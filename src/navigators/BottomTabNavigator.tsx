@@ -1,12 +1,25 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createStackNavigator } from '@react-navigation/stack';
 import { View, Text } from 'react-native';
 import HomeScreen from '../screens/TabsScreen/HomeScreen';
 import FavoritesScreen from '../screens/TabsScreen/FavoritesScreen';
 import SearchScreen from '../screens/TabsScreen/SearchScreen';
 import ProfileScreen from '../screens/TabsScreen/ProfileScreen';
+import WalletScreen from '../screens/Profile/WalletScreen';
 
 const Tab = createBottomTabNavigator();
+const Stack = createStackNavigator();
+
+// Profile Stack Navigator
+const ProfileStack = () => {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="ProfileMain" component={ProfileScreen} />
+      <Stack.Screen name="Wallet" component={WalletScreen} />
+    </Stack.Navigator>
+  );
+};
 
 interface TabIconProps {
   focused: boolean;
@@ -133,7 +146,7 @@ const BottomTabNavigator = () => {
       />
       <Tab.Screen
         name="Profile"
-        component={ProfileScreen}
+        component={ProfileStack}
         options={{
           tabBarIcon: ProfileIcon,
           tabBarLabel: 'Hồ sơ',
