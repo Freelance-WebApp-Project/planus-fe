@@ -1,20 +1,27 @@
-import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
-import { AuthProvider, useAuth } from '../hoc/AuthContext';
-import AuthNavigator from './AuthNavigator';
-import BottomTabNavigator from './BottomTabNavigator';
+import React from "react";
+import { NavigationContainer } from "@react-navigation/native";
+import { createStackNavigator } from "@react-navigation/stack";
+import { useAuth } from "../hoc/AuthContext";
+import AuthNavigator from "./AuthNavigator";
+import SetupNavigator from "./SetupNavigator";
+import BottomTabNavigator from "./BottomTabNavigator";
+import { StyleSheet } from "react-native";
 
 const Stack = createStackNavigator();
 
-const NavigationStack = () => {
-  const { isAuthenticated } = useAuth();
+const AppNavigator = () => {
+  const { isAuthenticated, user } = useAuth();
 
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {isAuthenticated ? (
-          <Stack.Screen name="Main" component={BottomTabNavigator} />
+          // Check if user is first login or hasn't completed setup
+          user?.isFirstLogin ? (
+            <Stack.Screen name="Setup" component={SetupNavigator} />
+          ) : (
+            <Stack.Screen name="Main" component={BottomTabNavigator} />
+          )
         ) : (
           <Stack.Screen name="Auth" component={AuthNavigator} />
         )}
@@ -23,12 +30,12 @@ const NavigationStack = () => {
   );
 };
 
-const AppNavigator = () => {
-  return (
-    <AuthProvider>
-      <NavigationStack />
-    </AuthProvider>
-  );
-};
-
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#F8F4FF",
+  },
+});
 export default AppNavigator;

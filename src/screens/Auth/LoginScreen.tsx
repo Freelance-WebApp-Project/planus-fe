@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -10,339 +10,449 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-} from 'react-native';
-import { StatusBar } from 'expo-status-bar';
-import { useAuth } from '../../hoc/AuthContext';
+  ActivityIndicator,
+  Dimensions,
+} from "react-native";
+import { StatusBar } from "expo-status-bar";
+import { useAuth } from "../../hoc/AuthContext";
+import { LoginRequest, AuthError } from "../../types/auth.types";
+import { showToast, formatErrorMessage } from "../../utils/toast.utils";
+
+const { width, height } = Dimensions.get("window");
 
 const LoginScreen = ({ navigation }: any) => {
-  const { login } = useAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const { login, isLoading } = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert('Lỗi', 'Vui lòng nhập đầy đủ thông tin');
+      showToast.error("Lỗi", "Vui lòng nhập đầy đủ thông tin");
       return;
     }
-    // Simulate login success
-    console.log('Login:', { email, password, rememberMe });
-    login(); // This will navigate to the main app
+
+    const credentials: LoginRequest = {
+      username: email,
+      password,
+    };
+
+    try {
+      const response = await login(credentials);
+
+      if (response.success) {
+        showToast.success("Thành công", "Đăng nhập thành công");
+        
+        // AppNavigator will automatically handle navigation based on user state
+        // No need to manually navigate from LoginScreen
+      } else {
+        const error = response.error;
+        if (error) {
+          const errorMessage = formatErrorMessage(error, 'Đăng nhập thất bại');
+          showToast.error('Lỗi đăng nhập', errorMessage);
+        } else {
+          showToast.error("Lỗi", "Đăng nhập thất bại");
+        }
+      }
+    } catch (error) {
+      showToast.error("Lỗi", "Có lỗi xảy ra khi đăng nhập");
+      return;
+    }
   };
 
   const handleForgotPassword = () => {
     // Handle forgot password logic
-    console.log('Forgot password');
   };
 
   const navigateToRegister = () => {
-    navigation.navigate('Register');
+    navigation.navigate("Register");
   };
 
   return (
-    <KeyboardAvoidingView 
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <StatusBar style="dark" />
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {/* Header with logo and world map */}
-        <View style={styles.header}>
-          <View style={styles.logoContainer}>
-            {/* World map illustration */}
-            <View style={styles.worldMap}>
-              <View style={styles.mapBackground} />
-              {/* Airplane icon */}
-              <View style={styles.airplane}>
-                <Text style={styles.airplaneIcon}>✈️</Text>
-              </View>
-              {/* Flight path */}
-              <View style={styles.flightPath} />
-            </View>
-            
-            {/* App title */}
-            <Text style={styles.title}>PLANUS</Text>
-          </View>
-        </View>
+    <View style={styles.container}>
+      <StatusBar style="light" />
 
-        {/* Login form */}
-        <View style={styles.formContainer}>
-          {/* Email input */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Địa chỉ E-mail/Tên người dùng</Text>
-            <View style={styles.inputWrapper}>
-              <View style={styles.inputIcon}>
-                <Text style={styles.iconText}>👤</Text>
+      {/* Background Gradient */}
+      <View style={styles.backgroundGradient} />
+
+      {/* Decorative Circles */}
+      <View style={styles.circle1} />
+      <View style={styles.circle2} />
+      <View style={styles.circle3} />
+
+      <KeyboardAvoidingView
+        style={styles.keyboardContainer}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContainer}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Header with logo */}
+          <View style={styles.header}>
+            <View style={styles.logoContainer}>
+              {/* Modern logo design */}
+              <View style={styles.logoWrapper}>
+                <View style={styles.logoIcon}>
+                  <Text style={styles.logoText}>✈️</Text>
+                </View>
+                <View style={styles.logoAccent} />
               </View>
-              <TextInput
-                style={styles.input}
-                placeholder="Nhập email hoặc tên người dùng tại đây..."
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                placeholderTextColor="#A0A0A0"
-              />
+
+              <Text style={styles.title}>PLANUS</Text>
+              <Text style={styles.subtitle}>
+                Khám phá thế giới cùng chúng tôi
+              </Text>
             </View>
           </View>
 
-          {/* Password input */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Mật Khẩu</Text>
-            <View style={styles.inputWrapper}>
-              <View style={styles.inputIcon}>
-                <Text style={styles.iconText}>🔒</Text>
+          {/* Login form */}
+          <View style={styles.formContainer}>
+            <View style={styles.formCard}>
+              {/* Email input */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Email hoặc tên người dùng</Text>
+                <View style={styles.inputWrapper}>
+                  <View style={styles.inputIcon}>
+                    <Text style={styles.iconText}>👤</Text>
+                  </View>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Nhập email hoặc tên người dùng"
+                    value={email}
+                    onChangeText={setEmail}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    placeholderTextColor="#A0A0A0"
+                  />
+                </View>
               </View>
-              <TextInput
-                style={styles.input}
-                placeholder="Nhập mật khẩu tại đây"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!isPasswordVisible}
-                placeholderTextColor="#A0A0A0"
-              />
+
+              {/* Password input */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Mật khẩu</Text>
+                <View style={styles.inputWrapper}>
+                  <View style={styles.inputIcon}>
+                    <Text style={styles.iconText}>🔒</Text>
+                  </View>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Nhập mật khẩu"
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry={!isPasswordVisible}
+                    placeholderTextColor="#A0A0A0"
+                  />
+                  <TouchableOpacity
+                    style={styles.eyeIcon}
+                    onPress={() => setIsPasswordVisible(!isPasswordVisible)}
+                  >
+                    <Text style={styles.iconText}>
+                      {isPasswordVisible ? "👁️" : "👁️‍🗨️"}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Remember me and forgot password */}
+              <View style={styles.optionsContainer}>
+                <TouchableOpacity
+                  style={styles.rememberMeContainer}
+                  onPress={() => setRememberMe(!rememberMe)}
+                >
+                  <View
+                    style={[
+                      styles.checkbox,
+                      rememberMe && styles.checkboxChecked,
+                    ]}
+                  >
+                    {rememberMe && <Text style={styles.checkmark}>✓</Text>}
+                  </View>
+                  <Text style={styles.rememberMeText}>Nhớ tôi</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity onPress={handleForgotPassword}>
+                  <Text style={styles.forgotPasswordText}>Quên mật khẩu?</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Login button */}
               <TouchableOpacity
-                style={styles.eyeIcon}
-                onPress={() => setIsPasswordVisible(!isPasswordVisible)}
+                style={[
+                  styles.loginButton,
+                  isLoading && styles.loginButtonDisabled,
+                ]}
+                onPress={handleLogin}
+                disabled={isLoading}
               >
-                <Text style={styles.iconText}>
-                  {isPasswordVisible ? '👁️' : '👁️‍🗨️'}
-                </Text>
+                {isLoading ? (
+                  <ActivityIndicator color="#FFF" size="small" />
+                ) : (
+                  <Text style={styles.loginButtonText}>Đăng nhập</Text>
+                )}
+              </TouchableOpacity>
+
+              {/* Divider */}
+              <View style={styles.dividerContainer}>
+                <View style={styles.dividerLine} />
+                <Text style={styles.dividerText}>hoặc</Text>
+                <View style={styles.dividerLine} />
+              </View>
+
+              {/* Register button */}
+              <TouchableOpacity
+                style={styles.registerButton}
+                onPress={navigateToRegister}
+              >
+                <Text style={styles.registerButtonText}>Tạo tài khoản mới</Text>
               </TouchableOpacity>
             </View>
           </View>
-
-          {/* Remember me and forgot password */}
-          <View style={styles.optionsContainer}>
-            <TouchableOpacity
-              style={styles.rememberMeContainer}
-              onPress={() => setRememberMe(!rememberMe)}
-            >
-              <View style={[styles.checkbox, rememberMe && styles.checkboxChecked]}>
-                {rememberMe && <Text style={styles.checkmark}>✓</Text>}
-              </View>
-              <Text style={styles.rememberMeText}>Nhớ tôi</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity onPress={handleForgotPassword}>
-              <Text style={styles.forgotPasswordText}>Quên mật khẩu?</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Login button */}
-          <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-            <Text style={styles.loginButtonText}>Đăng nhập</Text>
-          </TouchableOpacity>
-
-          {/* Divider */}
-          <View style={styles.dividerContainer}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>or</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          {/* Register button */}
-          <TouchableOpacity style={styles.registerButton} onPress={navigateToRegister}>
-            <Text style={styles.registerButtonText}>Tạo tài khoản</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F4FF',
+    backgroundColor: "#1a1a2e",
+  },
+  backgroundGradient: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "#16213e",
+  },
+  circle1: {
+    position: "absolute",
+    width: width * 0.8,
+    height: width * 0.8,
+    borderRadius: width * 0.4,
+    backgroundColor: "rgba(135, 206, 235, 0.1)",
+    top: -width * 0.3,
+    right: -width * 0.2,
+  },
+  circle2: {
+    position: "absolute",
+    width: width * 0.6,
+    height: width * 0.6,
+    borderRadius: width * 0.3,
+    backgroundColor: "rgba(135, 206, 235, 0.05)",
+    bottom: -width * 0.2,
+    left: -width * 0.1,
+  },
+  circle3: {
+    position: "absolute",
+    width: width * 0.4,
+    height: width * 0.4,
+    borderRadius: width * 0.2,
+    backgroundColor: "rgba(135, 206, 235, 0.08)",
+    top: height * 0.3,
+    right: -width * 0.1,
+  },
+  keyboardContainer: {
+    flex: 1,
   },
   scrollContainer: {
     flexGrow: 1,
     paddingHorizontal: 24,
+    paddingTop: 60,
+    paddingBottom: 30,
   },
   header: {
-    alignItems: 'center',
-    paddingTop: 60,
-    paddingBottom: 40,
+    alignItems: "center",
+    marginBottom: 40,
   },
   logoContainer: {
-    alignItems: 'center',
+    alignItems: "center",
   },
-  worldMap: {
-    width: 200,
-    height: 120,
+  logoWrapper: {
+    position: "relative",
     marginBottom: 20,
-    position: 'relative',
   },
-  mapBackground: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: '#87CEEB',
+  logoIcon: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: "rgba(135, 206, 235, 0.2)",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: "rgba(135, 206, 235, 0.3)",
+  },
+  logoText: {
+    fontSize: 32,
+  },
+  logoAccent: {
+    position: "absolute",
+    top: -5,
+    right: -5,
+    width: 20,
+    height: 20,
     borderRadius: 10,
-    opacity: 0.3,
-  },
-  airplane: {
-    position: 'absolute',
-    top: 30,
-    left: 40,
-  },
-  airplaneIcon: {
-    fontSize: 24,
-    transform: [{ rotate: '45deg' }],
-  },
-  flightPath: {
-    position: 'absolute',
-    top: 50,
-    left: 60,
-    width: 100,
-    height: 2,
-    backgroundColor: '#333',
-    borderStyle: 'dashed',
-    borderWidth: 1,
-    borderColor: '#333',
+    backgroundColor: "#87CEEB",
   },
   title: {
-    fontSize: 48,
-    fontWeight: 'bold',
-    color: '#333',
-    letterSpacing: 2,
+    fontSize: 42,
+    fontWeight: "bold",
+    color: "#FFF",
+    letterSpacing: 3,
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: "rgba(255, 255, 255, 0.8)",
+    textAlign: "center",
   },
   formContainer: {
     flex: 1,
+  },
+  formCard: {
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
+    borderRadius: 24,
+    padding: 24,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 10,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  formTitle: {
+    fontSize: 28,
+    fontWeight: "bold",
+    color: "#1a1a2e",
+    textAlign: "center",
+    marginBottom: 30,
   },
   inputContainer: {
     marginBottom: 20,
   },
   inputLabel: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: "600",
+    color: "#1a1a2e",
     marginBottom: 8,
   },
   inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFF',
-    borderRadius: 25,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F8F9FA",
+    borderRadius: 16,
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
+    paddingVertical: 16,
+    borderWidth: 1,
+    borderColor: "#E9ECEF",
   },
   inputIcon: {
     marginRight: 12,
   },
   iconText: {
     fontSize: 18,
-    color: '#666',
+    color: "#87CEEB",
   },
   input: {
     flex: 1,
     fontSize: 16,
-    color: '#333',
+    color: "#1a1a2e",
   },
   eyeIcon: {
     padding: 4,
   },
   optionsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 30,
   },
   rememberMeContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   checkbox: {
     width: 20,
     height: 20,
-    borderRadius: 10,
+    borderRadius: 4,
     borderWidth: 2,
-    borderColor: '#87CEEB',
+    borderColor: "#87CEEB",
     marginRight: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   checkboxChecked: {
-    backgroundColor: '#87CEEB',
+    backgroundColor: "#87CEEB",
   },
   checkmark: {
-    color: '#FFF',
+    color: "#FFF",
     fontSize: 12,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   rememberMeText: {
     fontSize: 14,
-    color: '#666',
+    color: "#6c757d",
   },
   forgotPasswordText: {
     fontSize: 14,
-    color: '#87CEEB',
-    fontWeight: '600',
+    color: "#87CEEB",
+    fontWeight: "600",
   },
   loginButton: {
-    backgroundColor: '#87CEEB',
-    borderRadius: 25,
-    paddingVertical: 16,
-    alignItems: 'center',
+    backgroundColor: "#87CEEB",
+    borderRadius: 16,
+    paddingVertical: 18,
+    alignItems: "center",
     marginBottom: 20,
-    shadowColor: '#000',
+    shadowColor: "#87CEEB",
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 4,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
   },
   loginButtonText: {
-    color: '#FFF',
+    color: "#FFF",
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
+  },
+  loginButtonDisabled: {
+    opacity: 0.7,
   },
   dividerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginVertical: 20,
   },
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: '#87CEEB',
+    backgroundColor: "#E9ECEF",
   },
   dividerText: {
     marginHorizontal: 16,
-    fontSize: 16,
-    color: '#666',
+    fontSize: 14,
+    color: "#6c757d",
   },
   registerButton: {
-    backgroundColor: '#FFF',
-    borderRadius: 25,
-    paddingVertical: 16,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#87CEEB',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
+    backgroundColor: "transparent",
+    borderRadius: 16,
+    paddingVertical: 18,
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "#87CEEB",
   },
   registerButtonText: {
-    color: '#87CEEB',
+    color: "#87CEEB",
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
 });
 
