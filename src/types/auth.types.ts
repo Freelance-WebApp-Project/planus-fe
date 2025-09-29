@@ -12,6 +12,7 @@ export interface User {
   income?: any;
   avatar?: any;
   favorites?: string[];
+  isPremium?: boolean;
 }
 
 export interface LoginRequest {
