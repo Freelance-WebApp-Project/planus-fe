@@ -12,14 +12,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { CategoryItem, PlaceType } from '../../types/place.types';
 
 const { width } = Dimensions.get('window');
-
-interface CategoryItem {
-  id: string;
-  title: string;
-  icon: string;
-}
 
 interface DestinationItem {
   id: string;
@@ -38,13 +33,13 @@ const HomeScreen = ({ navigation }: any) => {
 
   // Categories data
   const categories: CategoryItem[] = [
-    { id: '1', title: 'Khu nghỉ dưỡng', icon: '🏖️' },
-    { id: '2', title: 'Homestay', icon: '🏠' },
-    { id: '3', title: 'Khách sạn', icon: '🏨' },
-    { id: '4', title: 'Nhà nghỉ', icon: '🏢' },
-    { id: '5', title: 'Villa', icon: '🏰' },
-    { id: '6', title: 'Căn hộ', icon: '🏬' },
-    { id: '7', title: 'Ký túc', icon: '🏫' },
+    { id: '1', title: 'Khu nghỉ dưỡng', icon: '🏖️', type: PlaceType.RESORT },
+    { id: '2', title: 'Homestay', icon: '🏠', type: PlaceType.HOMESTAY },
+    { id: '3', title: 'Khách sạn', icon: '🏨', type: PlaceType.KHACH_SAN },
+    { id: '4', title: 'Nhà nghỉ', icon: '🏢', type: PlaceType.NHA_NGHI },
+    { id: '5', title: 'Villa', icon: '🏰', type: PlaceType.VILLA },
+    { id: '6', title: 'Căn hộ', icon: '🏬', type: PlaceType.CAN_HO },
+    { id: '7', title: 'Ký túc', icon: '🏫', type: PlaceType.KY_TUC },
     { id: '8', title: 'Xem thêm', icon: '⋯' },
   ];
 
@@ -61,8 +56,46 @@ const HomeScreen = ({ navigation }: any) => {
     { id: '2', title: 'Thành phố cổ', image: 'https://via.placeholder.com/300x150/DC143C/FFFFFF?text=Old+City' },
   ];
 
+  const handleCategoryPress = (item: CategoryItem) => {
+    if (item.id === '8') {
+      // "Xem thêm" button - navigate to all categories or places list
+      navigation.navigate('Search', { 
+        showAllCategories: true 
+      });
+    } else if (item.type) {
+      // Specific category - navigate to places filtered by type
+      navigation.navigate('Search', { 
+        filterType: item.type,
+        categoryTitle: item.title 
+      });
+    }
+  };
+
+  const handleSearch = () => {
+    if (searchText.trim()) {
+      navigation.navigate('Search', { 
+        searchQuery: searchText.trim() 
+      });
+    }
+  };
+
+  const handleSeeMoreCategories = () => {
+    navigation.navigate('Search', { 
+      showAllCategories: true 
+    });
+  };
+
+  const handleSeeMoreDestinations = () => {
+    navigation.navigate('Search', { 
+      showPopularPlaces: true 
+    });
+  };
+
   const renderCategoryItem = ({ item }: { item: CategoryItem }) => (
-    <TouchableOpacity style={styles.categoryItem}>
+    <TouchableOpacity 
+      style={styles.categoryItem}
+      onPress={() => handleCategoryPress(item)}
+    >
       <View style={styles.categoryIcon}>
         <Text style={styles.categoryIconText}>{item.icon}</Text>
       </View>
@@ -119,8 +152,10 @@ const HomeScreen = ({ navigation }: any) => {
               value={searchText}
               onChangeText={setSearchText}
               placeholderTextColor="#999"
+              onSubmitEditing={handleSearch}
+              returnKeyType="search"
             />
-            <TouchableOpacity style={styles.searchButton}>
+            <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
               <Text style={styles.searchIcon}>🔍</Text>
             </TouchableOpacity>
           </View>
@@ -133,7 +168,7 @@ const HomeScreen = ({ navigation }: any) => {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Thể loại</Text>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={handleSeeMoreCategories}>
               <View style={styles.menuIcon}>
                 <View style={styles.menuLine} />
                 <View style={styles.menuLine} />
@@ -155,7 +190,7 @@ const HomeScreen = ({ navigation }: any) => {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Địa điểm phổ biến</Text>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={handleSeeMoreDestinations}>
               <View style={styles.menuIcon}>
                 <View style={styles.menuLine} />
                 <View style={styles.menuLine} />

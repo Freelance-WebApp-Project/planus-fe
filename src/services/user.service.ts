@@ -1,22 +1,7 @@
 import { apiService } from './api.service';
 import { ApiResponse } from '../types/auth.types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-export interface UpdateProfileRequest {
-  fullName: string;
-  email: string;
-  gender: string;
-  dob?: any;
-  income?: any;
-  avatar?: any;
-  favorites: string[];
-}
-
-export interface UpdateProfileResponse {
-  success: boolean;
-  message: string;
-  user?: any;
-}
+import { UpdateProfileRequest, UpdateProfileResponse } from '../types/user.types';
 
 class UserService {
   async updateProfile(profileData: UpdateProfileRequest): Promise<ApiResponse<UpdateProfileResponse>> {

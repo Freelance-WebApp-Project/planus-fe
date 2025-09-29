@@ -8,6 +8,13 @@ export const API_CONFIG = {
       REFRESH_TOKEN: '/auth/refresh-token',
       GOOGLE_LOGIN: '/auth/google',
     },
+    PLACE: {
+      GET_ALL: '/places/get-all',
+      GET_ONE: '/places/get-one',
+    },
+    USER: {
+      UPDATE_PROFILE: '/users/update-profile',
+    },
   },
   TIMEOUT: 10000, // 10 seconds
 };
