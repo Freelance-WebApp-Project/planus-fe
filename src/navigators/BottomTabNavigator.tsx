@@ -1,12 +1,16 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
-import { View, Text } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import HomeScreen from '../screens/TabsScreen/HomeScreen';
 import FavoritesScreen from '../screens/TabsScreen/FavoritesScreen';
 import SearchScreen from '../screens/TabsScreen/SearchScreen';
 import ProfileScreen from '../screens/TabsScreen/ProfileScreen';
 import WalletScreen from '../screens/Profile/WalletScreen';
+import TripPlanningInputScreen from '../screens/TripPlanning/TripPlanningInputScreen';
+import SelectDestinationScreen from '../screens/TripPlanning/SelectDestinationScreen';
+import SuggestedPlansScreen from '../screens/TripPlanning/SuggestedPlansScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -17,6 +21,18 @@ const ProfileStack = () => {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="ProfileMain" component={ProfileScreen} />
       <Stack.Screen name="Wallet" component={WalletScreen} />
+    </Stack.Navigator>
+  );
+};
+
+// Main Stack Navigator
+const MainStack = () => {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="MainTabs" component={BottomTabNavigator} />
+      <Stack.Screen name="TripPlanning" component={TripPlanningInputScreen} />
+      <Stack.Screen name="SelectDestination" component={SelectDestinationScreen} />
+      <Stack.Screen name="SuggestedPlans" component={SuggestedPlansScreen} />
     </Stack.Navigator>
   );
 };
@@ -39,27 +55,34 @@ const FavoritesIcon = ({ focused, color }: TabIconProps) => (
   </View>
 );
 
-const AddIcon = ({ focused, color }: TabIconProps) => (
-  <View style={{
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#5A9FD8',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 5,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 8,
-  }}>
-    <Text style={{ fontSize: 26, color: '#FFF', fontWeight: 'bold' }}>+</Text>
-  </View>
-);
+const AddIcon = ({ focused, color }: TabIconProps) => {
+  const navigation = useNavigation();
+  
+  return (
+    <TouchableOpacity
+      style={{
+        width: 56,
+        height: 56,
+        borderRadius: 28,
+        backgroundColor: '#5A9FD8',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 5,
+        shadowColor: '#000',
+        shadowOffset: {
+          width: 0,
+          height: 4,
+        },
+        shadowOpacity: 0.3,
+        shadowRadius: 5,
+        elevation: 8,
+      }}
+      onPress={() => navigation.navigate('TripPlanning' as never)}
+    >
+      <Text style={{ fontSize: 26, color: '#FFF', fontWeight: 'bold' }}>+</Text>
+    </TouchableOpacity>
+  );
+};
 
 const SearchIcon = ({ focused, color }: TabIconProps) => (
   <View style={{ alignItems: 'center' }}>
@@ -156,4 +179,4 @@ const BottomTabNavigator = () => {
   );
 };
 
-export default BottomTabNavigator;
+export default MainStack;

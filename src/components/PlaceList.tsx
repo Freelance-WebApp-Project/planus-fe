@@ -19,9 +19,16 @@ interface PlaceListProps {
     minRating?: number;
     tags?: string[];
   };
+  showImage?: boolean;
+  cardStyle?: 'default' | 'compact';
 }
 
-const PlaceList: React.FC<PlaceListProps> = ({ onPlacePress, initialQuery = {} }) => {
+const PlaceList: React.FC<PlaceListProps> = ({ 
+  onPlacePress, 
+  initialQuery = {}, 
+  showImage = true,
+  cardStyle = 'default'
+}) => {
   const {
     places,
     loading,
@@ -37,26 +44,41 @@ const PlaceList: React.FC<PlaceListProps> = ({ onPlacePress, initialQuery = {} }
 
   const renderPlace = ({ item }: { item: Place }) => (
     <TouchableOpacity
-      style={styles.placeCard}
+      style={cardStyle === 'compact' ? styles.placeCardCompact : styles.placeCard}
       onPress={() => onPlacePress?.(item)}
     >
-      <Text style={styles.placeName}>{item.name}</Text>
-      <Text style={styles.placeType}>{item.type}</Text>
-      <Text style={styles.placeDescription} numberOfLines={2}>
-        {item.description}
-      </Text>
-      <Text style={styles.placeLocation}>{item.location.city}</Text>
-      <Text style={styles.placeRating}>⭐ {item.rating}/5</Text>
-      <Text style={styles.placePrice}>💰 {item.priceRange} VND</Text>
-      {item.tags.length > 0 && (
-        <View style={styles.tagsContainer}>
-          {item.tags.slice(0, 3).map((tag, index) => (
-            <Text key={index} style={styles.tag}>
-              {tag}
-            </Text>
-          ))}
+      {showImage && (
+        <View style={styles.placeImage}>
+          <Text style={styles.placeImageText}>🏢</Text>
         </View>
       )}
+      <View style={styles.placeInfo}>
+        <Text style={styles.placeName}>{item.name || 'N/A'}</Text>
+        <Text style={styles.placeType}>
+          {item.type ? item.type.replace('_', ' ').toUpperCase() : 'N/A'}
+        </Text>
+        <Text style={styles.placeDescription} numberOfLines={2}>
+          {item.description || 'N/A'}
+        </Text>
+        <Text style={styles.placeLocation}>
+          {item.location?.city || 'N/A'}
+        </Text>
+        <Text style={styles.placeRating}>
+          ⭐ {item.rating || 0}/5
+        </Text>
+        <Text style={styles.placePrice}>
+          💰 {item.priceRange ? item.priceRange.toLocaleString() : 0} VND
+        </Text>
+        {item.tags && item.tags.length > 0 && (
+          <View style={styles.tagsContainer}>
+            {item.tags.slice(0, 2).map((tag, index) => (
+              <Text key={index} style={styles.tag}>
+                {tag}
+              </Text>
+            ))}
+          </View>
+        )}
+      </View>
     </TouchableOpacity>
   );
 
@@ -101,9 +123,26 @@ const PlaceList: React.FC<PlaceListProps> = ({ onPlacePress, initialQuery = {} }
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
+    paddingHorizontal: 20,
   },
   placeCard: {
+    backgroundColor: '#FFF',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    flexDirection: 'row',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 6,
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
+  },
+  placeCardCompact: {
     backgroundColor: '#fff',
     borderRadius: 12,
     padding: 16,
@@ -117,38 +156,63 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
   },
+  placeImage: {
+    width: 90,
+    height: 90,
+    borderRadius: 12,
+    backgroundColor: '#F8F9FA',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+    borderWidth: 1,
+    borderColor: '#E9ECEF',
+  },
+  placeImageText: {
+    fontSize: 36,
+    color: '#6C757D',
+  },
+  placeInfo: {
+    flex: 1,
+    justifyContent: 'space-between',
+    paddingVertical: 4,
+  },
   placeName: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 4,
+    fontWeight: '700',
+    color: '#212529',
+    marginBottom: 6,
+    lineHeight: 22,
   },
   placeType: {
-    fontSize: 14,
-    color: '#666',
-    textTransform: 'capitalize',
+    fontSize: 12,
+    color: '#6C757D',
+    textTransform: 'uppercase',
     marginBottom: 8,
+    fontWeight: '600',
+    letterSpacing: 0.5,
   },
   placeDescription: {
     fontSize: 14,
-    color: '#666',
+    color: '#6C757D',
     marginBottom: 8,
     lineHeight: 20,
   },
   placeLocation: {
-    fontSize: 12,
-    color: '#999',
-    marginBottom: 4,
+    fontSize: 13,
+    color: '#868E96',
+    marginBottom: 8,
+    fontWeight: '500',
   },
   placeRating: {
-    fontSize: 12,
-    color: '#FFA500',
+    fontSize: 13,
+    color: '#FFC107',
+    fontWeight: '600',
     marginBottom: 4,
   },
   placePrice: {
-    fontSize: 12,
-    color: '#4CAF50',
-    marginBottom: 8,
+    fontSize: 14,
+    color: '#28A745',
+    fontWeight: '700',
   },
   tagsContainer: {
     flexDirection: 'row',
@@ -169,24 +233,34 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: 40,
   },
   errorText: {
     fontSize: 16,
-    color: '#FF5722',
+    color: '#DC3545',
     textAlign: 'center',
-    marginBottom: 16,
+    marginBottom: 20,
+    fontWeight: '500',
+    lineHeight: 24,
   },
   retryButton: {
-    backgroundColor: '#007AFF',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 8,
+    backgroundColor: '#5A9FD8',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 25,
+    shadowColor: '#5A9FD8',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
   retryButtonText: {
-    color: '#fff',
+    color: '#FFF',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '700',
   },
   footerLoader: {
     paddingVertical: 20,

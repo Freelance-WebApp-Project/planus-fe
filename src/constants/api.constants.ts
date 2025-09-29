@@ -15,6 +15,9 @@ export const API_CONFIG = {
     USER: {
       UPDATE_PROFILE: '/users/update-profile',
     },
+    PLAN: {
+      GENERATE: '/mcp/generate_travel_plan',
+    },
   },
   TIMEOUT: 10000, // 10 seconds
 };

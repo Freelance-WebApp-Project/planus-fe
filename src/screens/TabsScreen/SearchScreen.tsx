@@ -5,14 +5,14 @@ import {
   StyleSheet, 
   TextInput, 
   TouchableOpacity, 
-  FlatList,
   ActivityIndicator,
   ScrollView
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { usePlaces } from '../../hooks/usePlace';
-import { Place, PlaceType, SearchScreenParams } from '../../types/place.types';
+import { PlaceType, SearchScreenParams } from '../../types/place.types';
+import PlaceList from '../../components/PlaceList';
 
 const SearchScreen = () => {
   const route = useRoute();
@@ -60,28 +60,10 @@ const SearchScreen = () => {
     }
   };
 
-  const renderPlace = ({ item }: { item: Place }) => (
-    <TouchableOpacity style={styles.placeCard}>
-      <View style={styles.placeImage}>
-        <Text style={styles.placeImageText}>🏢</Text>
-      </View>
-      <View style={styles.placeInfo}>
-        <Text style={styles.placeName}>{item.name || 'N/A'}</Text>
-        <Text style={styles.placeType}>
-          {item.type ? item.type.replace('_', ' ').toUpperCase() : 'N/A'}
-        </Text>
-        <Text style={styles.placeLocation}>
-          {item.location?.city || 'N/A'}
-        </Text>
-        <Text style={styles.placeRating}>
-          ⭐ {item.rating || 0}/5
-        </Text>
-        <Text style={styles.placePrice}>
-          💰 {item.priceRange ? item.priceRange.toLocaleString() : 0} VND
-        </Text>
-      </View>
-    </TouchableOpacity>
-  );
+  const handlePlacePress = (place: any) => {
+    // Handle place press - you can add navigation to place details here
+    console.log('Place pressed:', place);
+  };
 
   const getScreenTitle = () => {
     if (params.categoryTitle) return params.categoryTitle;
@@ -170,12 +152,10 @@ const SearchScreen = () => {
             </TouchableOpacity>
           </View>
         ) : places && places.length > 0 ? (
-          <FlatList
-            data={places || []}
-            renderItem={renderPlace}
-            keyExtractor={(item) => item._id || Math.random().toString()}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.placesList}
+          <PlaceList
+            onPlacePress={handlePlacePress}
+            showImage={true}
+            cardStyle="default"
           />
         ) : (
           <View style={styles.emptyContainer}>
@@ -346,94 +326,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 24,
     fontWeight: '400',
-  },
-  placesList: {
-    paddingVertical: 20,
-    paddingHorizontal: 4,
-  },
-  placeCard: {
-    backgroundColor: '#FFF',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-    flexDirection: 'row',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 6,
-    borderWidth: 1,
-    borderColor: '#F0F0F0',
-  },
-  placeImage: {
-    width: 90,
-    height: 90,
-    borderRadius: 12,
-    backgroundColor: '#F8F9FA',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-    borderWidth: 1,
-    borderColor: '#E9ECEF',
-  },
-  placeImageText: {
-    fontSize: 36,
-    color: '#6C757D',
-  },
-  placeInfo: {
-    flex: 1,
-    justifyContent: 'space-between',
-    paddingVertical: 4,
-  },
-  placeName: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#212529',
-    marginBottom: 6,
-    lineHeight: 22,
-  },
-  placeType: {
-    fontSize: 12,
-    color: '#6C757D',
-    textTransform: 'uppercase',
-    marginBottom: 8,
-    fontWeight: '600',
-    letterSpacing: 0.5,
-  },
-  placeLocation: {
-    fontSize: 13,
-    color: '#868E96',
-    marginBottom: 8,
-    fontWeight: '500',
-  },
-  placeRating: {
-    fontSize: 13,
-    color: '#FFC107',
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  placePrice: {
-    fontSize: 14,
-    color: '#28A745',
-    fontWeight: '700',
-  },
-  tagsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginTop: 8,
-  },
-  tag: {
-    backgroundColor: '#E3F2FD',
-    color: '#1976D2',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    fontSize: 10,
-    marginRight: 4,
-    marginBottom: 4,
   },
   filtersContainer: {
     marginTop: 5,
