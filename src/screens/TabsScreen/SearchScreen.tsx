@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   View, 
   Text, 
@@ -6,13 +6,14 @@ import {
   TextInput, 
   TouchableOpacity, 
   ActivityIndicator,
-  ScrollView
+  ScrollView,
+  FlatList,
+  RefreshControl
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { usePlaces } from '../../hooks/usePlace';
-import { PlaceType, SearchScreenParams } from '../../types/place.types';
-import PlaceList from '../../components/PlaceList';
+import { PlaceType, SearchScreenParams, Place } from '../../types/place.types';
 
 const SearchScreen = () => {
   const route = useRoute();
@@ -21,16 +22,29 @@ const SearchScreen = () => {
   
   const [searchQuery, setSearchQuery] = useState(params.searchQuery || '');
   const [activeFilter, setActiveFilter] = useState<PlaceType | null>(params.filterType || null);
-  
+
+  // Use the usePlaces hook
   const {
-    places = [],
+    places,
     loading,
     error,
+    total,
+    page,
+    limit,
     fetchPlaces,
+    loadMore,
+    refresh,
     search,
-    filterByType
+    filterByType,
   } = usePlaces();
 
+  // Reset state when params change
+  useEffect(() => {
+    setSearchQuery(params.searchQuery || '');
+    setActiveFilter(params.filterType || null);
+  }, [params.searchQuery, params.filterType]);
+
+  // Fetch data based on params
   useEffect(() => {
     if (params.searchQuery) {
       search(params.searchQuery);
@@ -43,7 +57,7 @@ const SearchScreen = () => {
     } else {
       fetchPlaces();
     }
-  }, [params]);
+  }, [params.searchQuery, params.filterType, params.showAllCategories, params.showPopularPlaces]);
 
   const handleSearch = () => {
     if (searchQuery.trim()) {
@@ -63,6 +77,55 @@ const SearchScreen = () => {
   const handlePlacePress = (place: any) => {
     // Handle place press - you can add navigation to place details here
     console.log('Place pressed:', place);
+  };
+
+  // Render place item
+  const renderPlace = ({ item }: { item: Place }) => (
+    <TouchableOpacity
+      style={styles.placeCard}
+      onPress={() => handlePlacePress(item)}
+    >
+      <View style={styles.placeImage}>
+        <Text style={styles.placeImageText}>🏢</Text>
+      </View>
+      <View style={styles.placeInfo}>
+        <Text style={styles.placeName}>{item.name || 'N/A'}</Text>
+        <Text style={styles.placeType}>
+          {item.type ? item.type.replace('_', ' ').toUpperCase() : 'N/A'}
+        </Text>
+        <Text style={styles.placeDescription} numberOfLines={2}>
+          {item.description || 'N/A'}
+        </Text>
+        <Text style={styles.placeLocation}>
+          {item.location?.city || 'N/A'}
+        </Text>
+        <Text style={styles.placeRating}>
+          ⭐ {item.rating || 0}/5
+        </Text>
+        <Text style={styles.placePrice}>
+          💰 {item.priceRange ? item.priceRange.toLocaleString() : 0} VND
+        </Text>
+        {item.tags && item.tags.length > 0 && (
+          <View style={styles.tagsContainer}>
+            {item.tags.slice(0, 2).map((tag, index) => (
+              <Text key={index} style={styles.tag}>
+                {tag}
+              </Text>
+            ))}
+          </View>
+        )}
+      </View>
+    </TouchableOpacity>
+  );
+
+  // Render footer for loading more
+  const renderFooter = () => {
+    if (!loading) return null;
+    return (
+      <View style={styles.footerLoader}>
+        <ActivityIndicator size="small" color="#007AFF" />
+      </View>
+    );
   };
 
   const getScreenTitle = () => {
@@ -137,36 +200,43 @@ const SearchScreen = () => {
         </View>
       )}
 
-      {/* Content */}
-      <View style={styles.content}>
-        {loading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#5A9FD8" />
-            <Text style={styles.loadingText}>Đang tải...</Text>
-          </View>
-        ) : error ? (
-          <View style={styles.errorContainer}>
-            <Text style={styles.errorText}>{error}</Text>
-            <TouchableOpacity style={styles.retryButton} onPress={() => fetchPlaces()}>
-              <Text style={styles.retryButtonText}>Thử lại</Text>
-            </TouchableOpacity>
-          </View>
-        ) : places && places.length > 0 ? (
-          <PlaceList
-            onPlacePress={handlePlacePress}
-            showImage={true}
-            cardStyle="default"
-          />
-        ) : (
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyIcon}>🔍</Text>
-            <Text style={styles.emptyTitle}>Không tìm thấy kết quả</Text>
-            <Text style={styles.emptyDescription}>
-              Thử tìm kiếm với từ khóa khác hoặc thay đổi bộ lọc
-            </Text>
-          </View>
-        )}
-      </View>
+        {/* Content */}
+        <View style={styles.content}>
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#5A9FD8" />
+              <Text style={styles.loadingText}>Đang tải...</Text>
+            </View>
+          ) : error ? (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorText}>{error}</Text>
+              <TouchableOpacity style={styles.retryButton} onPress={() => fetchPlaces()}>
+                <Text style={styles.retryButtonText}>Thử lại</Text>
+              </TouchableOpacity>
+            </View>
+          ) : places && places.length > 0 ? (
+            <FlatList
+              data={places}
+              renderItem={renderPlace}
+              keyExtractor={(item) => item._id}
+              onEndReached={loadMore}
+              onEndReachedThreshold={0.5}
+              ListFooterComponent={renderFooter}
+              refreshControl={
+                <RefreshControl refreshing={loading} onRefresh={refresh} />
+              }
+              showsVerticalScrollIndicator={false}
+            />
+          ) : (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyIcon}>🔍</Text>
+              <Text style={styles.emptyTitle}>Không tìm thấy kết quả</Text>
+              <Text style={styles.emptyDescription}>
+                Thử tìm kiếm với từ khóa khác hoặc thay đổi bộ lọc
+              </Text>
+            </View>
+          )}
+        </View>
     </SafeAreaView>
   );
 };
@@ -254,6 +324,7 @@ const styles = StyleSheet.create({
     color: '#5A9FD8',
   },
   content: {
+    marginTop: 10,
     flex: 1,
     paddingHorizontal: 20,
   },
@@ -326,6 +397,100 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 24,
     fontWeight: '400',
+  },
+  placeCard: {
+    backgroundColor: '#FFF',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    flexDirection: 'row',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 6,
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
+  },
+  placeImage: {
+    width: 90,
+    height: 90,
+    borderRadius: 12,
+    backgroundColor: '#F8F9FA',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+    borderWidth: 1,
+    borderColor: '#E9ECEF',
+  },
+  placeImageText: {
+    fontSize: 36,
+    color: '#6C757D',
+  },
+  placeInfo: {
+    flex: 1,
+    justifyContent: 'space-between',
+    paddingVertical: 4,
+  },
+  placeName: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#212529',
+    marginBottom: 6,
+    lineHeight: 22,
+  },
+  placeType: {
+    fontSize: 12,
+    color: '#6C757D',
+    textTransform: 'uppercase',
+    marginBottom: 8,
+    fontWeight: '600',
+    letterSpacing: 0.5,
+  },
+  placeDescription: {
+    fontSize: 14,
+    color: '#6C757D',
+    marginBottom: 8,
+    lineHeight: 20,
+  },
+  placeLocation: {
+    fontSize: 13,
+    color: '#868E96',
+    marginBottom: 8,
+    fontWeight: '500',
+  },
+  placeRating: {
+    fontSize: 13,
+    color: '#FFC107',
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  placePrice: {
+    fontSize: 14,
+    color: '#28A745',
+    fontWeight: '700',
+  },
+  tagsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 8,
+  },
+  tag: {
+    backgroundColor: '#E3F2FD',
+    color: '#1976D2',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    fontSize: 10,
+    marginRight: 4,
+    marginBottom: 4,
+  },
+  footerLoader: {
+    paddingVertical: 20,
+    alignItems: 'center',
   },
   filtersContainer: {
     marginTop: 5,

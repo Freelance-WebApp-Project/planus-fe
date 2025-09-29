@@ -22,8 +22,8 @@ export const usePlaces = (initialQuery: QueryPlaceDto = {}) => {
     try {
       const response: PlaceListApiResponse = await placeService.getAll({
         ...query,
-        page: query.page || page,
-        limit: query.limit || limit,
+        page: query.page || 1,
+        limit: query.limit || 10,
       });
 
       if (response.success && response.data) {
@@ -39,7 +39,7 @@ export const usePlaces = (initialQuery: QueryPlaceDto = {}) => {
     } finally {
       setLoading(false);
     }
-  }, [page, limit]);
+  }, []);
 
   const loadMore = useCallback(() => {
     if (!loading && places.length < total) {
@@ -73,7 +73,7 @@ export const usePlaces = (initialQuery: QueryPlaceDto = {}) => {
 
   useEffect(() => {
     fetchPlaces(initialQuery);
-  }, []);
+  }, [fetchPlaces]);
 
   return {
     places,

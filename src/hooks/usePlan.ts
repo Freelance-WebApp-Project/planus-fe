@@ -31,110 +31,19 @@ export const usePlanGeneration = () => {
     }
   }, []);
 
-  const generateQuickPlan = useCallback(async (
-    userId: string,
-    lat: number,
-    lng: number,
-    city: string,
-    purpose: string
-  ) => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response: GeneratePlanResponse = await planService.generateQuickPlan(
-        userId,
-        lat,
-        lng,
-        city,
-        purpose
-      );
-
-      if (response.success && response.data) {
-        setPlans(response.data.plans);
-      } else {
-        setError(response.error?.message || 'Failed to generate quick travel plans');
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const generateCustomPlan = useCallback(async (
-    userId: string,
-    lat: number,
-    lng: number,
-    city: string,
-    purpose: string,
-    duration: string,
-    radius: number,
-    destination?: string
-  ) => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response: GeneratePlanResponse = await planService.generateCustomPlan(
-        userId,
-        lat,
-        lng,
-        city,
-        purpose,
-        duration,
-        radius,
-        destination
-      );
-
-      if (response.success && response.data) {
-        setPlans(response.data.plans);
-      } else {
-        setError(response.error?.message || 'Failed to generate custom travel plans');
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
 
   const clearPlans = useCallback(() => {
     setPlans([]);
     setError(null);
   }, []);
 
-  const filterPlansByCost = useCallback((maxCost: number) => {
-    const filteredPlans = planService.filterPlansByCost(plans, maxCost);
-    setPlans(filteredPlans);
-  }, [plans]);
-
-  const sortPlansByCost = useCallback(() => {
-    const sortedPlans = planService.sortPlansByCost(plans);
-    setPlans(sortedPlans);
-  }, [plans]);
-
-  const sortPlansByRating = useCallback(() => {
-    const sortedPlans = planService.sortPlansByRating(plans);
-    setPlans(sortedPlans);
-  }, [plans]);
-
-  const getPlanSummary = useCallback((plan: TravelPlan) => {
-    return planService.getPlanSummary(plan);
-  }, []);
 
   return {
     plans,
     loading,
     error,
     generatePlan,
-    generateQuickPlan,
-    generateCustomPlan,
     clearPlans,
-    filterPlansByCost,
-    sortPlansByCost,
-    sortPlansByRating,
-    getPlanSummary,
   };
 };
 
