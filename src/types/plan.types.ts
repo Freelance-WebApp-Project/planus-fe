@@ -5,6 +5,51 @@ export interface TravelPlan {
   itinerary: ItineraryItem[];
 }
 
+export interface SavedPlan {
+  _id: string;
+  createdBy: string;
+  updatedBy: string;
+  userId: {
+    _id: string;
+    username: string;
+    email: string;
+    avatar: string | null;
+  };
+  planTitle: string;
+  totalDuration: string;
+  estimatedCost: number;
+  itinerary: SavedItineraryItem[];
+  isPaid: boolean;
+  isShared: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SavedItineraryItem {
+  placeId: {
+    _id: string;
+    name: string;
+    type: string;
+    images: Array<{
+      _id: string;
+      imageUrl: string;
+    }>;
+    location: {
+      coordinates: {
+        type: 'Point';
+        coordinates: [number, number];
+      };
+      address: string;
+      city: string;
+    };
+    priceRange: number;
+    rating: number;
+  };
+  order: number;
+  distance: string;
+  travelTime: string;
+}
+
 export interface ItineraryItem {
   _id: string;
   order: number;
@@ -60,6 +105,36 @@ export interface GeneratePlanResponse {
     timestamp?: string;
     path?: string;
   };
+}
+
+export interface GetAllPlansResponse {
+  code: number;
+  message: string;
+  success: boolean;
+  data: {
+    records: SavedPlan[];
+    total: number;
+    lastPage: number;
+    page: number;
+    size: number;
+  };
+  error?: {
+    message: string;
+    statusCode?: number;
+    timestamp?: string;
+    path?: string;
+  };
+}
+
+export interface QueryPlanDto {
+  userId?: string;
+  isPaid?: boolean;
+  isShared?: boolean;
+  minCost?: number;
+  maxCost?: number;
+  page?: number;
+  size?: number;
+  search?: string;
 }
 
 export interface PlanFilters {

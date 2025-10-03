@@ -21,6 +21,7 @@ export const API_CONFIG = {
     },
     PLAN: {
       GENERATE: '/mcp/generate-travel-plan',
+      GET_ALL: '/plans/get-all',
     },
     WALLET: {
       BALANCE: '/wallet/balance',
