@@ -125,6 +125,14 @@ export interface PlaceListApiResponse {
   };
 }
 
+// Response type for random places API
+export interface RandomPlacesApiResponse {
+  code: number;
+  success: boolean;
+  message: string;
+  data: Place[];
+}
+
 // Navigation parameter types for SearchScreen
 export interface SearchScreenParams {
   searchQuery?: string;

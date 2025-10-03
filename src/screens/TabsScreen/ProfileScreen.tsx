@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -15,12 +15,17 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../hoc/AuthContext";
 import { showToast } from "../../utils/toast.utils";
 import { userService } from "../../services/user.service";
+import { useWallet } from "../../hooks/useWallet";
+import { User } from "../../types/auth.types";
 import PremiumPopup from "./PremiumPopup";
 
 const { width } = Dimensions.get("window");
 
 const ProfileScreen = ({ navigation }: any) => {
   const { user, logout, isLoading, setUser } = useAuth();
+  const { buyVip, loading: walletLoading } = useWallet();
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [isLoadingUser, setIsLoadingUser] = useState(false);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [editData, setEditData] = useState({
@@ -31,6 +36,29 @@ const ProfileScreen = ({ navigation }: any) => {
     income: "",
   });
   const [isPremiumPopupVisible, setIsPremiumPopupVisible] = useState(false);
+
+  // Fetch current user data from API
+  const fetchCurrentUser = async () => {
+    setIsLoadingUser(true);
+    try {
+      const response = await userService.getMe();
+      if (response.success && response.data) {
+        setCurrentUser(response.data);
+        // Also update the context user
+        setUser(response.data);
+      } else {
+        showToast.error("Lỗi", "Không thể tải thông tin người dùng");
+      }
+    } catch (error) {
+      showToast.error("Lỗi", "Có lỗi xảy ra khi tải thông tin");
+    } finally {
+      setIsLoadingUser(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCurrentUser();
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -51,6 +79,24 @@ const ProfileScreen = ({ navigation }: any) => {
     });
   };
 
+  const formatPremiumEndDate = (dateString: string) => {
+    if (!dateString) return "Chưa có";
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = date.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays <= 0) {
+      return "Đã hết hạn";
+    } else if (diffDays === 1) {
+      return "Hết hạn ngày mai";
+    } else if (diffDays <= 7) {
+      return `Còn ${diffDays} ngày`;
+    } else {
+      return formatDate(dateString);
+    }
+  };
+
   const formatCurrency = (amount: number) => {
     if (!amount) return "Chưa cập nhật";
     return amount.toLocaleString("vi-VN") + " VND";
@@ -58,11 +104,11 @@ const ProfileScreen = ({ navigation }: any) => {
 
   const openEditModal = () => {
     setEditData({
-      fullName: user?.fullName || "",
-      email: user?.email || "",
-      gender: user?.gender || "",
-      phone: user?.phone || "",
-      income: user?.income || "",
+      fullName: currentUser?.fullName || "",
+      email: currentUser?.email || "",
+      gender: currentUser?.gender || "",
+      phone: currentUser?.phone || "",
+      income: currentUser?.income?.toString() || "",
     });
     setIsEditModalVisible(true);
   };
@@ -96,25 +142,26 @@ const ProfileScreen = ({ navigation }: any) => {
         fullName: editData.fullName.trim(),
         email: editData.email.trim(),
         gender: editData.gender,
-        dob: user?.dob || {},
-        income: editData.income ? parseInt(editData.income) : user?.income,
-        favorites: user?.favorites || [],
+        dob: currentUser?.dob || {},
+        income: editData.income ? parseInt(editData.income) : currentUser?.income,
+        favorites: currentUser?.favorites || [],
       };
 
       const response = await userService.updateProfile(updateData);
 
       if (response.success) {
-        // Update user in context
-        if (user) {
+        // Update user in context and local state
+        if (currentUser) {
           const updatedUser = {
-            ...user,
+            ...currentUser,
             fullName: editData.fullName.trim(),
             email: editData.email.trim(),
             gender: editData.gender,
             phone: editData.phone,
-            income: editData.income ? parseInt(editData.income) : user.income,
+            income: editData.income ? parseInt(editData.income) : currentUser.income,
           };
 
+          setCurrentUser(updatedUser);
           setUser(updatedUser);
         }
         showToast.success("Thành công", "Cập nhật hồ sơ thành công");
@@ -131,20 +178,45 @@ const ProfileScreen = ({ navigation }: any) => {
     }
   };
 
-  const handlePremiumSubscribe = (plan: "monthly" | "yearly") => {
-    // In real app, this would call API to subscribe to premium
-    console.log("Subscribing to premium plan:", plan);
-    showToast.success(
-      "Thành công",
-      `Đăng ký Premium ${
-        plan === "monthly" ? "hàng tháng" : "hàng năm"
-      } thành công!`
-    );
+  const handlePremiumSubscribe = async (plan: "monthly" | "yearly") => {
+    try {
+      const vipData = {
+        amount: plan === "monthly" ? 50000 : 500000, // 50k for 1 month, 500k for 12 months
+        months: plan === "monthly" ? 1 : 12,
+      };
+
+      const result = await buyVip(vipData);
+      
+      if (result) {
+        showToast.success(
+          "Thành công",
+          `Đăng ký Premium ${
+            plan === "monthly" ? "hàng tháng" : "hàng năm"
+          } thành công!`
+        );
+        setIsPremiumPopupVisible(false);
+        
+        // Update user premium status
+        if (currentUser) {
+          const updatedUser = {
+            ...currentUser,
+            isPremium: true,
+            premiumEndDate: new Date(Date.now() + (plan === "monthly" ? 30 : 365) * 24 * 60 * 60 * 1000).toISOString(),
+          };
+          setCurrentUser(updatedUser);
+          setUser(updatedUser);
+        }
+      } else {
+        showToast.error("Lỗi", "Không thể mua gói Premium");
+      }
+    } catch (error) {
+      showToast.error("Lỗi", "Có lỗi xảy ra khi mua Premium");
+    }
   };
 
-  const isPremiumUser = user?.isPremium || false;
+  const isPremiumUser = currentUser?.isPremium || false;
 
-  if (isLoading) {
+  if (isLoading || isLoadingUser) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
@@ -165,14 +237,14 @@ const ProfileScreen = ({ navigation }: any) => {
           <View style={styles.avatarContainer}>
             <View style={styles.avatar}>
               <Text style={styles.avatarText}>
-                {user?.fullName?.charAt(0)?.toUpperCase() || "👤"}
+                {currentUser?.fullName?.charAt(0)?.toUpperCase() || "👤"}
               </Text>
             </View>
           </View>
           <Text style={styles.userName}>
-            {user?.fullName || "Chưa cập nhật"}
+            {currentUser?.fullName || "Chưa cập nhật"}
           </Text>
-          <Text style={styles.userEmail}>{user?.email || "Chưa cập nhật"}</Text>
+          <Text style={styles.userEmail}>{currentUser?.email || "Chưa cập nhật"}</Text>
         </View>
 
         {/* Premium Status Section */}
@@ -186,13 +258,18 @@ const ProfileScreen = ({ navigation }: any) => {
               </View>
               <View style={styles.premiumDetails}>
                 <Text style={styles.premiumTitle}>
-                  {isPremiumUser ? "Premium Active" : "Upgrade to Premium"}
+                  {isPremiumUser ? "Premium Active" : "Nâng cấp tài khoản Premium"}
                 </Text>
                 <Text style={styles.premiumSubtitle}>
                   {isPremiumUser
-                    ? "Tài khoản Premium của bạn đang hoạt động"
+                    ? `Tài khoản Premium của bạn đang hoạt động`
                     : "Mở khóa tất cả tính năng cao cấp"}
                 </Text>
+                {isPremiumUser && currentUser?.premiumEndDate && (
+                  <Text style={styles.premiumEndDate}>
+                    {formatPremiumEndDate(currentUser.premiumEndDate)}
+                  </Text>
+                )}
               </View>
             </View>
             {!isPremiumUser && (
@@ -208,81 +285,6 @@ const ProfileScreen = ({ navigation }: any) => {
               <View style={styles.premiumActiveBadge}>
                 <Text style={styles.premiumActiveText}>✓</Text>
               </View>
-            )}
-          </View>
-        </View>
-
-        {/* Profile Information */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Thông tin cá nhân</Text>
-
-          <View style={styles.infoCard}>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Họ và tên</Text>
-              <Text style={styles.infoValue}>
-                {user?.fullName || "Chưa cập nhật"}
-              </Text>
-            </View>
-
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Email</Text>
-              <Text style={styles.infoValue}>
-                {user?.email || "Chưa cập nhật"}
-              </Text>
-            </View>
-
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Giới tính</Text>
-              <Text style={styles.infoValue}>
-                {user?.gender === "male" ? "Nam" : "Nữ"}
-              </Text>
-            </View>
-
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Ngày sinh</Text>
-              <Text style={styles.infoValue}>
-                {formatDate(user?.dob || "")}
-              </Text>
-            </View>
-
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Số điện thoại</Text>
-              <Text style={styles.infoValue}>
-                {user?.phone || "Chưa cập nhật"}
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Income Information */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Thông tin thu nhập</Text>
-
-          <View style={styles.infoCard}>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Thu nhập</Text>
-              <Text style={styles.infoValue}>
-                {user?.income ? formatCurrency(user.income) : "Chưa cập nhật"}
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Interests */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Sở thích</Text>
-
-          <View style={styles.infoCard}>
-            {user?.favorites && user.favorites.length > 0 ? (
-              <View style={styles.interestsContainer}>
-                {user.favorites.map((interest, index) => (
-                  <View key={index} style={styles.interestTag}>
-                    <Text style={styles.interestText}>{interest}</Text>
-                  </View>
-                ))}
-              </View>
-            ) : (
-              <Text style={styles.noDataText}>Chưa cập nhật sở thích</Text>
             )}
           </View>
         </View>
@@ -310,6 +312,81 @@ const ProfileScreen = ({ navigation }: any) => {
               <Text style={styles.walletButtonText}>Xem ví</Text>
               <Text style={styles.walletButtonArrow}>→</Text>
             </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Profile Information */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Thông tin cá nhân</Text>
+
+          <View style={styles.infoCard}>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Họ và tên</Text>
+              <Text style={styles.infoValue}>
+                {currentUser?.fullName || "Chưa cập nhật"}
+              </Text>
+            </View>
+
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Email</Text>
+              <Text style={styles.infoValue}>
+                {currentUser?.email || "Chưa cập nhật"}
+              </Text>
+            </View>
+
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Giới tính</Text>
+              <Text style={styles.infoValue}>
+                {currentUser?.gender === "male" ? "Nam" : "Nữ"}
+              </Text>
+            </View>
+
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Ngày sinh</Text>
+              <Text style={styles.infoValue}>
+                {formatDate(currentUser?.dob || "")}
+              </Text>
+            </View>
+
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Số điện thoại</Text>
+              <Text style={styles.infoValue}>
+                {currentUser?.phone || "Chưa cập nhật"}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Income Information */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Thông tin thu nhập</Text>
+
+          <View style={styles.infoCard}>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Thu nhập</Text>
+              <Text style={styles.infoValue}>
+                {currentUser?.income ? formatCurrency(currentUser.income) : "Chưa cập nhật"}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Interests */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Sở thích</Text>
+
+          <View style={styles.infoCard}>
+            {currentUser?.favorites && currentUser.favorites.length > 0 ? (
+              <View style={styles.interestsContainer}>
+                {currentUser.favorites.map((interest, index) => (
+                  <View key={index} style={styles.interestTag}>
+                    <Text style={styles.interestText}>{interest}</Text>
+                  </View>
+                ))}
+              </View>
+            ) : (
+              <Text style={styles.noDataText}>Chưa cập nhật sở thích</Text>
+            )}
           </View>
         </View>
 
@@ -476,6 +553,7 @@ const ProfileScreen = ({ navigation }: any) => {
         visible={isPremiumPopupVisible}
         onClose={() => setIsPremiumPopupVisible(false)}
         onSubscribe={handlePremiumSubscribe}
+        isLoading={walletLoading}
       />
     </SafeAreaView>
   );
@@ -864,6 +942,12 @@ const styles = StyleSheet.create({
   premiumSubtitle: {
     fontSize: 14,
     color: "#666",
+  },
+  premiumEndDate: {
+    fontSize: 12,
+    color: "#4CAF50",
+    fontWeight: "600",
+    marginTop: 4,
   },
   premiumButton: {
     flexDirection: "row",

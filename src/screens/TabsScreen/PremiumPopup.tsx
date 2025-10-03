@@ -7,6 +7,7 @@ import {
   Modal,
   Dimensions,
   ScrollView,
+  ActivityIndicator,
 } from 'react-native';
 import { showToast } from '../../utils/toast.utils';
 
@@ -15,27 +16,18 @@ const { width, height } = Dimensions.get('window');
 interface PremiumPopupProps {
   visible: boolean;
   onClose: () => void;
-  onSubscribe: (plan: 'monthly' | 'yearly') => void;
+  onSubscribe: (plan: 'monthly' | 'yearly') => Promise<void>;
+  isLoading?: boolean;
 }
 
-const PremiumPopup: React.FC<PremiumPopupProps> = ({ visible, onClose, onSubscribe }) => {
+const PremiumPopup: React.FC<PremiumPopupProps> = ({ visible, onClose, onSubscribe, isLoading = false }) => {
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('monthly');
-  const [isSubscribing, setIsSubscribing] = useState(false);
 
   const handleSubscribe = async () => {
     try {
-      setIsSubscribing(true);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      onSubscribe(selectedPlan);
-      showToast.success('Thành công', 'Đăng ký Premium thành công!');
-      onClose();
+      await onSubscribe(selectedPlan);
     } catch (error) {
-      showToast.error('Lỗi', 'Có lỗi xảy ra khi đăng ký Premium');
-    } finally {
-      setIsSubscribing(false);
+      // Error handling is done in parent component
     }
   };
 
@@ -43,7 +35,7 @@ const PremiumPopup: React.FC<PremiumPopupProps> = ({ visible, onClose, onSubscri
     {
       id: 'monthly',
       name: 'Hàng tháng',
-      price: '39.000',
+      price: '50.000',
       period: 'VND/Tháng',
       originalPrice: null,
       discount: null,
@@ -52,10 +44,10 @@ const PremiumPopup: React.FC<PremiumPopupProps> = ({ visible, onClose, onSubscri
     {
       id: 'yearly',
       name: 'Hàng năm',
-      price: '350.000',
+      price: '500.000',
       period: 'VND/Năm',
-      originalPrice: '468.000',
-      discount: '25%',
+      originalPrice: '600.000',
+      discount: '17%',
       popular: true,
     },
   ];
@@ -184,13 +176,18 @@ const PremiumPopup: React.FC<PremiumPopupProps> = ({ visible, onClose, onSubscri
           {/* Subscribe Button */}
           <View style={styles.footer}>
             <TouchableOpacity
-              style={[styles.subscribeButton, isSubscribing && styles.subscribeButtonDisabled]}
+              style={[styles.subscribeButton, isLoading && styles.subscribeButtonDisabled]}
               onPress={handleSubscribe}
-              disabled={isSubscribing}
+              disabled={isLoading}
             >
-              <Text style={styles.subscribeButtonText}>
-                {isSubscribing ? 'Đang xử lý...' : 'Đăng ký ngay!'}
-              </Text>
+              {isLoading ? (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                  <Text style={styles.subscribeButtonText}>Đang xử lý...</Text>
+                </View>
+              ) : (
+                <Text style={styles.subscribeButtonText}>Đăng ký ngay!</Text>
+              )}
             </TouchableOpacity>
           </View>
         </View>
@@ -414,6 +411,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#FFFFFF',
+  },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 

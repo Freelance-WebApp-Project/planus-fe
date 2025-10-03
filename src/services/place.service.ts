@@ -5,6 +5,7 @@ import {
   QueryPlaceDto,
   PlaceListApiResponse,
   PlaceResponse,
+  RandomPlacesApiResponse,
 } from '../types/place.types';
 
 class PlaceService {
@@ -110,6 +111,27 @@ class PlaceService {
           path: API_CONFIG.ENDPOINTS.PLACE.GET_ONE,
         },
       };
+    }
+  }
+
+  /**
+   * Get random places
+   * @returns Promise<Place[]>
+   */
+  async getRandom(): Promise<Place[]> {
+    try {
+      const response = await apiService.get<RandomPlacesApiResponse>(
+        API_CONFIG.ENDPOINTS.PLACE.RANDOM
+      );
+      
+      if (response.success && response.data && response.data.data) {
+        return response.data.data;
+      }
+      
+      return [];
+    } catch (error) {
+      console.error('Failed to fetch random places:', error);
+      return [];
     }
   }
 }

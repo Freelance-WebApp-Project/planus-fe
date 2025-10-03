@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { CategoryItem, PlaceType } from '../../types/place.types';
+import { CategoryItem, PlaceType, Place } from '../../types/place.types';
+import { placeService } from '../../services/place.service';
+import { API_CONFIG } from '../../constants/api.constants';
 
 const { width } = Dimensions.get('window');
 
@@ -30,6 +32,7 @@ interface SuggestionItem {
 
 const HomeScreen = ({ navigation }: any) => {
   const [searchText, setSearchText] = useState('');
+  const [randomPlaces, setRandomPlaces] = useState<Place[]>([]);
 
   // Categories data
   const categories: CategoryItem[] = [
@@ -43,18 +46,41 @@ const HomeScreen = ({ navigation }: any) => {
     { id: '8', title: 'Xem thêm', icon: '⋯' },
   ];
 
-  // Popular destinations
-  const destinations: DestinationItem[] = [
-    { id: '1', title: 'Ocean Park', image: 'https://via.placeholder.com/200x150/87CEEB/FFFFFF?text=Ocean+Park' },
-    { id: '2', title: 'Bảo tàng', image: 'https://via.placeholder.com/200x150/4169E1/FFFFFF?text=Museum' },
-    { id: '3', title: 'Hồ Tây', image: 'https://via.placeholder.com/200x150/9370DB/FFFFFF?text=Ho+Tay' },
-  ];
+  // Fetch random places on component mount
+  useEffect(() => {
+    const fetchRandomPlaces = async () => {
+      try {
+        const places = await placeService.getRandom();
+        setRandomPlaces(places);
+      } catch (error) {
+        console.error('Error fetching random places:', error);
+      }
+    };
 
-  // Suggestions
-  const suggestions: SuggestionItem[] = [
-    { id: '1', title: 'Đường núi', image: 'https://via.placeholder.com/300x150/228B22/FFFFFF?text=Mountain+Road' },
-    { id: '2', title: 'Thành phố cổ', image: 'https://via.placeholder.com/300x150/DC143C/FFFFFF?text=Old+City' },
-  ];
+    fetchRandomPlaces();
+  }, []);
+
+  // Helper function to truncate title if too long
+  const truncateTitle = (title: string, maxLength: number = 20) => {
+    return title.length > maxLength ? title.substring(0, maxLength) + '...' : title;
+  };
+  // Convert random places to destinations format (3 items)
+  const destinations: DestinationItem[] = randomPlaces.slice(0, 3).map((place, index) => ({
+    id: place._id,
+    title: truncateTitle(place.name),
+    image: place.images?.[0]?.imageUrl 
+      ? `https://storage.googleapis.com/balerion/images/${place.images[0].imageUrl}` 
+      : `https://via.placeholder.com/200x150/87CEEB/FFFFFF?text=${encodeURIComponent(place.name)}`
+  }));
+
+  // Convert random places to suggestions format (3 items)
+  const suggestions: SuggestionItem[] = randomPlaces.slice(3, 6).map((place, index) => ({
+    id: place._id,
+    title: truncateTitle(place.name, 25),
+    image: place.images?.[0]?.imageUrl 
+      ? `https://storage.googleapis.com/balerion/images/${place.images[0].imageUrl}` 
+      : `https://via.placeholder.com/300x150/228B22/FFFFFF?text=${encodeURIComponent(place.name)}`
+  }));
 
   const handleCategoryPress = (item: CategoryItem) => {
     if (item.id === '8') {
@@ -106,7 +132,12 @@ const HomeScreen = ({ navigation }: any) => {
   const renderDestinationItem = ({ item }: { item: DestinationItem }) => (
     <TouchableOpacity style={styles.destinationItem}>
       <View style={styles.destinationImageContainer}>
-        <View style={[styles.destinationImage, { backgroundColor: '#87CEEB' }]} />
+        <Image 
+          source={{ uri: item.image }} 
+          style={styles.destinationImage}
+          defaultSource={{ uri: 'https://via.placeholder.com/200x150/87CEEB/FFFFFF?text=Loading' }}
+          onError={() => console.log('Error loading destination image:', item.image)}
+        />
       </View>
       <Text style={styles.destinationText}>{item.title}</Text>
     </TouchableOpacity>
@@ -114,7 +145,14 @@ const HomeScreen = ({ navigation }: any) => {
 
   const renderSuggestionItem = ({ item }: { item: SuggestionItem }) => (
     <TouchableOpacity style={styles.suggestionItem}>
-      <View style={[styles.suggestionImage, { backgroundColor: '#4169E1' }]} />
+      <View style={styles.suggestionImageContainer}>
+        <Image 
+          source={{ uri: item.image }} 
+          style={styles.suggestionImage}
+          defaultSource={{ uri: 'https://via.placeholder.com/120x100/4169E1/FFFFFF?text=Loading' }}
+          onError={() => console.log('Error loading suggestion image:', item.image)}
+        />
+      </View>
       <Text style={styles.suggestionText}>{item.title}</Text>
     </TouchableOpacity>
   );
@@ -322,7 +360,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   section: {
-    marginTop: 25,
+    marginTop: 35,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -331,6 +369,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   sectionTitle: {
+    marginTop: 10,
     fontSize: 20,
     fontWeight: 'bold',
     color: '#333',
@@ -417,6 +456,9 @@ const styles = StyleSheet.create({
   },
   suggestionItem: {
     marginRight: 15,
+    alignItems: 'center',
+  },
+  suggestionImageContainer: {
     borderRadius: 15,
     overflow: 'hidden',
     shadowColor: '#000',
@@ -429,22 +471,16 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   suggestionImage: {
-    width: 200,
-    height: 120,
-    justifyContent: 'flex-end',
-    paddingHorizontal: 15,
-    paddingVertical: 15,
+    width: 120,
+    height: 100,
+    borderRadius: 15,
   },
   suggestionText: {
-    position: 'absolute',
-    bottom: 15,
-    left: 15,
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#FFF',
-    textShadowColor: 'rgba(0,0,0,0.5)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 2,
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginTop: 8,
+    textAlign: 'center',
   },
 });
 

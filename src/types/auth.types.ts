@@ -13,6 +13,7 @@ export interface User {
   avatar?: any;
   favorites?: string[];
   isPremium?: boolean;
+  premiumEndDate?: string;
 }
 
 export interface LoginRequest {

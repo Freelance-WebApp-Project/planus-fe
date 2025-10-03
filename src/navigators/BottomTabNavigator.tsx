@@ -8,6 +8,7 @@ import FavoritesScreen from '../screens/TabsScreen/FavoritesScreen';
 import SearchScreen from '../screens/TabsScreen/SearchScreen';
 import ProfileScreen from '../screens/TabsScreen/ProfileScreen';
 import WalletScreen from '../screens/Profile/WalletScreen';
+import TransactionHistoryScreen from '../screens/Profile/TransactionHistoryScreen';
 import TripPlanningInputScreen from '../screens/TripPlanning/TripPlanningInputScreen';
 import SelectDestinationScreen from '../screens/TripPlanning/SelectDestinationScreen';
 import SuggestedPlansScreen from '../screens/TripPlanning/SuggestedPlansScreen';
@@ -33,6 +34,7 @@ const MainStack = () => {
       <Stack.Screen name="TripPlanning" component={TripPlanningInputScreen} />
       <Stack.Screen name="SelectDestination" component={SelectDestinationScreen} />
       <Stack.Screen name="SuggestedPlans" component={SuggestedPlansScreen} />
+      <Stack.Screen name="TransactionHistory" component={TransactionHistoryScreen} />
     </Stack.Navigator>
   );
 };
