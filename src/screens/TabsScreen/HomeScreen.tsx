@@ -69,7 +69,7 @@ const HomeScreen = ({ navigation }: any) => {
     id: place._id,
     title: truncateTitle(place.name),
     image: place.images?.[0]?.imageUrl 
-      ? `https://storage.googleapis.com/balerion/images/${place.images[0].imageUrl}` 
+      ? `${API_CONFIG.UPLOADS_URL}/${place.images[0].imageUrl}` 
       : `https://via.placeholder.com/200x150/87CEEB/FFFFFF?text=${encodeURIComponent(place.name)}`
   }));
 
@@ -78,7 +78,7 @@ const HomeScreen = ({ navigation }: any) => {
     id: place._id,
     title: truncateTitle(place.name, 25),
     image: place.images?.[0]?.imageUrl 
-      ? `https://storage.googleapis.com/balerion/images/${place.images[0].imageUrl}` 
+      ? `${API_CONFIG.UPLOADS_URL}/${place.images[0].imageUrl}` 
       : `https://via.placeholder.com/300x150/228B22/FFFFFF?text=${encodeURIComponent(place.name)}`
   }));
 

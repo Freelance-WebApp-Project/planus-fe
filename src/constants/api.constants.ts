@@ -1,6 +1,8 @@
 export const API_CONFIG = {
   BASE_URL: process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api',
-  UPLOADS_URL: process.env.EXPO_PUBLIC_UPLOADS_URL || 'http://localhost:3000/uploads',
+  UPLOADS_URL: process.env.EXPO_PUBLIC_UPLOADS_URL || 'https://storage.googleapis.com/balerion/images',
+  NOMINATIM_URL: process.env.EXPO_PUBLIC_NOMINATIM_URL || 'https://nominatim.openstreetmap.org',
+  OSRM_URL: process.env.EXPO_PUBLIC_OSRM_URL || 'https://router.project-osrm.org',
   ENDPOINTS: {
     AUTH: {
       LOGIN: '/auth/login',

@@ -21,6 +21,7 @@ import {
   TravelPlan,
 } from "../../types/plan.types";
 import { planService } from "../../services/plan.service";
+import { API_CONFIG } from "../../constants/api.constants";
 
 const { width } = Dimensions.get("window");
 const cardWidth = (width - 60) / 3; // 3 cards per row with margins
@@ -61,7 +62,7 @@ const SuggestedPlansScreen = () => {
   );
 
   const [loading, setLoading] = useState(true);
-  const [suggestedPlans, setSuggestedPlans] = useState<PlaceInfo[]>([]);
+  const [suggestedPlans, setSuggestedPlans] = useState<TravelPlan[]>([]);
 
   const handlePlanSelect = (planId: string) => {
     setSelectedPlan(planId);
@@ -72,45 +73,41 @@ const SuggestedPlansScreen = () => {
     console.log("Selected plan:", selectedPlan);
   };
 
-  const renderPlanCard = ({ item }: { item: PlaceInfo }) => (
-    <TouchableOpacity
-      style={[
-        styles.planCard,
-        selectedPlan === item._id && styles.selectedPlanCard,
-      ]}
-      onPress={() => handlePlanSelect(item._id)}
-    >
-      <Image source={{ uri: item.images[0] }} style={styles.planImage} />
-      <View style={styles.planInfo}>
-        <View style={styles.ratingContainer}>
-          {[...Array(5)].map((_, index) => (
-            <Text
-              key={index}
-              style={[
-                styles.star,
-                index < Math.round(item.rating)
-                  ? styles.starFilled
-                  : styles.starEmpty,
-              ]}
-            >
-              ★
-            </Text>
-          ))}
+  const renderPlanCard = ({ item }: { item: TravelPlan }) => {
+    const firstPlace = item.itinerary[0]?.placeInfo;
+    const imageUrl = firstPlace?.images?.[0] 
+      ? `${API_CONFIG.UPLOADS_URL}/${firstPlace.images[0]}` 
+      : `https://via.placeholder.com/200x150/87CEEB/FFFFFF?text=${encodeURIComponent(item.planTitle)}`;
+    
+    return (
+      <TouchableOpacity
+        style={[
+          styles.planCard,
+          selectedPlan === item.planTitle && styles.selectedPlanCard,
+        ]}
+        onPress={() => handlePlanSelect(item.planTitle)}
+      >
+        <Image source={{ uri: imageUrl }} style={styles.planImage} />
+        <View style={styles.planInfo}>
+          <Text style={styles.planTitle}>{item.planTitle}</Text>
+          <View style={styles.planDetails}>
+            <Text style={styles.planDuration}>⏰ {item.totalDuration}</Text>
+            <Text style={styles.planCost}>💰 {item.estimatedCost.toLocaleString()}đ</Text>
+          </View>
+          <Text style={styles.planPlacesCount}>
+            📍 {item.itinerary.length} địa điểm
+          </Text>
         </View>
-        <View style={styles.locationContainer}>
-          {/* <Text style={styles.locationIcon}>📍</Text> */}
-          <Text style={styles.locationText}>{item.location.address}</Text>
-        </View>
-      </View>
-    </TouchableOpacity>
-  );
+      </TouchableOpacity>
+    );
+  };
 
   const getRoute = async (
     start: { lat: number; lng: number },
     end: { lat: number; lng: number }
   ) => {
     try {
-      const url = `https://router.project-osrm.org/route/v1/driving/${start.lng},${start.lat};${end.lng},${end.lat}?overview=full&geometries=geojson`;
+      const url = `${API_CONFIG.OSRM_URL}/route/v1/driving/${start.lng},${start.lat};${end.lng},${end.lat}?overview=full&geometries=geojson`;
       const response = await fetch(url);
       const data = await response.json();
 
@@ -190,15 +187,10 @@ const SuggestedPlansScreen = () => {
     try {
       setLoading(true);
       const response = await planService.generatePlan(request);
-      if (response.success && response.data) {
-        // chỉ lấy placeInfo từ tất cả kế hoạch
-        const places = response.data.plans.flatMap((plan: any) =>
-          plan.itinerary.map((it: any) => it.placeInfo)
-        );
-        console.log("Generated plans:", places);
-        setSuggestedPlans(places);
+        if (response && response.success && response.data) {
+          setSuggestedPlans(response.data.plans);
       } else {
-        console.error("API Error:", response.error?.message);
+        console.error("API Error:", response?.error?.message);
       }
     } catch (error) {
       console.error("Error calling generatePlan:", error);
@@ -213,6 +205,11 @@ const SuggestedPlansScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Kế hoạch gợi ý</Text>
+      </View>
+
       {/* Header with Background Image */}
       <View style={styles.headerContainer}>
         <MapView
@@ -267,14 +264,6 @@ const SuggestedPlansScreen = () => {
               </Text>
             </View>
             <View style={styles.travelDetails}>
-              <Text style={styles.travelIcon}>🏍️</Text>
-              <Text style={styles.travelText}>Xe máy</Text>
-            </View>
-          </View>
-
-          <View style={styles.travelTo}>
-            <Text style={styles.travelLabel}>Đến: {end.address}</Text>
-            <View style={styles.travelDetails}>
               <Text style={styles.travelIcon}>⏰</Text>
               {distance !== null && travelTime && (
                 <Text style={styles.travelText}>
@@ -283,6 +272,10 @@ const SuggestedPlansScreen = () => {
                 </Text>
               )}
             </View>
+          </View>
+
+          <View style={styles.travelTo}>
+            <Text style={styles.travelLabel}>Đến: {end.address}</Text>
           </View>
         </View>
       </View>
@@ -302,14 +295,9 @@ const SuggestedPlansScreen = () => {
             <FlatList
               data={suggestedPlans}
               renderItem={renderPlanCard}
-              numColumns={3}
               showsVerticalScrollIndicator={false}
               contentContainerStyle={styles.plansGrid}
-              columnWrapperStyle={styles.planRow}
             />
-            <TouchableOpacity style={styles.moreButton}>
-              <Text style={styles.moreButtonText}>Thêm...</Text>
-            </TouchableOpacity>
           </View>
         )}
       </View>
@@ -339,6 +327,21 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F5F5F5",
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: "#FFF",
+    borderBottomWidth: 1,
+    borderBottomColor: "#E9ECEF",
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#212529",
   },
   headerContainer: {
     height: 200,
@@ -414,15 +417,14 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   travelInfo: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    flexDirection: "column",
+    gap: 16,
   },
   travelFrom: {
-    flex: 1,
+    width: "100%",
   },
   travelTo: {
-    flex: 1,
-    alignItems: "flex-end",
+    width: "100%",
   },
   travelLabel: {
     fontSize: 16,
@@ -458,12 +460,7 @@ const styles = StyleSheet.create({
   plansGrid: {
     paddingBottom: 20,
   },
-  planRow: {
-    justifyContent: "space-between",
-    marginBottom: 16,
-  },
   planCard: {
-    width: cardWidth,
     backgroundColor: "#FFF",
     borderRadius: 12,
     overflow: "hidden",
@@ -477,31 +474,44 @@ const styles = StyleSheet.create({
     elevation: 3,
     borderWidth: 2,
     borderColor: "transparent",
+    marginBottom: 16,
   },
   selectedPlanCard: {
     borderColor: "#FF4444",
   },
   planImage: {
     width: "100%",
-    height: cardWidth * 0.7,
+    height: 150,
     resizeMode: "cover",
   },
   planInfo: {
-    padding: 12,
+    padding: 16,
   },
-  ratingContainer: {
-    flexDirection: "row",
+  planTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#212529",
     marginBottom: 8,
   },
-  star: {
-    fontSize: 12,
-    marginRight: 2,
+  planDetails: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 8,
   },
-  starFilled: {
-    color: "#FFD700",
+  planDuration: {
+    fontSize: 14,
+    color: "#6C757D",
+    fontWeight: "500",
   },
-  starEmpty: {
-    color: "#E9ECEF",
+  planCost: {
+    fontSize: 14,
+    color: "#28A745",
+    fontWeight: "600",
+  },
+  planPlacesCount: {
+    fontSize: 14,
+    color: "#6C757D",
+    fontWeight: "500",
   },
   moreButton: {
     alignItems: "center",

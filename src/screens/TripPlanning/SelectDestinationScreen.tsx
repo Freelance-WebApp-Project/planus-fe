@@ -16,6 +16,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import * as Location from "expo-location";
 import MapView, { Marker, Polyline } from "react-native-maps";
+import { API_CONFIG } from "../../constants/api.constants";
 
 const { width } = Dimensions.get("window");
 
@@ -95,7 +96,7 @@ const SelectDestinationScreen = () => {
   const searchLocation = async (query: string) => {
     try {
       if (!query.trim()) return [];
-      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
+      const url = `${API_CONFIG.NOMINATIM_URL}/search?q=${encodeURIComponent(
         query
       )}&format=json&limit=5`;
 
@@ -150,7 +151,7 @@ const SelectDestinationScreen = () => {
     coords: Location.LocationObjectCoords
   ) => {
     try {
-      const url = `https://nominatim.openstreetmap.org/reverse?lat=${coords.latitude}&lon=${coords.longitude}&format=json`;
+      const url = `${API_CONFIG.NOMINATIM_URL}/reverse?lat=${coords.latitude}&lon=${coords.longitude}&format=json`;
 
       const response = await fetch(url, {
         headers: {
@@ -181,7 +182,7 @@ const SelectDestinationScreen = () => {
     end: { lat: number; lng: number }
   ) => {
     try {
-      const url = `https://router.project-osrm.org/route/v1/driving/${start.lng},${start.lat};${end.lng},${end.lat}?overview=full&geometries=geojson`;
+      const url = `${API_CONFIG.OSRM_URL}/route/v1/driving/${start.lng},${start.lat};${end.lng},${end.lat}?overview=full&geometries=geojson`;
       console.log("Fetching:", url);
 
       const response = await fetch(url);
@@ -269,23 +270,16 @@ const SelectDestinationScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Chọn địa điểm</Text>
+      </View>
+
       <KeyboardAvoidingView
         style={styles.keyboardContainer}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <ScrollView showsVerticalScrollIndicator={false}>
-          {/* Header */}
-          <View style={styles.header}>
-            <View style={styles.locationInfo}>
-              <Text style={styles.locationIcon}>📍</Text>
-              <Text style={styles.locationText}>Hà Nội, Việt Nam</Text>
-              <Text style={styles.chevronIcon}>▼</Text>
-            </View>
-            <TouchableOpacity style={styles.notificationButton}>
-              <Text style={styles.bellIcon}>🔔</Text>
-            </TouchableOpacity>
-          </View>
-
           {/* Banner */}
           <MapView
             style={styles.map}
@@ -393,9 +387,6 @@ const SelectDestinationScreen = () => {
                 />
               </TouchableOpacity>
             ))}
-            <TouchableOpacity style={styles.moreButton}>
-              <Text style={styles.moreButtonText}>Thêm...</Text>
-            </TouchableOpacity>
           </View>
         </ScrollView>
 
@@ -427,13 +418,18 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
     backgroundColor: "#FFF",
     borderBottomWidth: 1,
-    borderBottomColor: "#EEE",
+    borderBottomColor: "#E9ECEF",
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#212529",
   },
   locationInfo: {
     flexDirection: "row",

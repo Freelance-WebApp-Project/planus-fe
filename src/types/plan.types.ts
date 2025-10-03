@@ -48,8 +48,10 @@ export interface GeneratePlanRequest {
 }
 
 export interface GeneratePlanResponse {
+  code: number;
+  message: string;
   success: boolean;
-  data?: {
+  data: {
     plans: TravelPlan[];
   };
   error?: {

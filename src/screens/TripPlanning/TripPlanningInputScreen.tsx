@@ -65,14 +65,7 @@ const TripPlanningInputScreen = () => {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <View style={styles.locationContainer}>
-          <Text style={styles.locationIcon}>📍</Text>
-          <Text style={styles.locationText}>Hà Nội, Việt Nam</Text>
-          <Text style={styles.dropdownIcon}>▼</Text>
-        </View>
-        <TouchableOpacity style={styles.notificationButton}>
-          <Text style={styles.notificationIcon}>🔔</Text>
-        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Tạo kế hoạch chuyến đi</Text>
       </View>
 
       {/* Banner Image */}
@@ -202,11 +195,18 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 20,
     paddingVertical: 16,
     backgroundColor: "#FFF",
+    borderBottomWidth: 1,
+    borderBottomColor: "#E9ECEF",
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#212529",
   },
   locationContainer: {
     flexDirection: "row",

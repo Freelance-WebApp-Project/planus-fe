@@ -1,10 +1,10 @@
-import { apiService } from './api.service';
-import { API_CONFIG } from '../constants/api.constants';
+import { apiService } from "./api.service";
+import { API_CONFIG } from "../constants/api.constants";
 import {
   GeneratePlanRequest,
   GeneratePlanResponse,
   TravelPlan,
-} from '../types/plan.types';
+} from "../types/plan.types";
 
 class PlanService {
   /**
@@ -12,35 +12,38 @@ class PlanService {
    * @param request - Travel plan generation request
    * @returns Promise<GeneratePlanResponse>
    */
-  async generatePlan(request: GeneratePlanRequest): Promise<GeneratePlanResponse> {
+  async generatePlan(
+    request: GeneratePlanRequest
+  ): Promise<GeneratePlanResponse | undefined> {
     try {
-      console.log('Generating plan with request:', request);
-      const response = await apiService.post<GeneratePlanResponse['data']>(
+      const response = await apiService.post<GeneratePlanResponse>(
         API_CONFIG.ENDPOINTS.PLAN.GENERATE,
         request
       );
- console.log('Generating plan with request:', request);
       // Handle the actual API response structure
       if (response.success && response.data) {
         // The API returns { code: 200, data: { plans: [] }, message: "Success", success: true }
         const apiData = response.data as any;
 
-        console.log('API response data:', response);
-
         return {
           success: true,
+          code: apiData.code,
+          message: apiData.message,
           data: {
             plans: apiData.data.plans || [],
-          }
+          },
         };
       }
-
-      return response;
     } catch (error) {
       return {
         success: false,
+        code: 500,
+        message: "Failed to generate travel plan",
+        data: {
+          plans: [],
+        },
         error: {
-          message: 'Failed to generate travel plan',
+          message: "Failed to generate travel plan",
           statusCode: 500,
           timestamp: new Date().toISOString(),
           path: API_CONFIG.ENDPOINTS.PLAN.GENERATE,
@@ -48,7 +51,6 @@ class PlanService {
       };
     }
   }
-
 }
 
 export const planService = new PlanService();
