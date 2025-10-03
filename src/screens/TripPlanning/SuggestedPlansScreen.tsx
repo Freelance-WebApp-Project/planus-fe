@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -8,11 +8,21 @@ import {
   Image,
   Dimensions,
   FlatList,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, useRoute } from '@react-navigation/native';
+  ActivityIndicator,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useNavigation, useRoute } from "@react-navigation/native";
+import * as Location from "expo-location";
+import MapView, { Marker, Polyline } from "react-native-maps";
+import {
+  GeneratePlanRequest,
+  GeneratePlanResponse,
+  PlaceInfo,
+  TravelPlan,
+} from "../../types/plan.types";
+import { planService } from "../../services/plan.service";
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 const cardWidth = (width - 60) / 3; // 3 cards per row with margins
 
 interface SuggestedPlan {
@@ -30,73 +40,28 @@ interface SuggestedPlan {
 const SuggestedPlansScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const { selectedPurpose, selectedDuration, radius } = route.params as any;
+  const { start, end, selectedPurpose, selectedDuration, radius } =
+    route.params as {
+      start: { lat: number; lng: number; address: string };
+      end: { lat: number; lng: number; address: string };
+      selectedPurpose: string;
+      selectedDuration: string;
+      radius: number;
+    };
 
-  const [selectedPlan, setSelectedPlan] = useState<string>('plan1');
+  console.log("Route params:", route.params);
 
-  const suggestedPlans: SuggestedPlan[] = [
-    {
-      id: 'plan1',
-      title: 'Cà phê & Thư giãn',
-      image: 'https://images.unsplash.com/photo-1442512595331-e89e73853f31?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
-      rating: 5,
-      placesCount: 3,
-      distance: '15km',
-      duration: '35 phút',
-      price: '150,000 VND',
-      isSelected: true,
-    },
-    {
-      id: 'plan2',
-      title: 'Ẩm thực Hà Nội',
-      image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
-      rating: 4,
-      placesCount: 6,
-      distance: '12km',
-      duration: '45 phút',
-      price: '200,000 VND',
-    },
-    {
-      id: 'plan3',
-      title: 'Thư viện & Học tập',
-      image: 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
-      rating: 5,
-      placesCount: 5,
-      distance: '8km',
-      duration: '25 phút',
-      price: '80,000 VND',
-    },
-    {
-      id: 'plan4',
-      title: 'Giải trí & Thể thao',
-      image: 'https://images.unsplash.com/photo-1594736797933-d0c0a0b0b0b0?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
-      rating: 4,
-      placesCount: 3,
-      distance: '10km',
-      duration: '30 phút',
-      price: '120,000 VND',
-    },
-    {
-      id: 'plan5',
-      title: 'Chụp ảnh & Kỷ niệm',
-      image: 'https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
-      rating: 4,
-      placesCount: 8,
-      distance: '18km',
-      duration: '50 phút',
-      price: '180,000 VND',
-    },
-    {
-      id: 'plan6',
-      title: 'Karaoke & Ca hát',
-      image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
-      rating: 4,
-      placesCount: 3,
-      distance: '6km',
-      duration: '20 phút',
-      price: '100,000 VND',
-    },
-  ];
+  const [selectedPlan, setSelectedPlan] = useState<string>("plan1");
+
+  const [routeCoords, setRouteCoords] = useState<any[]>([]);
+
+  const [distance, setDistance] = useState<number | null>(null);
+  const [travelTime, setTravelTime] = useState<{ h: number; m: number } | null>(
+    null
+  );
+
+  const [loading, setLoading] = useState(true);
+  const [suggestedPlans, setSuggestedPlans] = useState<PlaceInfo[]>([]);
 
   const handlePlanSelect = (planId: string) => {
     setSelectedPlan(planId);
@@ -104,18 +69,18 @@ const SuggestedPlansScreen = () => {
 
   const handleContinue = () => {
     // Navigate to plan details or next step
-    console.log('Selected plan:', selectedPlan);
+    console.log("Selected plan:", selectedPlan);
   };
 
-  const renderPlanCard = ({ item }: { item: SuggestedPlan }) => (
+  const renderPlanCard = ({ item }: { item: PlaceInfo }) => (
     <TouchableOpacity
       style={[
         styles.planCard,
-        selectedPlan === item.id && styles.selectedPlanCard,
+        selectedPlan === item._id && styles.selectedPlanCard,
       ]}
-      onPress={() => handlePlanSelect(item.id)}
+      onPress={() => handlePlanSelect(item._id)}
     >
-      <Image source={{ uri: item.image }} style={styles.planImage} />
+      <Image source={{ uri: item.images[0] }} style={styles.planImage} />
       <View style={styles.planInfo}>
         <View style={styles.ratingContainer}>
           {[...Array(5)].map((_, index) => (
@@ -123,7 +88,9 @@ const SuggestedPlansScreen = () => {
               key={index}
               style={[
                 styles.star,
-                index < item.rating ? styles.starFilled : styles.starEmpty,
+                index < Math.round(item.rating)
+                  ? styles.starFilled
+                  : styles.starEmpty,
               ]}
             >
               ★
@@ -131,59 +98,190 @@ const SuggestedPlansScreen = () => {
           ))}
         </View>
         <View style={styles.locationContainer}>
-          <Text style={styles.locationIcon}>📍</Text>
-          <Text style={styles.locationText}>{item.placesCount} địa điểm...</Text>
+          {/* <Text style={styles.locationIcon}>📍</Text> */}
+          <Text style={styles.locationText}>{item.location.address}</Text>
         </View>
       </View>
     </TouchableOpacity>
   );
 
+  const getRoute = async (
+    start: { lat: number; lng: number },
+    end: { lat: number; lng: number }
+  ) => {
+    try {
+      const url = `https://router.project-osrm.org/route/v1/driving/${start.lng},${start.lat};${end.lng},${end.lat}?overview=full&geometries=geojson`;
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (data.routes && data.routes.length > 0) {
+        const coords = data.routes[0].geometry.coordinates.map(
+          (c: number[]) => ({
+            latitude: c[1],
+            longitude: c[0],
+          })
+        );
+        setRouteCoords(coords);
+      }
+    } catch (error) {
+      console.error("Error fetching route:", error);
+    }
+  };
+
+  const toRad = (value: number) => (value * Math.PI) / 180;
+
+  const haversineDistance = (
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number
+  ): number => {
+    const R = 6371; // bán kính trái đất (km)
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c; // km
+  };
+
+  const estimateTravelTime = (distanceKm: number, speedKmH: number) => {
+    const totalMinutes = Math.round((distanceKm / speedKmH) * 60);
+    const h = Math.floor(totalMinutes / 60);
+    const m = totalMinutes % 60;
+    return { h, m };
+  };
+
+  useEffect(() => {
+    if (start && end) {
+      const dist = haversineDistance(start.lat, start.lng, end.lat, end.lng);
+      setDistance(dist);
+
+      // xe máy 40 km/h
+      const { h, m } = estimateTravelTime(dist, 40);
+      setTravelTime({ h, m });
+    }
+  }, [start, end]);
+
+  useEffect(() => {
+    if (start && end) {
+      getRoute(start, end);
+    }
+  }, [start, end]);
+
+  const generatePlan = async () => {
+    if (!selectedPurpose || !selectedDuration || !radius || !start || !end) {
+      alert("Vui lòng nhập đầy đủ thông tin");
+      return;
+    }
+
+    const request: GeneratePlanRequest = {
+      lat: end.lat,
+      lng: end.lng,
+      city: end.address,
+      purpose: selectedPurpose,
+      duration: selectedDuration,
+      radius: radius,
+      destination: end.address,
+    };
+
+    try {
+      setLoading(true);
+      const response = await planService.generatePlan(request);
+      if (response.success && response.data) {
+        // chỉ lấy placeInfo từ tất cả kế hoạch
+        const places = response.data.plans.flatMap((plan: any) =>
+          plan.itinerary.map((it: any) => it.placeInfo)
+        );
+        console.log("Generated plans:", places);
+        setSuggestedPlans(places);
+      } else {
+        console.error("API Error:", response.error?.message);
+      }
+    } catch (error) {
+      console.error("Error calling generatePlan:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    generatePlan();
+  }, [selectedPurpose, selectedDuration, radius, start, end]);
+
   return (
     <SafeAreaView style={styles.container}>
       {/* Header with Background Image */}
       <View style={styles.headerContainer}>
-        <Image
-          source={{
-            uri: 'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
+        <MapView
+          style={styles.map}
+          initialRegion={{
+            latitude: 21.0285, // Hà Nội
+            longitude: 105.8542,
+            latitudeDelta: 0.05,
+            longitudeDelta: 0.05,
           }}
-          style={styles.headerBackground}
-          resizeMode="cover"
-        />
-        <View style={styles.headerOverlay} />
-        
-        {/* Header Content */}
-        <View style={styles.headerContent}>
-          <View style={styles.locationContainer}>
-            <Text style={styles.locationIcon}>📍</Text>
-            <Text style={styles.locationText}>Hà Nội, Việt Nam</Text>
-          </View>
-          <TouchableOpacity style={styles.notificationButton}>
-            <Text style={styles.notificationIcon}>🔔</Text>
-            <View style={styles.notificationDot} />
-          </TouchableOpacity>
-        </View>
+        >
+          {/* Marker vị trí hiện tại */}
+          <Marker
+            coordinate={{
+              latitude: start.lat,
+              longitude: start.lng,
+            }}
+            title="Bạn đang ở đây"
+            pinColor="red"
+          />
+
+          {/* Marker điểm đến */}
+          <Marker
+            coordinate={{
+              latitude: end.lat,
+              longitude: end.lng,
+            }}
+            title="Điểm đến"
+            pinColor="blue"
+          />
+
+          {/* Vẽ đường đi */}
+          {routeCoords.length > 0 && (
+            <Polyline
+              coordinates={routeCoords}
+              strokeWidth={5}
+              strokeColor="blue"
+            />
+          )}
+        </MapView>
       </View>
 
       {/* Travel Info Card */}
       <View style={styles.travelCard}>
         <View style={styles.travelInfo}>
           <View style={styles.travelFrom}>
-            <Text style={styles.travelLabel}>Từ: Vị trí của tôi</Text>
+            <Text style={styles.travelLabel}>Từ: {start.address}</Text>
             <View style={styles.travelDetails}>
               <Text style={styles.travelIcon}>📍</Text>
-              <Text style={styles.travelText}>15km</Text>
+              <Text style={styles.travelText}>
+                {distance ? `${distance.toFixed(2)} km` : "Đang tính..."}
+              </Text>
             </View>
             <View style={styles.travelDetails}>
               <Text style={styles.travelIcon}>🏍️</Text>
               <Text style={styles.travelText}>Xe máy</Text>
             </View>
           </View>
-          
+
           <View style={styles.travelTo}>
-            <Text style={styles.travelLabel}>Đến: Hoà Lạc</Text>
+            <Text style={styles.travelLabel}>Đến: {end.address}</Text>
             <View style={styles.travelDetails}>
               <Text style={styles.travelIcon}>⏰</Text>
-              <Text style={styles.travelText}>35 phút</Text>
+              {distance !== null && travelTime && (
+                <Text style={styles.travelText}>
+                  {travelTime.h > 0 ? `${travelTime.h} giờ ` : ""}
+                  {travelTime.m} phút
+                </Text>
+              )}
             </View>
           </View>
         </View>
@@ -192,32 +290,43 @@ const SuggestedPlansScreen = () => {
       {/* Suggested Plans Section */}
       <View style={styles.plansSection}>
         <Text style={styles.sectionTitle}>Kế hoạch gợi ý</Text>
-        
-        <FlatList
-          data={suggestedPlans}
-          renderItem={renderPlanCard}
-          keyExtractor={(item) => item.id}
-          numColumns={3}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.plansGrid}
-          columnWrapperStyle={styles.planRow}
-        />
-        
-        <TouchableOpacity style={styles.moreButton}>
-          <Text style={styles.moreButtonText}>Thêm...</Text>
-        </TouchableOpacity>
+
+        {loading ? (
+          <ActivityIndicator
+            size="large"
+            color="#0000ff"
+            style={{ marginTop: 20 }}
+          />
+        ) : (
+          <View>
+            <FlatList
+              data={suggestedPlans}
+              renderItem={renderPlanCard}
+              numColumns={3}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.plansGrid}
+              columnWrapperStyle={styles.planRow}
+            />
+            <TouchableOpacity style={styles.moreButton}>
+              <Text style={styles.moreButtonText}>Thêm...</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
 
       {/* Bottom Navigation */}
       <View style={styles.bottomBar}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
           <Text style={styles.backIcon}>←</Text>
           <Text style={styles.backLabel}>Quay lại</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.continueButton} onPress={handleContinue}>
+        <TouchableOpacity
+          style={styles.continueButton}
+          onPress={handleContinue}
+        >
           <Text style={styles.continueButtonText}>Tiếp</Text>
           <Text style={styles.continueIcon}>→</Text>
         </TouchableOpacity>
@@ -229,72 +338,72 @@ const SuggestedPlansScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: "#F5F5F5",
   },
   headerContainer: {
     height: 200,
-    position: 'relative',
+    position: "relative",
   },
   headerBackground: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   headerOverlay: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    backgroundColor: "rgba(0, 0, 0, 0.3)",
   },
   headerContent: {
-    position: 'absolute',
+    position: "absolute",
     top: 50,
     left: 0,
     right: 0,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 20,
   },
   locationContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   locationIcon: {
     fontSize: 16,
     marginRight: 8,
-    color: '#FFF',
+    color: "#FFF",
   },
   locationText: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#FFF',
+    fontWeight: "600",
+    color: "#000000",
   },
   notificationButton: {
-    position: 'relative',
+    position: "relative",
     padding: 8,
   },
   notificationIcon: {
     fontSize: 20,
-    color: '#FFF',
+    color: "#FFF",
   },
   notificationDot: {
-    position: 'absolute',
+    position: "absolute",
     top: 6,
     right: 6,
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#FF4444',
+    backgroundColor: "#FF4444",
   },
   travelCard: {
-    backgroundColor: '#FFF',
+    backgroundColor: "#FFF",
     marginHorizontal: 20,
     marginTop: -20,
     borderRadius: 16,
     padding: 20,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 4,
@@ -305,25 +414,25 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   travelInfo: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   travelFrom: {
     flex: 1,
   },
   travelTo: {
     flex: 1,
-    alignItems: 'flex-end',
+    alignItems: "flex-end",
   },
   travelLabel: {
     fontSize: 16,
-    fontWeight: '700',
-    color: '#212529',
+    fontWeight: "700",
+    color: "#212529",
     marginBottom: 12,
   },
   travelDetails: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 8,
   },
   travelIcon: {
@@ -332,8 +441,8 @@ const styles = StyleSheet.create({
   },
   travelText: {
     fontSize: 14,
-    color: '#6C757D',
-    fontWeight: '500',
+    color: "#6C757D",
+    fontWeight: "500",
   },
   plansSection: {
     flex: 1,
@@ -342,23 +451,23 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 20,
-    fontWeight: '800',
-    color: '#212529',
+    fontWeight: "800",
+    color: "#212529",
     marginBottom: 20,
   },
   plansGrid: {
     paddingBottom: 20,
   },
   planRow: {
-    justifyContent: 'space-between',
+    justifyContent: "space-between",
     marginBottom: 16,
   },
   planCard: {
     width: cardWidth,
-    backgroundColor: '#FFF',
+    backgroundColor: "#FFF",
     borderRadius: 12,
-    overflow: 'hidden',
-    shadowColor: '#000',
+    overflow: "hidden",
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -367,21 +476,21 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
     borderWidth: 2,
-    borderColor: 'transparent',
+    borderColor: "transparent",
   },
   selectedPlanCard: {
-    borderColor: '#FF4444',
+    borderColor: "#FF4444",
   },
   planImage: {
-    width: '100%',
+    width: "100%",
     height: cardWidth * 0.7,
-    resizeMode: 'cover',
+    resizeMode: "cover",
   },
   planInfo: {
     padding: 12,
   },
   ratingContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     marginBottom: 8,
   },
   star: {
@@ -389,67 +498,53 @@ const styles = StyleSheet.create({
     marginRight: 2,
   },
   starFilled: {
-    color: '#FFD700',
+    color: "#FFD700",
   },
   starEmpty: {
-    color: '#E9ECEF',
-  },
-  locationContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  locationIcon: {
-    fontSize: 12,
-    marginRight: 4,
-    color: '#FF4444',
-  },
-  locationText: {
-    fontSize: 12,
-    color: '#6C757D',
-    fontWeight: '500',
+    color: "#E9ECEF",
   },
   moreButton: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingVertical: 16,
   },
   moreButtonText: {
     fontSize: 16,
-    color: '#5A9FD8',
-    fontWeight: '600',
+    color: "#5A9FD8",
+    fontWeight: "600",
   },
   bottomBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 20,
     paddingVertical: 16,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: "#F8F9FA",
     borderTopWidth: 1,
-    borderTopColor: '#E9ECEF',
+    borderTopColor: "#E9ECEF",
   },
   backButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: 8,
   },
   backIcon: {
     fontSize: 20,
-    color: '#5A9FD8',
+    color: "#5A9FD8",
     marginRight: 8,
   },
   backLabel: {
     fontSize: 14,
-    color: '#5A9FD8',
-    fontWeight: '600',
+    color: "#5A9FD8",
+    fontWeight: "600",
   },
   continueButton: {
-    backgroundColor: '#5A9FD8',
+    backgroundColor: "#5A9FD8",
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 25,
-    flexDirection: 'row',
-    alignItems: 'center',
-    shadowColor: '#5A9FD8',
+    flexDirection: "row",
+    alignItems: "center",
+    shadowColor: "#5A9FD8",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -459,15 +554,27 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   continueButtonText: {
-    color: '#FFF',
+    color: "#FFF",
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: "700",
     marginRight: 8,
   },
   continueIcon: {
-    color: '#FFF',
+    color: "#FFF",
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: "700",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  map: {
+    flex: 1,
+    width: width - 32,
+    height: 200,
+    marginHorizontal: 16,
+    marginBottom: 20,
   },
 });
 

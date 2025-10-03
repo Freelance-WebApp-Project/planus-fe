@@ -18,7 +18,7 @@ export const API_CONFIG = {
       UPDATE_PROFILE: '/users/update-profile',
     },
     PLAN: {
-      GENERATE: '/mcp/generate_travel_plan',
+      GENERATE: '/mcp/generate-travel-plan',
     },
     WALLET: {
       BALANCE: '/wallet/balance',

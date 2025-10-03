@@ -38,7 +38,6 @@ export interface PlaceInfo {
 }
 
 export interface GeneratePlanRequest {
-  userId: string;
   lat: number;
   lng: number;
   city: string;

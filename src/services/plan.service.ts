@@ -14,19 +14,23 @@ class PlanService {
    */
   async generatePlan(request: GeneratePlanRequest): Promise<GeneratePlanResponse> {
     try {
+      console.log('Generating plan with request:', request);
       const response = await apiService.post<GeneratePlanResponse['data']>(
         API_CONFIG.ENDPOINTS.PLAN.GENERATE,
         request
       );
-
+ console.log('Generating plan with request:', request);
       // Handle the actual API response structure
       if (response.success && response.data) {
         // The API returns { code: 200, data: { plans: [] }, message: "Success", success: true }
         const apiData = response.data as any;
+
+        console.log('API response data:', response);
+
         return {
           success: true,
           data: {
-            plans: apiData.plans || [],
+            plans: apiData.data.plans || [],
           }
         };
       }
