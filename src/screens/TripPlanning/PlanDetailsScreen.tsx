@@ -22,78 +22,113 @@ const PlanDetailsScreen = () => {
 
   const renderPlaceItem = (item: any, index: number) => {
     const place = item.placeInfo;
-    const imageUrl = place.images?.[0] 
-      ? `${API_CONFIG.UPLOADS_URL}/${place.images[0]}` 
-      : `https://via.placeholder.com/300x200/87CEEB/FFFFFF?text=${encodeURIComponent(place.name)}`;
+    const imageUrl = place.images?.[0]
+      ? `${API_CONFIG.UPLOADS_URL}/${place.images[0]}`
+      : `https://via.placeholder.com/300x200/87CEEB/FFFFFF?text=${encodeURIComponent(
+          place.name
+        )}`;
 
     return (
-      <View key={item._id} style={styles.placeItem}>
-        <View style={styles.placeHeader}>
-          <View style={styles.orderBadge}>
-            <Text style={styles.orderText}>{item.order}</Text>
-          </View>
-          <View style={styles.placeInfo}>
-            <Text style={styles.placeName}>{place.name}</Text>
-            <Text style={styles.placeType}>{place.type}</Text>
-          </View>
-        </View>
-        
-        <Image source={{ uri: imageUrl }} style={styles.placeImage} />
-        
-        <View style={styles.placeDetails}>
-          <Text style={styles.placeDescription}>{place.description}</Text>
-          
-          <View style={styles.locationInfo}>
-            <Text style={styles.locationIcon}>📍</Text>
-            <Text style={styles.locationText}>{place.location.address}</Text>
-          </View>
-          
-          <View style={styles.ratingContainer}>
-            <Text style={styles.ratingLabel}>Đánh giá:</Text>
-            {[...Array(5)].map((_, i) => (
-              <Text
-                key={i}
-                style={[
-                  styles.star,
-                  i < Math.round(place.rating) ? styles.starFilled : styles.starEmpty,
-                ]}
-              >
-                ★
-              </Text>
-            ))}
-            <Text style={styles.ratingValue}>({place.rating})</Text>
-          </View>
-          
-          {place.priceRange > 0 && (
-            <View style={styles.priceInfo}>
-              <Text style={styles.priceLabel}>Giá:</Text>
-              <Text style={styles.priceValue}>{place.priceRange.toLocaleString()}đ</Text>
-            </View>
-          )}
-          
-          {item.distance && (
-            <View style={styles.travelInfo}>
-              <Text style={styles.travelLabel}>Khoảng cách:</Text>
-              <Text style={styles.travelValue}>{item.distance}</Text>
-            </View>
-          )}
-          
-          {item.travelTime && (
-            <View style={styles.travelInfo}>
-              <Text style={styles.travelLabel}>Thời gian di chuyển:</Text>
-              <Text style={styles.travelValue}>{item.travelTime}</Text>
-            </View>
-          )}
-          
-          {place.tags && place.tags.length > 0 && (
-            <View style={styles.tagsContainer}>
-              {place.tags.map((tag, tagIndex) => (
-                <View key={tagIndex} style={styles.tag}>
-                  <Text style={styles.tagText}>{tag}</Text>
+      <View key={item._id}>
+        <View style={styles.placeContainer}>
+          <View key={item._id} style={styles.itineraryItem}>
+            <Image source={{ uri: imageUrl }} style={styles.placeImage} />
+            {index !== plan.itinerary.length - 1 && (
+              <View style={styles.verticalContainer}>
+                <View style={styles.verticalLine} />
+                <View style={styles.orderBadge}>
+                  <Text style={styles.heartIcon}>🏍️</Text>
+                  <View
+                    style={[
+                      styles.diagonalLine,
+                      { transform: [{ rotate: "-10deg" }], top: 16, left: 25 },
+                    ]}
+                  />
+
+                  {/* Đường chéo nghiêng xuống */}
+                  <View
+                    style={[
+                      styles.diagonalLine,
+                      { transform: [{ rotate: "10deg" }], top: 16, left: 25 },
+                    ]}
+                  />
                 </View>
-              ))}
+                <View style={styles.verticalLine} />
+              </View>
+            )}
+          </View>
+
+          <View>
+            <View style={styles.placeContainer}>
+              <View style={styles.orderBadge}>
+                <Text style={styles.orderText}>{item.order}</Text>
+              </View>
+              <View style={styles.placeInfo}>
+                <Text style={styles.placeName}>{place.name}</Text>
+                {/* <Text style={styles.placeType}>{place.type}</Text> */}
+              </View>
+              
             </View>
-          )}
+
+            <View style={styles.placeContainer}>
+              <View style={styles.circle}>
+                <View style={styles.starsContainer}>
+                  {[...Array(5)].map((_, i) => (
+                    <Text
+                      key={i}
+                      style={[
+                        styles.star,
+                        i < Math.round(place.rating)
+                          ? styles.starFilled
+                          : styles.starEmpty,
+                      ]}
+                    >
+                      ★
+                    </Text>
+                  ))}
+                </View>
+              </View>
+
+              {/* Hình chữ nhật bo tròn gắn vào hình tròn */}
+              <View style={styles.rectangle}>
+                <View style={styles.locationInfo}>
+                  <Text style={styles.locationIcon}>📍</Text>
+                  <Text style={styles.locationText}>
+                    {place.location.address}
+                  </Text>
+                </View>
+                <Text style={styles.priceText}>
+                  - {place.priceRange.toLocaleString()}VND/Người
+                </Text>
+              </View>
+            </View>
+
+                        {place.tags && place.tags.length > 0 && (
+              <View style={styles.tagsContainer}>
+                {place.tags.map((tag, tagIndex) => (
+                  <View key={tagIndex} style={styles.tag}>
+                    <Text style={styles.tagText}>{tag}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            <View style={styles.placeDetails}>
+            {index < plan.itinerary.length - 1 && plan.itinerary[index + 1].distance && (
+              <View style={styles.travelInfo}>
+                <Text style={styles.travelLabel}>Khoảng cách:</Text>
+                <Text style={styles.travelValue}>{plan.itinerary[index + 1].distance}</Text>
+              </View>
+            )}
+
+            {index < plan.itinerary.length - 1 && plan.itinerary[index + 1].travelTime && (
+              <View style={styles.travelTimeInfo}>
+                <Text style={styles.travelLabel}>Thời gian di chuyển:</Text>
+                <Text style={styles.travelValue}>{plan.itinerary[index + 1].travelTime}</Text>
+              </View>
+            )}
+          </View>
+          </View>
         </View>
       </View>
     );
@@ -126,12 +161,16 @@ const PlanDetailsScreen = () => {
             <View style={styles.summaryItem}>
               <Text style={styles.summaryIcon}>💰</Text>
               <Text style={styles.summaryLabel}>Chi phí</Text>
-              <Text style={styles.summaryValue}>{plan.estimatedCost.toLocaleString()}đ</Text>
+              <Text style={styles.summaryValue}>
+                {plan.estimatedCost.toLocaleString()}đ
+              </Text>
             </View>
             <View style={styles.summaryItem}>
               <Text style={styles.summaryIcon}>📍</Text>
               <Text style={styles.summaryLabel}>Địa điểm</Text>
-              <Text style={styles.summaryValue}>{plan.itinerary.length} nơi</Text>
+              <Text style={styles.summaryValue}>
+                {plan.itinerary.length} nơi
+              </Text>
             </View>
           </View>
         </View>
@@ -273,7 +312,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#5A9FD8",
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 12,
+    marginRight: 3,
   },
   orderText: {
     color: "#FFF",
@@ -282,12 +321,12 @@ const styles = StyleSheet.create({
   },
   placeInfo: {
     flex: 1,
+    minWidth: 120,
   },
   placeName: {
-    fontSize: 16,
+    fontSize: 12,
     fontWeight: "600",
     color: "#212529",
-    marginBottom: 4,
   },
   placeType: {
     fontSize: 14,
@@ -295,12 +334,16 @@ const styles = StyleSheet.create({
     textTransform: "capitalize",
   },
   placeImage: {
-    width: "100%",
-    height: 200,
+    width: "60%",
+    height: 100,
+    borderRadius: 30,
     resizeMode: "cover",
   },
+  placeContainer: {
+    flexDirection: "row",
+  },
   placeDetails: {
-    padding: 16,
+    paddingTop: 5,
   },
   placeDescription: {
     fontSize: 14,
@@ -311,14 +354,12 @@ const styles = StyleSheet.create({
   locationInfo: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 12,
   },
   locationIcon: {
-    fontSize: 16,
-    marginRight: 8,
+    fontSize: 10,
   },
   locationText: {
-    fontSize: 14,
+    fontSize: 10,
     color: "#6C757D",
     flex: 1,
   },
@@ -333,8 +374,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   star: {
-    fontSize: 16,
-    marginRight: 2,
+    fontSize: 10,
   },
   starFilled: {
     color: "#FFD700",
@@ -367,10 +407,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 8,
   },
+  travelTimeInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
   travelLabel: {
     fontSize: 14,
     color: "#6C757D",
-    marginRight: 8,
+    marginRight: 2,
   },
   travelValue: {
     fontSize: 14,
@@ -419,6 +463,74 @@ const styles = StyleSheet.create({
     color: "#FFF",
     fontSize: 16,
     fontWeight: "700",
+  },
+  circle: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    borderWidth: 5,
+    borderColor: "#6ec3ee",
+    backgroundColor: "#FFF", // Màu vàng cho circle
+    justifyContent: "center",
+    alignItems: "center",
+    position: "relative",
+    zIndex: 2,
+  },
+  starsContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+  },
+  rectangle: {
+    backgroundColor: "#4FC3F7", // Màu xanh dương
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginTop: 7,
+    marginLeft: -10, // Gắn vào circle bằng cách overlap
+    minWidth: 160,
+    height: 50,
+    flex: 1,
+    alignItems: "center",
+  },
+  priceText: {
+    fontSize: 12,
+    fontWeight: "bold",
+    color: "white",
+    marginBottom: 2,
+  },
+  itineraryContainer: {
+    flexDirection: "column", // xếp ảnh dọc
+    alignItems: "center",
+    paddingVertical: 10,
+  },
+  itineraryItem: {
+    alignItems: "center",
+    width: "48%",
+    marginLeft: -30,
+  },
+  verticalLine: {
+    width: 4, // độ dày của gạch dọc
+    height: 40, // chiều dài nối giữa các ảnh
+    backgroundColor: "#000",
+    marginVertical: 4, // khoảng cách trên/dưới ảnh
+  },
+  verticalContainer: {
+    flexDirection: "column",
+    alignItems: "center",
+  },
+  heartIcon: {
+    fontSize: 18,
+    lineHeight: 15,
+    textAlign: "center",
+  },
+  diagonalLine: {
+    position: "absolute",
+    width: 65, // chiều dài đường
+    height: 2, // độ dày
+    backgroundColor: "#000",
+    transformOrigin: "top left", // đầu đường là điểm xoay
+    zIndex: 1,
   },
 });
 
