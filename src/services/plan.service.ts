@@ -20,6 +20,9 @@ class PlanService {
         API_CONFIG.ENDPOINTS.PLAN.GENERATE,
         request
       );
+
+      console.log("Response:", response);
+      
       // Handle the actual API response structure
       if (response.success && response.data) {
         // The API returns { code: 200, data: { plans: [] }, message: "Success", success: true }

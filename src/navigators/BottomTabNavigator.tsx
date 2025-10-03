@@ -12,6 +12,7 @@ import TransactionHistoryScreen from '../screens/Profile/TransactionHistoryScree
 import TripPlanningInputScreen from '../screens/TripPlanning/TripPlanningInputScreen';
 import SelectDestinationScreen from '../screens/TripPlanning/SelectDestinationScreen';
 import SuggestedPlansScreen from '../screens/TripPlanning/SuggestedPlansScreen';
+import PlanDetailsScreen from '../screens/TripPlanning/PlanDetailsScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -34,6 +35,7 @@ const MainStack = () => {
       <Stack.Screen name="TripPlanning" component={TripPlanningInputScreen} />
       <Stack.Screen name="SelectDestination" component={SelectDestinationScreen} />
       <Stack.Screen name="SuggestedPlans" component={SuggestedPlansScreen} />
+      <Stack.Screen name="PlanDetails" component={PlanDetailsScreen} />
       <Stack.Screen name="TransactionHistory" component={TransactionHistoryScreen} />
     </Stack.Navigator>
   );

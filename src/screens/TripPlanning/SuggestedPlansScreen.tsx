@@ -50,8 +50,6 @@ const SuggestedPlansScreen = () => {
       radius: number;
     };
 
-  console.log("Route params:", route.params);
-
   const [selectedPlan, setSelectedPlan] = useState<string>("plan1");
 
   const [routeCoords, setRouteCoords] = useState<any[]>([]);
@@ -64,8 +62,10 @@ const SuggestedPlansScreen = () => {
   const [loading, setLoading] = useState(true);
   const [suggestedPlans, setSuggestedPlans] = useState<TravelPlan[]>([]);
 
-  const handlePlanSelect = (planId: string) => {
-    setSelectedPlan(planId);
+  const handlePlanSelect = (plan: TravelPlan) => {
+    setSelectedPlan(plan.planTitle);
+    // Navigate to plan details
+    (navigation as any).navigate("PlanDetails", { plan });
   };
 
   const handleContinue = () => {
@@ -85,7 +85,7 @@ const SuggestedPlansScreen = () => {
           styles.planCard,
           selectedPlan === item.planTitle && styles.selectedPlanCard,
         ]}
-        onPress={() => handlePlanSelect(item.planTitle)}
+        onPress={() => handlePlanSelect(item)}
       >
         <Image source={{ uri: imageUrl }} style={styles.planImage} />
         <View style={styles.planInfo}>
