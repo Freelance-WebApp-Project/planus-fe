@@ -65,7 +65,7 @@ class PlanService {
       console.log("Getting all plans with query:", query);
       
       const response = await apiService.get<GetAllPlansResponse["data"]>(
-        API_CONFIG.ENDPOINTS.PLAN.GET_ALL,
+        API_CONFIG.ENDPOINTS.PLAN.GET_ME,
         query as Record<string, string>
       );
 
