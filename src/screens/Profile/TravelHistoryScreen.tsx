@@ -15,21 +15,21 @@ import { planService } from '../../services/plan.service';
 import { SavedPlan } from '../../types/plan.types';
 import { API_CONFIG } from '../../constants/api.constants';
 
-const FavoritesScreen = () => {
+const TravelHistoryScreen = () => {
   const navigation = useNavigation();
   const [plans, setPlans] = useState<SavedPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const fetchPlans = async () => {
+  const fetchPaidPlans = async () => {
     try {
       setLoading(true);
-      const response = await planService.getMe({ isFavorite: true });
+      const response = await planService.getMe({ isPaid: true });
       if (response.success && response.data) {
         setPlans(response.data.records);
       }
     } catch (error) {
-      console.error('Error fetching plans:', error);
+      console.error('Error fetching paid plans:', error);
     } finally {
       setLoading(false);
     }
@@ -37,12 +37,12 @@ const FavoritesScreen = () => {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await fetchPlans();
+    await fetchPaidPlans();
     setRefreshing(false);
   };
 
   useEffect(() => {
-    fetchPlans();
+    fetchPaidPlans();
   }, []);
 
   const renderPlanCard = ({ item }: { item: SavedPlan }) => {
@@ -100,8 +100,10 @@ const FavoritesScreen = () => {
           <Text style={styles.planPlacesCount}>
             📍 {item.itinerary.length} địa điểm
           </Text>
-          <View style={styles.userInfo}>
-            <Text style={styles.userName}>👤 {item.userId.username}</Text>
+          <View style={styles.statusContainer}>
+            <View style={styles.paidBadge}>
+              <Text style={styles.paidText}>✓ Đã thanh toán</Text>
+            </View>
             <Text style={styles.createdDate}>
               📅 {new Date(item.createdAt).toLocaleDateString('vi-VN')}
             </Text>
@@ -115,7 +117,14 @@ const FavoritesScreen = () => {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Kế hoạch yêu thích</Text>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Text style={styles.backIcon}>←</Text>
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Lịch sử chuyến đi</Text>
+          <View style={styles.placeholder} />
         </View>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#5A9FD8" />
@@ -128,15 +137,22 @@ const FavoritesScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Kế hoạch yêu thích</Text>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Text style={styles.backIcon}>←</Text>
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Lịch sử chuyến đi</Text>
+        <View style={styles.placeholder} />
       </View>
       
       {plans.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyIcon}>📋</Text>
-          <Text style={styles.emptyTitle}>Chưa có kế hoạch yêu thích</Text>
+          <Text style={styles.emptyTitle}>Chưa có chuyến đi nào</Text>
           <Text style={styles.emptyDescription}>
-            Thêm kế hoạch vào yêu thích để xem ở đây
+            Các kế hoạch đã thanh toán sẽ hiển thị ở đây
           </Text>
         </View>
       ) : (
@@ -162,7 +178,7 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 16,
@@ -170,10 +186,20 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#E9ECEF',
   },
+  backButton: {
+    padding: 8,
+  },
+  backIcon: {
+    fontSize: 20,
+    color: '#5A9FD8',
+  },
   headerTitle: {
     fontSize: 18,
     fontWeight: '700',
     color: '#212529',
+  },
+  placeholder: {
+    width: 36,
   },
   loadingContainer: {
     flex: 1,
@@ -260,15 +286,21 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     marginBottom: 8,
   },
-  userInfo: {
+  statusContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  userName: {
+  paidBadge: {
+    backgroundColor: '#28A745',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  paidText: {
     fontSize: 12,
-    color: '#6C757D',
-    fontWeight: '500',
+    color: '#FFF',
+    fontWeight: '600',
   },
   createdDate: {
     fontSize: 12,
@@ -277,4 +309,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default FavoritesScreen;
+export default TravelHistoryScreen;

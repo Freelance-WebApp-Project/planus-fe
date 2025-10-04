@@ -130,11 +130,29 @@ export interface QueryPlanDto {
   userId?: string;
   isPaid?: boolean;
   isShared?: boolean;
+  isFavorite?: boolean;
   minCost?: number;
   maxCost?: number;
   page?: number;
   size?: number;
   search?: string;
+}
+
+export interface ItineraryDto {
+  placeId: string;
+  order: number;
+  distance: string;
+  travelTime: string;
+}
+
+export interface CreatePlanDto {
+  planTitle: string;
+  totalDuration: string;
+  estimatedCost: number;
+  itinerary: ItineraryDto[];
+  isPaid?: boolean;
+  isShared?: boolean;
+  isFavorite?: boolean;
 }
 
 export interface PlanFilters {

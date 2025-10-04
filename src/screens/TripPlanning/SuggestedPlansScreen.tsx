@@ -320,7 +320,7 @@ const SuggestedPlansScreen = () => {
         <Text style={styles.backLabel}>Quay lại</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity
+      {/* <TouchableOpacity
         style={[
           styles.continueButton,
           loading && { opacity: 0.5 }, 
@@ -330,7 +330,7 @@ const SuggestedPlansScreen = () => {
       >
         <Text style={styles.continueButtonText}>Tiếp</Text>
         <Text style={styles.continueIcon}>→</Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
       </View>
     </SafeAreaView>
   );

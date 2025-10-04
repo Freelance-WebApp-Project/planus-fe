@@ -315,6 +315,32 @@ const ProfileScreen = ({ navigation }: any) => {
           </View>
         </View>
 
+        {/* Travel History Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Lịch sử chuyến đi</Text>
+
+          <View style={styles.historyCard}>
+            <View style={styles.historyInfo}>
+              <View style={styles.historyIcon}>
+                <Text style={styles.historyIconText}>🗺️</Text>
+              </View>
+              <View style={styles.historyDetails}>
+                <Text style={styles.historyTitle}>Chuyến đi đã thanh toán</Text>
+                <Text style={styles.historySubtitle}>
+                  Xem lại các kế hoạch đã mua
+                </Text>
+              </View>
+            </View>
+            <TouchableOpacity
+              style={styles.historyButton}
+              onPress={() => navigation.navigate("TravelHistory")}
+            >
+              <Text style={styles.historyButtonText}>Xem lịch sử</Text>
+              <Text style={styles.historyButtonArrow}>→</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
         {/* Profile Information */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Thông tin cá nhân</Text>
@@ -977,6 +1003,72 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   premiumActiveText: {
+    fontSize: 16,
+    color: "#FFFFFF",
+    fontWeight: "bold",
+  },
+  // Travel History styles
+  historyCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    padding: 16,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  historyInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  historyIcon: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: "#E8F5E8",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  historyIconText: {
+    fontSize: 24,
+  },
+  historyDetails: {
+    flex: 1,
+  },
+  historyTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 4,
+  },
+  historySubtitle: {
+    fontSize: 14,
+    color: "#666",
+  },
+  historyButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: "#4CAF50",
+    borderRadius: 8,
+  },
+  historyButtonText: {
+    fontSize: 14,
+    color: "#FFFFFF",
+    fontWeight: "600",
+    marginRight: 4,
+  },
+  historyButtonArrow: {
     fontSize: 16,
     color: "#FFFFFF",
     fontWeight: "bold",
