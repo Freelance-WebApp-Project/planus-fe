@@ -67,7 +67,6 @@ const PlanDetailsScreen = () => {
                 <Text style={styles.placeName}>{place.name}</Text>
                 {/* <Text style={styles.placeType}>{place.type}</Text> */}
               </View>
-              
             </View>
 
             <View style={styles.placeContainer}>
@@ -103,31 +102,39 @@ const PlanDetailsScreen = () => {
               </View>
             </View>
 
-                        {place.tags && place.tags.length > 0 && (
-              <View style={styles.tagsContainer}>
-                {place.tags.map((tag, tagIndex) => (
-                  <View key={tagIndex} style={styles.tag}>
-                    <Text style={styles.tagText}>{tag}</Text>
-                  </View>
-                ))}
-              </View>
-            )}
+            <View style={styles.tagsContainer}>
+              {
+                place.tags && place.tags.length > 0
+                  ? place.tags.map((tag, tagIndex) => (
+                      <View key={tagIndex} style={styles.tag}>
+                        <Text style={styles.tagText}>{tag}</Text>
+                      </View>
+                    ))
+                  : null // không hiển thị gì bên trong nhưng container vẫn tồn tại
+              }
+            </View>
 
             <View style={styles.placeDetails}>
-            {index < plan.itinerary.length - 1 && plan.itinerary[index + 1].distance && (
-              <View style={styles.travelInfo}>
-                <Text style={styles.travelLabel}>Khoảng cách:</Text>
-                <Text style={styles.travelValue}>{plan.itinerary[index + 1].distance}</Text>
-              </View>
-            )}
+              {index < plan.itinerary.length - 1 &&
+                plan.itinerary[index + 1].distance && (
+                  <View style={styles.travelInfo}>
+                    <Text style={styles.travelLabel}>Khoảng cách:</Text>
+                    <Text style={styles.travelValue}>
+                      {plan.itinerary[index + 1].distance}
+                    </Text>
+                  </View>
+                )}
 
-            {index < plan.itinerary.length - 1 && plan.itinerary[index + 1].travelTime && (
-              <View style={styles.travelTimeInfo}>
-                <Text style={styles.travelLabel}>Thời gian di chuyển:</Text>
-                <Text style={styles.travelValue}>{plan.itinerary[index + 1].travelTime}</Text>
-              </View>
-            )}
-          </View>
+              {index < plan.itinerary.length - 1 &&
+                plan.itinerary[index + 1].travelTime && (
+                  <View style={styles.travelTimeInfo}>
+                    <Text style={styles.travelLabel}>Thời gian di chuyển:</Text>
+                    <Text style={styles.travelValue}>
+                      {plan.itinerary[index + 1].travelTime}
+                    </Text>
+                  </View>
+                )}
+            </View>
           </View>
         </View>
       </View>
@@ -425,6 +432,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     marginTop: 8,
+    minHeight: 30,
   },
   tag: {
     backgroundColor: "#E9ECEF",

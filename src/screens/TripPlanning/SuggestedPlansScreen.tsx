@@ -75,10 +75,12 @@ const SuggestedPlansScreen = () => {
 
   const renderPlanCard = ({ item }: { item: TravelPlan }) => {
     const firstPlace = item.itinerary[0]?.placeInfo;
-    const imageUrl = firstPlace?.images?.[0] 
-      ? `${API_CONFIG.UPLOADS_URL}/${firstPlace.images[0]}` 
-      : `https://via.placeholder.com/200x150/87CEEB/FFFFFF?text=${encodeURIComponent(item.planTitle)}`;
-    
+    const imageUrl = firstPlace?.images?.[0]
+      ? `${API_CONFIG.UPLOADS_URL}/${firstPlace.images[0]}`
+      : `https://via.placeholder.com/200x150/87CEEB/FFFFFF?text=${encodeURIComponent(
+          item.planTitle
+        )}`;
+
     return (
       <TouchableOpacity
         style={[
@@ -92,7 +94,9 @@ const SuggestedPlansScreen = () => {
           <Text style={styles.planTitle}>{item.planTitle}</Text>
           <View style={styles.planDetails}>
             <Text style={styles.planDuration}>⏰ {item.totalDuration}</Text>
-            <Text style={styles.planCost}>💰 {item.estimatedCost.toLocaleString()}đ</Text>
+            <Text style={styles.planCost}>
+              💰 {item.estimatedCost.toLocaleString()}đ
+            </Text>
           </View>
           <Text style={styles.planPlacesCount}>
             📍 {item.itinerary.length} địa điểm
@@ -187,8 +191,8 @@ const SuggestedPlansScreen = () => {
     try {
       setLoading(true);
       const response = await planService.generatePlan(request);
-        if (response && response.success && response.data) {
-          setSuggestedPlans(response.data.plans);
+      if (response && response.success && response.data) {
+        setSuggestedPlans(response.data.plans);
       } else {
         console.error("API Error:", response?.error?.message);
       }
@@ -285,39 +289,48 @@ const SuggestedPlansScreen = () => {
         <Text style={styles.sectionTitle}>Kế hoạch gợi ý</Text>
 
         {loading ? (
-          <ActivityIndicator
-            size="large"
-            color="#0000ff"
-            style={{ marginTop: 20 }}
-          />
-        ) : (
-          <View>
-            <FlatList
-              data={suggestedPlans}
-              renderItem={renderPlanCard}
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={styles.plansGrid}
-            />
+          <View style={{ alignItems: "center", marginTop: 40 }}>
+            <ActivityIndicator size="large" color="#0000ff" />
+            <Text style={{ marginTop: 15, fontSize: 16, color: "#0000ff" }}>
+              Planus đang lên kế hoạch cho bạn...
+            </Text>
           </View>
+        ) : (
+          <FlatList
+            data={suggestedPlans}
+            renderItem={renderPlanCard}
+            keyExtractor={(item, index) => index.toString()}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.plansGrid}
+          />
         )}
       </View>
 
       {/* Bottom Navigation */}
       <View style={styles.bottomBar}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Text style={styles.backIcon}>←</Text>
-          <Text style={styles.backLabel}>Quay lại</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.continueButton}
-          onPress={handleContinue}
-        >
-          <Text style={styles.continueButtonText}>Tiếp</Text>
-          <Text style={styles.continueIcon}>→</Text>
-        </TouchableOpacity>
+      <TouchableOpacity
+        style={[
+          styles.backButton,
+          loading && { opacity: 0.5 }, 
+        ]}
+        onPress={() => navigation.goBack()}
+        disabled={loading} 
+      >
+        <Text style={styles.backIcon}>←</Text>
+        <Text style={styles.backLabel}>Quay lại</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[
+          styles.continueButton,
+          loading && { opacity: 0.5 }, 
+        ]}
+        onPress={handleContinue}
+        disabled={loading} 
+      >
+        <Text style={styles.continueButtonText}>Tiếp</Text>
+        <Text style={styles.continueIcon}>→</Text>
+      </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
