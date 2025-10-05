@@ -14,6 +14,7 @@ import SelectDestinationScreen from '../screens/TripPlanning/SelectDestinationSc
 import SuggestedPlansScreen from '../screens/TripPlanning/SuggestedPlansScreen';
 import PlanDetailsScreen from '../screens/TripPlanning/PlanDetailsScreen';
 import TravelHistoryScreen from '../screens/Profile/TravelHistoryScreen';
+import PlanDetailHistoryScreen from '../screens/Profile/PlanDetailHistoryScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -24,6 +25,7 @@ const ProfileStack = () => {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="ProfileMain" component={ProfileScreen} />
       <Stack.Screen name="Wallet" component={WalletScreen} />
+      <Stack.Screen name="PlanDetailHistory" component={PlanDetailHistoryScreen} />
     </Stack.Navigator>
   );
 };

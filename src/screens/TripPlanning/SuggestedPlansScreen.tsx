@@ -26,6 +26,20 @@ import { API_CONFIG } from "../../constants/api.constants";
 const { width } = Dimensions.get("window");
 const cardWidth = (width - 60) / 3; // 3 cards per row with margins
 
+const purposes = [
+  { id: "dating", label: "Hẹn hò", icon: "💕" },
+  { id: "relax", label: "Thư giãn", icon: "🧘" },
+  { id: "coffee", label: "Cà phê", icon: "☕" },
+  { id: "explore", label: "Khám phá", icon: "🗺️" },
+  { id: "food", label: "Ẩm thực", icon: "🍜" },
+];
+
+const durations = [
+  { id: "half-day", label: "Nửa ngày", icon: "🌅" },
+  { id: "full-day", label: "Cả ngày", icon: "🌞" },
+  { id: "multi-day", label: "Nhiều ngày", icon: "📅" },
+];
+
 interface SuggestedPlan {
   id: string;
   title: string;
@@ -49,6 +63,12 @@ const SuggestedPlansScreen = () => {
       selectedDuration: string;
       radius: number;
     };
+
+  // Lấy label từ id
+  const selectedPurposeLabel =
+    purposes.find((p) => p.id === selectedPurpose)?.label ?? "";
+  const selectedDurationLabel =
+    durations.find((d) => d.id === selectedDuration)?.label ?? "";
 
   const [selectedPlan, setSelectedPlan] = useState<string>("plan1");
 
@@ -280,6 +300,13 @@ const SuggestedPlansScreen = () => {
 
           <View style={styles.travelTo}>
             <Text style={styles.travelLabel}>Đến: {end.address}</Text>
+            <Text style={styles.travelLabel}>
+              Mục đích: {selectedPurposeLabel}
+            </Text>
+            <Text style={styles.travelLabel}>
+              Thời gian: {selectedDurationLabel}
+            </Text>
+            <Text style={styles.travelLabel}>Bán kính: {radius/1000} km</Text>
           </View>
         </View>
       </View>
@@ -308,19 +335,16 @@ const SuggestedPlansScreen = () => {
 
       {/* Bottom Navigation */}
       <View style={styles.bottomBar}>
-      <TouchableOpacity
-        style={[
-          styles.backButton,
-          loading && { opacity: 0.5 }, 
-        ]}
-        onPress={() => navigation.goBack()}
-        disabled={loading} 
-      >
-        <Text style={styles.backIcon}>←</Text>
-        <Text style={styles.backLabel}>Quay lại</Text>
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.backButton, loading && { opacity: 0.5 }]}
+          onPress={() => navigation.goBack()}
+          disabled={loading}
+        >
+          <Text style={styles.backIcon}>←</Text>
+          <Text style={styles.backLabel}>Quay lại</Text>
+        </TouchableOpacity>
 
-      {/* <TouchableOpacity
+        {/* <TouchableOpacity
         style={[
           styles.continueButton,
           loading && { opacity: 0.5 }, 
