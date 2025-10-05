@@ -1,8 +1,10 @@
+import { APP_CONFIG } from '../config/app.config';
+
 export const API_CONFIG = {
-  BASE_URL: process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api',
-  UPLOADS_URL: process.env.EXPO_PUBLIC_UPLOADS_URL || 'https://storage.googleapis.com/balerion/images',
-  NOMINATIM_URL: process.env.EXPO_PUBLIC_NOMINATIM_URL || 'https://nominatim.openstreetmap.org',
-  OSRM_URL: process.env.EXPO_PUBLIC_OSRM_URL || 'https://router.project-osrm.org',
+  BASE_URL: APP_CONFIG.API.BASE_URL,
+  UPLOADS_URL: APP_CONFIG.API.UPLOADS_URL,
+  NOMINATIM_URL: APP_CONFIG.API.NOMINATIM_URL,
+  OSRM_URL: APP_CONFIG.API.OSRM_URL,
   ENDPOINTS: {
     AUTH: {
       LOGIN: '/auth/login',
@@ -36,7 +38,7 @@ export const API_CONFIG = {
       BUY_VIP: '/wallet/buy-vip',
     },
   },
-  TIMEOUT: 10000, // 10 seconds
+  TIMEOUT: APP_CONFIG.TIMEOUT,
 };
 
 export const STORAGE_KEYS = {
