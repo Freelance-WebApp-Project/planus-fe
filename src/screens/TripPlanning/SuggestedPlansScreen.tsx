@@ -9,6 +9,7 @@ import {
   Dimensions,
   FlatList,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, useRoute } from "@react-navigation/native";
@@ -213,8 +214,21 @@ const SuggestedPlansScreen = () => {
       const response = await planService.generatePlan(request);
       if (response && response.success && response.data) {
         setSuggestedPlans(response.data.plans);
+        alert("Tạo kế hoạch thành công!");
       } else {
-        console.error("API Error:", response?.error?.message);
+        setLoading(false);
+        Alert.alert(
+          "Có lỗi xảy ra",
+          "Hệ thống gặp sự cố khi tạo kế hoạch. Bạn có muốn thử lại không?",
+          [
+            {
+              text: "Không",
+              onPress: () => navigation.goBack(),
+              style: "cancel",
+            },
+            { text: "Thử lại", onPress: () => generatePlan() },
+          ]
+        );
       }
     } catch (error) {
       console.error("Error calling generatePlan:", error);
@@ -306,7 +320,7 @@ const SuggestedPlansScreen = () => {
             <Text style={styles.travelLabel}>
               Thời gian: {selectedDurationLabel}
             </Text>
-            <Text style={styles.travelLabel}>Bán kính: {radius/1000} km</Text>
+            <Text style={styles.travelLabel}>Bán kính: {radius / 1000} km</Text>
           </View>
         </View>
       </View>

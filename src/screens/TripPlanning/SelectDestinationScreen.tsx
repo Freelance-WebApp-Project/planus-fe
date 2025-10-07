@@ -108,8 +108,7 @@ const SelectDestinationScreen = () => {
       });
 
       if (!response.ok) {
-        const text = await response.text();
-        console.error("Nominatim error:", text);
+        alert("Hệ thống gặp sự cố khi lấy địa chỉ từ tọa độ, vui lòng thử lại sau");
         return [];
       }
 
@@ -160,8 +159,9 @@ const SelectDestinationScreen = () => {
       });
 
       if (!response.ok) {
-        const text = await response.text();
-        console.error("Nominatim error:", text);
+        // const text = await response.text();
+        // console.error("Nominatim error:", text);
+        alert("Hệ thống gặp sự cố khi lấy địa chỉ từ tọa độ, vui lòng thử lại sau");
         return;
       }
 

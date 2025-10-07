@@ -85,7 +85,7 @@ const ProfileScreen = ({ navigation }: any) => {
     const now = new Date();
     const diffTime = date.getTime() - now.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays <= 0) {
       return "Đã hết hạn";
     } else if (diffDays === 1) {
@@ -143,7 +143,9 @@ const ProfileScreen = ({ navigation }: any) => {
         email: editData.email.trim(),
         gender: editData.gender,
         dob: currentUser?.dob || {},
-        income: editData.income ? parseInt(editData.income) : currentUser?.income,
+        income: editData.income
+          ? parseInt(editData.income)
+          : currentUser?.income,
         favorites: currentUser?.favorites || [],
       };
 
@@ -158,7 +160,9 @@ const ProfileScreen = ({ navigation }: any) => {
             email: editData.email.trim(),
             gender: editData.gender,
             phone: editData.phone,
-            income: editData.income ? parseInt(editData.income) : currentUser.income,
+            income: editData.income
+              ? parseInt(editData.income)
+              : currentUser.income,
           };
 
           setCurrentUser(updatedUser);
@@ -186,7 +190,7 @@ const ProfileScreen = ({ navigation }: any) => {
       };
 
       const result = await buyVip(vipData);
-      
+
       if (result) {
         showToast.success(
           "Thành công",
@@ -195,13 +199,15 @@ const ProfileScreen = ({ navigation }: any) => {
           } thành công!`
         );
         setIsPremiumPopupVisible(false);
-        
+
         // Update user premium status
         if (currentUser) {
           const updatedUser = {
             ...currentUser,
             isPremium: true,
-            premiumEndDate: new Date(Date.now() + (plan === "monthly" ? 30 : 365) * 24 * 60 * 60 * 1000).toISOString(),
+            premiumEndDate: new Date(
+              Date.now() + (plan === "monthly" ? 30 : 365) * 24 * 60 * 60 * 1000
+            ).toISOString(),
           };
           setCurrentUser(updatedUser);
           setUser(updatedUser);
@@ -244,7 +250,9 @@ const ProfileScreen = ({ navigation }: any) => {
           <Text style={styles.userName}>
             {currentUser?.fullName || "Chưa cập nhật"}
           </Text>
-          <Text style={styles.userEmail}>{currentUser?.email || "Chưa cập nhật"}</Text>
+          <Text style={styles.userEmail}>
+            {currentUser?.email || "Chưa cập nhật"}
+          </Text>
         </View>
 
         {/* Premium Status Section */}
@@ -258,7 +266,9 @@ const ProfileScreen = ({ navigation }: any) => {
               </View>
               <View style={styles.premiumDetails}>
                 <Text style={styles.premiumTitle}>
-                  {isPremiumUser ? "Premium Active" : "Nâng cấp tài khoản Premium"}
+                  {isPremiumUser
+                    ? "Premium Active"
+                    : "Nâng cấp tài khoản Premium"}
                 </Text>
                 <Text style={styles.premiumSubtitle}>
                   {isPremiumUser
@@ -391,7 +401,9 @@ const ProfileScreen = ({ navigation }: any) => {
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Thu nhập</Text>
               <Text style={styles.infoValue}>
-                {currentUser?.income ? formatCurrency(currentUser.income) : "Chưa cập nhật"}
+                {currentUser?.income
+                  ? formatCurrency(currentUser.income)
+                  : "Chưa cập nhật"}
               </Text>
             </View>
           </View>
@@ -922,36 +934,37 @@ const styles = StyleSheet.create({
   },
   // Premium styles
   premiumCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
+    backgroundColor: "#0A0A0A", // đen sâu
+    borderRadius: 16,
     padding: 16,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-    borderWidth: 1,
-    borderColor: "#FFD700",
+    borderWidth: 1.5,
+    borderColor: "#FFD700", // viền vàng gold
+    shadowColor: "#FFD700",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 5,
   },
+
   premiumInfo: {
     flexDirection: "row",
     alignItems: "center",
     flex: 1,
   },
+
   premiumIcon: {
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: "#FFF8E1",
+    backgroundColor: "rgba(255,215,0,0.1)",
     justifyContent: "center",
     alignItems: "center",
     marginRight: 12,
+    borderWidth: 1,
+    borderColor: "#FFD700",
   },
   premiumIconText: {
     fontSize: 24,
@@ -962,38 +975,46 @@ const styles = StyleSheet.create({
   premiumTitle: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#333",
+    color: "#FFD700",
     marginBottom: 4,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
+
   premiumSubtitle: {
     fontSize: 14,
-    color: "#666",
+    color: "#E0E0E0",
   },
+
   premiumEndDate: {
     fontSize: 12,
     color: "#4CAF50",
     fontWeight: "600",
     marginTop: 4,
   },
+
   premiumButton: {
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 8,
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
     backgroundColor: "#FFD700",
     borderRadius: 8,
+    shadowColor: "#FFD700",
+    shadowOpacity: 0.6,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 3,
   },
+
   premiumButtonText: {
     fontSize: 14,
-    color: "#333",
-    fontWeight: "600",
-    marginRight: 4,
+    color: "#000",
+    fontWeight: "700",
+    marginRight: 6,
+    textTransform: "uppercase",
   },
-  premiumButtonArrow: {
-    fontSize: 16,
-    color: "#333",
-    fontWeight: "bold",
-  },
+
   premiumActiveBadge: {
     width: 32,
     height: 32,
@@ -1002,11 +1023,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  premiumActiveText: {
-    fontSize: 16,
-    color: "#FFFFFF",
-    fontWeight: "bold",
-  },
+
   // Travel History styles
   historyCard: {
     backgroundColor: "#FFFFFF",

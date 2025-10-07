@@ -1,27 +1,30 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TextInput, 
-  TouchableOpacity, 
+import React, { useState, useEffect, useCallback } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
   ActivityIndicator,
   ScrollView,
   FlatList,
-  RefreshControl
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRoute, useNavigation } from '@react-navigation/native';
-import { usePlaces } from '../../hooks/usePlace';
-import { PlaceType, SearchScreenParams, Place } from '../../types/place.types';
+  RefreshControl,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useRoute, useNavigation } from "@react-navigation/native";
+import { usePlaces } from "../../hooks/usePlace";
+import { PlaceType, SearchScreenParams, Place } from "../../types/place.types";
+import { FontAwesome } from "@expo/vector-icons";
 
 const SearchScreen = () => {
   const route = useRoute();
   const navigation = useNavigation();
   const params = (route.params as SearchScreenParams) || {};
-  
-  const [searchQuery, setSearchQuery] = useState(params.searchQuery || '');
-  const [activeFilter, setActiveFilter] = useState<PlaceType | null>(params.filterType || null);
+
+  const [searchQuery, setSearchQuery] = useState(params.searchQuery || "");
+  const [activeFilter, setActiveFilter] = useState<PlaceType | null>(
+    params.filterType || null
+  );
 
   // Use the usePlaces hook
   const {
@@ -40,7 +43,7 @@ const SearchScreen = () => {
 
   // Reset state when params change
   useEffect(() => {
-    setSearchQuery(params.searchQuery || '');
+    setSearchQuery(params.searchQuery || "");
     setActiveFilter(params.filterType || null);
   }, [params.searchQuery, params.filterType]);
 
@@ -53,11 +56,16 @@ const SearchScreen = () => {
     } else if (params.showAllCategories) {
       fetchPlaces();
     } else if (params.showPopularPlaces) {
-      fetchPlaces({ sortBy: 'rating', sortOrder: 'desc' });
+      fetchPlaces({ sortBy: "rating", sortOrder: "desc" });
     } else {
       fetchPlaces();
     }
-  }, [params.searchQuery, params.filterType, params.showAllCategories, params.showPopularPlaces]);
+  }, [
+    params.searchQuery,
+    params.filterType,
+    params.showAllCategories,
+    params.showPopularPlaces,
+  ]);
 
   const handleSearch = () => {
     if (searchQuery.trim()) {
@@ -76,7 +84,7 @@ const SearchScreen = () => {
 
   const handlePlacePress = (place: any) => {
     // Handle place press - you can add navigation to place details here
-    console.log('Place pressed:', place);
+    console.log("Place pressed:", place);
   };
 
   // Render place item
@@ -89,21 +97,18 @@ const SearchScreen = () => {
         <Text style={styles.placeImageText}>🏢</Text>
       </View>
       <View style={styles.placeInfo}>
-        <Text style={styles.placeName}>{item.name || 'N/A'}</Text>
+        <Text style={styles.placeName}>{item.name || "N/A"}</Text>
         <Text style={styles.placeType}>
-          {item.type ? item.type.replace('_', ' ').toUpperCase() : 'N/A'}
+          {item.type ? item.type.replace("_", " ").toUpperCase() : "N/A"}
         </Text>
         <Text style={styles.placeDescription} numberOfLines={2}>
-          {item.description || 'N/A'}
+          {item.description || "N/A"}
         </Text>
-        <Text style={styles.placeLocation}>
-          {item.location?.city || 'N/A'}
-        </Text>
-        <Text style={styles.placeRating}>
-          ⭐ {item.rating || 0}/5
-        </Text>
+        <Text style={styles.placeLocation}>{item.location?.city || "N/A"}</Text>
+        <Text style={styles.placeRating}>⭐ {item.rating || 0}/5</Text>
         <Text style={styles.placePrice}>
-          💰 {item.priceRange ? item.priceRange.toLocaleString() : 0} VND
+          <FontAwesome name="money" size={20} color="#green"/>{' '}
+          {item.priceRange ? item.priceRange.toLocaleString() : 0} VND
         </Text>
         {item.tags && item.tags.length > 0 && (
           <View style={styles.tagsContainer}>
@@ -131,9 +136,9 @@ const SearchScreen = () => {
   const getScreenTitle = () => {
     if (params.categoryTitle) return params.categoryTitle;
     if (params.searchQuery) return `Kết quả cho "${params.searchQuery}"`;
-    if (params.showAllCategories) return 'Danh sách địa điểm';
-    if (params.showPopularPlaces) return 'Địa điểm phổ biến';
-    return 'Tìm kiếm';
+    if (params.showAllCategories) return "Danh sách địa điểm";
+    if (params.showPopularPlaces) return "Địa điểm phổ biến";
+    return "Tìm kiếm";
   };
 
   return (
@@ -143,18 +148,20 @@ const SearchScreen = () => {
         <View style={styles.headerTop}>
           <Text style={styles.headerTitle}>{getScreenTitle()}</Text>
           {params.filterType && (
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.clearFilterButton}
               onPress={() => {
                 // Navigate back to show all categories
-                (navigation as any).navigate('Search', { showAllCategories: true });
+                (navigation as any).navigate("Search", {
+                  showAllCategories: true,
+                });
               }}
             >
               <Text style={styles.clearFilterText}>Tất cả</Text>
             </TouchableOpacity>
           )}
         </View>
-        
+
         {/* Search Bar */}
         <View style={styles.searchContainer}>
           <TextInput
@@ -166,7 +173,8 @@ const SearchScreen = () => {
             returnKeyType="search"
           />
           <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
-            <Text style={styles.searchIcon}>🔍</Text>
+            {/* <Text style={styles.searchIcon}>🔍</Text> */}
+            <FontAwesome name="search" size={20} color="#5A9FD8" />
           </TouchableOpacity>
         </View>
       </View>
@@ -174,8 +182,8 @@ const SearchScreen = () => {
       {/* Category Filters - Only show when viewing all categories */}
       {params.showAllCategories && !params.filterType && (
         <View style={styles.filtersContainer}>
-          <ScrollView 
-            horizontal 
+          <ScrollView
+            horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.filtersList}
           >
@@ -184,15 +192,17 @@ const SearchScreen = () => {
                 key={type}
                 style={[
                   styles.filterButton,
-                  activeFilter === type && styles.activeFilterButton
+                  activeFilter === type && styles.activeFilterButton,
                 ]}
                 onPress={() => handleFilterPress(type)}
               >
-                <Text style={[
-                  styles.filterButtonText,
-                  activeFilter === type && styles.activeFilterButtonText
-                ]}>
-                  {type.replace('_', ' ').toUpperCase()}
+                <Text
+                  style={[
+                    styles.filterButtonText,
+                    activeFilter === type && styles.activeFilterButtonText,
+                  ]}
+                >
+                  {type.replace("_", " ").toUpperCase()}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -200,43 +210,47 @@ const SearchScreen = () => {
         </View>
       )}
 
-        {/* Content */}
-        <View style={styles.content}>
-          {loading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#5A9FD8" />
-              <Text style={styles.loadingText}>Đang tải...</Text>
-            </View>
-          ) : error ? (
-            <View style={styles.errorContainer}>
-              <Text style={styles.errorText}>{error}</Text>
-              <TouchableOpacity style={styles.retryButton} onPress={() => fetchPlaces()}>
-                <Text style={styles.retryButtonText}>Thử lại</Text>
-              </TouchableOpacity>
-            </View>
-          ) : places && places.length > 0 ? (
-            <FlatList
-              data={places}
-              renderItem={renderPlace}
-              keyExtractor={(item) => item._id}
-              onEndReached={loadMore}
-              onEndReachedThreshold={0.5}
-              ListFooterComponent={renderFooter}
-              refreshControl={
-                <RefreshControl refreshing={loading} onRefresh={refresh} />
-              }
-              showsVerticalScrollIndicator={false}
-            />
-          ) : (
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyIcon}>🔍</Text>
-              <Text style={styles.emptyTitle}>Không tìm thấy kết quả</Text>
-              <Text style={styles.emptyDescription}>
-                Thử tìm kiếm với từ khóa khác hoặc thay đổi bộ lọc
-              </Text>
-            </View>
-          )}
-        </View>
+      {/* Content */}
+      <View style={styles.content}>
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#5A9FD8" />
+            <Text style={styles.loadingText}>Đang tải...</Text>
+          </View>
+        ) : error ? (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>{error}</Text>
+            <TouchableOpacity
+              style={styles.retryButton}
+              onPress={() => fetchPlaces()}
+            >
+              <Text style={styles.retryButtonText}>Thử lại</Text>
+            </TouchableOpacity>
+          </View>
+        ) : places && places.length > 0 ? (
+          <FlatList
+            data={places}
+            renderItem={renderPlace}
+            keyExtractor={(item) => item._id}
+            onEndReached={loadMore}
+            onEndReachedThreshold={0.5}
+            ListFooterComponent={renderFooter}
+            refreshControl={
+              <RefreshControl refreshing={loading} onRefresh={refresh} />
+            }
+            showsVerticalScrollIndicator={false}
+          />
+        ) : (
+          <View style={styles.emptyContainer}>
+            {/* <Text style={styles.emptyIcon}>🔍</Text> */}
+            <FontAwesome name="search" style={styles.emptyIcon} />
+            <Text style={styles.emptyTitle}>Không tìm thấy kết quả</Text>
+            <Text style={styles.emptyDescription}>
+              Thử tìm kiếm với từ khóa khác hoặc thay đổi bộ lọc
+            </Text>
+          </View>
+        )}
+      </View>
     </SafeAreaView>
   );
 };
@@ -244,16 +258,16 @@ const SearchScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: "#F5F5F5",
   },
   header: {
-    backgroundColor: '#87CEEB',
+    backgroundColor: "#87CEEB",
     paddingTop: 20,
     paddingBottom: 24,
     paddingHorizontal: 20,
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 4,
@@ -263,39 +277,39 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   headerTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 18,
   },
   headerTitle: {
     fontSize: 26,
-    fontWeight: '800',
-    color: '#FFF',
+    fontWeight: "800",
+    color: "#FFF",
     letterSpacing: 0.5,
     flex: 1,
   },
   clearFilterButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+    borderColor: "rgba(255, 255, 255, 0.3)",
   },
   clearFilterText: {
-    color: '#FFF',
+    color: "#FFF",
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFF',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFF",
     borderRadius: 30,
     paddingHorizontal: 20,
     paddingVertical: 14,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 4,
@@ -304,24 +318,24 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
     borderWidth: 1,
-    borderColor: '#E9ECEF',
+    borderColor: "#E9ECEF",
   },
   searchInput: {
     flex: 1,
     fontSize: 16,
-    color: '#212529',
-    fontWeight: '500',
+    color: "#212529",
+    fontWeight: "500",
     paddingVertical: 4,
   },
   searchButton: {
     marginLeft: 12,
     padding: 8,
     borderRadius: 20,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: "#F8F9FA",
   },
   searchIcon: {
     fontSize: 20,
-    color: '#5A9FD8',
+    color: "#5A9FD8",
   },
   content: {
     marginTop: 10,
@@ -330,36 +344,36 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     paddingVertical: 60,
   },
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#6C757D',
-    fontWeight: '500',
+    color: "#6C757D",
+    fontWeight: "500",
   },
   errorContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 40,
   },
   errorText: {
     fontSize: 16,
-    color: '#DC3545',
-    textAlign: 'center',
+    color: "#DC3545",
+    textAlign: "center",
     marginBottom: 20,
-    fontWeight: '500',
+    fontWeight: "500",
     lineHeight: 24,
   },
   retryButton: {
-    backgroundColor: '#5A9FD8',
+    backgroundColor: "#5A9FD8",
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 25,
-    shadowColor: '#5A9FD8',
+    shadowColor: "#5A9FD8",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -369,14 +383,14 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   retryButtonText: {
-    color: '#FFF',
+    color: "#FFF",
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   emptyContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 40,
   },
   emptyIcon: {
@@ -386,25 +400,25 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 22,
-    fontWeight: '700',
-    color: '#212529',
+    fontWeight: "700",
+    color: "#212529",
     marginBottom: 12,
-    textAlign: 'center',
+    textAlign: "center",
   },
   emptyDescription: {
     fontSize: 16,
-    color: '#6C757D',
-    textAlign: 'center',
+    color: "#6C757D",
+    textAlign: "center",
     lineHeight: 24,
-    fontWeight: '400',
+    fontWeight: "400",
   },
   placeCard: {
-    backgroundColor: '#FFF',
+    backgroundColor: "#FFF",
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
-    flexDirection: 'row',
-    shadowColor: '#000',
+    flexDirection: "row",
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 4,
@@ -413,74 +427,74 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 6,
     borderWidth: 1,
-    borderColor: '#F0F0F0',
+    borderColor: "#F0F0F0",
   },
   placeImage: {
     width: 90,
     height: 90,
     borderRadius: 12,
-    backgroundColor: '#F8F9FA',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#F8F9FA",
+    justifyContent: "center",
+    alignItems: "center",
     marginRight: 16,
     borderWidth: 1,
-    borderColor: '#E9ECEF',
+    borderColor: "#E9ECEF",
   },
   placeImageText: {
     fontSize: 36,
-    color: '#6C757D',
+    color: "#6C757D",
   },
   placeInfo: {
     flex: 1,
-    justifyContent: 'space-between',
+    justifyContent: "space-between",
     paddingVertical: 4,
   },
   placeName: {
     fontSize: 18,
-    fontWeight: '700',
-    color: '#212529',
+    fontWeight: "700",
+    color: "#212529",
     marginBottom: 6,
     lineHeight: 22,
   },
   placeType: {
     fontSize: 12,
-    color: '#6C757D',
-    textTransform: 'uppercase',
+    color: "#6C757D",
+    textTransform: "uppercase",
     marginBottom: 8,
-    fontWeight: '600',
+    fontWeight: "600",
     letterSpacing: 0.5,
   },
   placeDescription: {
     fontSize: 14,
-    color: '#6C757D',
+    color: "#6C757D",
     marginBottom: 8,
     lineHeight: 20,
   },
   placeLocation: {
     fontSize: 13,
-    color: '#868E96',
+    color: "#868E96",
     marginBottom: 8,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   placeRating: {
     fontSize: 13,
-    color: '#FFC107',
-    fontWeight: '600',
+    color: "#FFC107",
+    fontWeight: "600",
     marginBottom: 4,
   },
   placePrice: {
     fontSize: 14,
-    color: '#28A745',
-    fontWeight: '700',
+    color: "#28A745",
+    fontWeight: "700",
   },
   tagsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     marginTop: 8,
   },
   tag: {
-    backgroundColor: '#E3F2FD',
-    color: '#1976D2',
+    backgroundColor: "#E3F2FD",
+    color: "#1976D2",
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
@@ -490,15 +504,15 @@ const styles = StyleSheet.create({
   },
   footerLoader: {
     paddingVertical: 20,
-    alignItems: 'center',
+    alignItems: "center",
   },
   filtersContainer: {
     marginTop: 5,
-    backgroundColor: '#FFF',
+    backgroundColor: "#FFF",
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#E9ECEF',
-    shadowColor: '#000',
+    borderBottomColor: "#E9ECEF",
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 1,
@@ -511,14 +525,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   filterButton: {
-    backgroundColor: '#F8F9FA',
+    backgroundColor: "#F8F9FA",
     paddingHorizontal: 18,
     paddingVertical: 10,
     borderRadius: 25,
     marginRight: 12,
     borderWidth: 1.5,
-    borderColor: '#E9ECEF',
-    shadowColor: '#000',
+    borderColor: "#E9ECEF",
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 1,
@@ -528,9 +542,9 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   activeFilterButton: {
-    backgroundColor: '#5A9FD8',
-    borderColor: '#5A9FD8',
-    shadowColor: '#5A9FD8',
+    backgroundColor: "#5A9FD8",
+    borderColor: "#5A9FD8",
+    shadowColor: "#5A9FD8",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -541,13 +555,13 @@ const styles = StyleSheet.create({
   },
   filterButtonText: {
     fontSize: 12,
-    color: '#6C757D',
-    fontWeight: '600',
+    color: "#6C757D",
+    fontWeight: "600",
     letterSpacing: 0.3,
   },
   activeFilterButtonText: {
-    color: '#FFF',
-    fontWeight: '700',
+    color: "#FFF",
+    fontWeight: "700",
   },
 });
 

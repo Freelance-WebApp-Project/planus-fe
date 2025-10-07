@@ -14,6 +14,7 @@ import { useNavigation } from "@react-navigation/native";
 import { planService } from "../../services/plan.service";
 import { SavedPlan } from "../../types/plan.types";
 import { API_CONFIG } from "../../constants/api.constants";
+import { FontAwesome } from "@expo/vector-icons";
 
 const TravelHistoryScreen = () => {
   const navigation = useNavigation();
@@ -127,7 +128,8 @@ const TravelHistoryScreen = () => {
           >
             <Text style={styles.backIcon}>←</Text>
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Lịch sử chuyến đi</Text>
+          <Text style={styles.headerTitle}>Lịch sử chuyến đi
+          </Text>
           <View style={styles.placeholder} />
         </View>
         <View style={styles.loadingContainer}>
@@ -153,7 +155,8 @@ const TravelHistoryScreen = () => {
           style={styles.backButton}
           onPress={() => (navigation as any).navigate("MainTabs", { screen: "Home" })}
         >
-          <Text style={styles.backIcon}>🏠</Text>
+          {/* <Text style={styles.backIcon}>🏠</Text> */}
+          <FontAwesome name="home" size={24} color="#212529" style={{marginBottom: 5}} />
         </TouchableOpacity>
       </View>
 

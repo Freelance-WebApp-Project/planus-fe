@@ -14,6 +14,7 @@ import { useNavigation } from '@react-navigation/native';
 import { planService } from '../../services/plan.service';
 import { SavedPlan } from '../../types/plan.types';
 import { API_CONFIG } from '../../constants/api.constants';
+import { FontAwesome } from "@expo/vector-icons";
 
 const FavoritesScreen = () => {
   const navigation = useNavigation();
@@ -95,7 +96,9 @@ const FavoritesScreen = () => {
           <Text style={styles.planTitle}>{item.planTitle}</Text>
           <View style={styles.planDetails}>
             <Text style={styles.planDuration}>⏰ {item.totalDuration}</Text>
-            <Text style={styles.planCost}>💰 {item.estimatedCost.toLocaleString()}đ</Text>
+            <Text style={styles.planCost}>
+              <FontAwesome name="money" size={20} color="#green"/>{' '}
+               {item.estimatedCost.toLocaleString()}đ</Text>
           </View>
           <Text style={styles.planPlacesCount}>
             📍 {item.itinerary.length} địa điểm

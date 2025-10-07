@@ -17,6 +17,7 @@ import { StatusBar } from "expo-status-bar";
 import { useAuth } from "../../hoc/AuthContext";
 import { LoginRequest, AuthError } from "../../types/auth.types";
 import { showToast, formatErrorMessage } from "../../utils/toast.utils";
+import { FontAwesome } from "@expo/vector-icons";
 
 const { width, height } = Dimensions.get("window");
 
@@ -43,14 +44,14 @@ const LoginScreen = ({ navigation }: any) => {
 
       if (response.success) {
         showToast.success("Thành công", "Đăng nhập thành công");
-        
+
         // AppNavigator will automatically handle navigation based on user state
         // No need to manually navigate from LoginScreen
       } else {
         const error = response.error;
         if (error) {
-          const errorMessage = formatErrorMessage(error, 'Đăng nhập thất bại');
-          showToast.error('Lỗi đăng nhập', errorMessage);
+          const errorMessage = formatErrorMessage(error, "Đăng nhập thất bại");
+          showToast.error("Lỗi đăng nhập", errorMessage);
         } else {
           showToast.error("Lỗi", "Đăng nhập thất bại");
         }
@@ -91,20 +92,19 @@ const LoginScreen = ({ navigation }: any) => {
         >
           {/* Header with logo */}
           <View style={styles.header}>
-            <View style={styles.logoContainer}>
-              {/* Modern logo design */}
-              <View style={styles.logoWrapper}>
-                <View style={styles.logoIcon}>
-                  <Text style={styles.logoText}>✈️</Text>
-                </View>
-                <View style={styles.logoAccent} />
-              </View>
-
-              <Text style={styles.title}>PLANUS</Text>
-              <Text style={styles.subtitle}>
-                Khám phá thế giới cùng chúng tôi
-              </Text>
-            </View>
+            <Image
+              source={require("../../../assets/logo.png")}
+              style={{
+                width: 80,
+                height: 80,
+                marginBottom: 20,
+                borderRadius: 40,
+              }}
+            />
+            <Text style={styles.title}>PLANUS</Text>
+            <Text style={styles.subtitle}>
+              Khám phá thế giới cùng chúng tôi
+            </Text>
           </View>
 
           {/* Login form */}
@@ -114,9 +114,9 @@ const LoginScreen = ({ navigation }: any) => {
               <View style={styles.inputContainer}>
                 <Text style={styles.inputLabel}>Email hoặc tên người dùng</Text>
                 <View style={styles.inputWrapper}>
-                  <View style={styles.inputIcon}>
+                  {/* <View style={styles.inputIcon}>
                     <Text style={styles.iconText}>👤</Text>
-                  </View>
+                  </View> */}
                   <TextInput
                     style={styles.input}
                     placeholder="Nhập email hoặc tên người dùng"
@@ -133,9 +133,9 @@ const LoginScreen = ({ navigation }: any) => {
               <View style={styles.inputContainer}>
                 <Text style={styles.inputLabel}>Mật khẩu</Text>
                 <View style={styles.inputWrapper}>
-                  <View style={styles.inputIcon}>
+                  {/* <View style={styles.inputIcon}>
                     <Text style={styles.iconText}>🔒</Text>
-                  </View>
+                  </View> */}
                   <TextInput
                     style={styles.input}
                     placeholder="Nhập mật khẩu"
@@ -148,9 +148,11 @@ const LoginScreen = ({ navigation }: any) => {
                     style={styles.eyeIcon}
                     onPress={() => setIsPasswordVisible(!isPasswordVisible)}
                   >
-                    <Text style={styles.iconText}>
-                      {isPasswordVisible ? "👁️" : "👁️‍🗨️"}
-                    </Text>
+                    {isPasswordVisible ? (
+                      <FontAwesome name="eye" size={18} color="black" />
+                    ) : (
+                      <FontAwesome name="eye-slash" size={18} color="black" />
+                    )}
                   </TouchableOpacity>
                 </View>
               </View>
@@ -381,7 +383,7 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 4,
     borderWidth: 2,
-    borderColor: "#87CEEB",
+    borderColor: "#000000",
     marginRight: 8,
     alignItems: "center",
     justifyContent: "center",
@@ -396,11 +398,11 @@ const styles = StyleSheet.create({
   },
   rememberMeText: {
     fontSize: 14,
-    color: "#6c757d",
+    color: "#000000",
   },
   forgotPasswordText: {
     fontSize: 14,
-    color: "#87CEEB",
+    color: "#000000",
     fontWeight: "600",
   },
   loginButton: {

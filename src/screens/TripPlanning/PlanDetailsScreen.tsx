@@ -15,13 +15,17 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import { TravelPlan, CreatePlanDto } from "../../types/plan.types";
 import { API_CONFIG } from "../../constants/api.constants";
 import { planService } from "../../services/plan.service";
+import { FontAwesome } from "@expo/vector-icons";
 
 const { width } = Dimensions.get("window");
 
 const PlanDetailsScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const { plan, planId } = route.params as { plan: TravelPlan; planId?: string };
+  const { plan, planId } = route.params as {
+    plan: TravelPlan;
+    planId?: string;
+  };
   const [processingPayment, setProcessingPayment] = useState(false);
   const [processingFavorite, setProcessingFavorite] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
@@ -29,12 +33,12 @@ const PlanDetailsScreen = () => {
   const handleCreateWithPayment = async () => {
     try {
       setProcessingPayment(true);
-      
+
       const createPlanData: CreatePlanDto = {
         planTitle: plan.planTitle,
         totalDuration: plan.totalDuration,
         estimatedCost: plan.estimatedCost,
-        itinerary: plan.itinerary.map(item => ({
+        itinerary: plan.itinerary.map((item) => ({
           placeId: item.placeInfo._id,
           order: item.order,
           distance: item.distance,
@@ -44,27 +48,27 @@ const PlanDetailsScreen = () => {
       };
 
       const response = await planService.createWithPayment(createPlanData);
-      
+
       if (response.success) {
-        console.log('Plan created with payment successfully');
-        
+        console.log("Plan created with payment successfully");
+
         // Show success alert
         Alert.alert(
-          'Thanh toán thành công!',
-          'Kế hoạch đã được tạo và thanh toán thành công.',
+          "Thanh toán thành công!",
+          "Kế hoạch đã được tạo và thanh toán thành công.",
           [
             {
-              text: 'Xem lịch sử',
+              text: "Xem lịch sử",
               onPress: () => {
                 // Navigate to TravelHistory screen
-                (navigation as any).navigate('TravelHistory');
-              }
-            }
+                (navigation as any).navigate("TravelHistory");
+              },
+            },
           ]
         );
       }
     } catch (error) {
-      console.error('Error creating plan with payment:', error);
+      console.error("Error creating plan with payment:", error);
     } finally {
       setProcessingPayment(false);
     }
@@ -73,18 +77,18 @@ const PlanDetailsScreen = () => {
   const handleToggleFavorite = async () => {
     try {
       setProcessingFavorite(true);
-      
+
       if (isFavorited) {
         // If already favorited, unfavorite using plan ID
         if (planId) {
           const response = await planService.unfavorite(planId);
-          
+
           if (response.success) {
             setIsFavorited(false);
-            console.log('Plan unfavorited successfully');
+            console.log("Plan unfavorited successfully");
           }
         } else {
-          console.error('Plan ID not found for unfavorite operation');
+          console.error("Plan ID not found for unfavorite operation");
         }
       } else {
         // If not favorited, add to favorites
@@ -92,7 +96,7 @@ const PlanDetailsScreen = () => {
           planTitle: plan.planTitle,
           totalDuration: plan.totalDuration,
           estimatedCost: plan.estimatedCost,
-          itinerary: plan.itinerary.map(item => ({
+          itinerary: plan.itinerary.map((item) => ({
             placeId: item.placeInfo._id,
             order: item.order,
             distance: item.distance,
@@ -104,14 +108,14 @@ const PlanDetailsScreen = () => {
         };
 
         const response = await planService.toggleFavorite(favoritePlanData);
-        
+
         if (response.success) {
           setIsFavorited(true);
-          console.log('Plan favorited successfully');
+          console.log("Plan favorited successfully");
         }
       }
     } catch (error) {
-      console.error('Error toggling favorite status:', error);
+      console.error("Error toggling favorite status:", error);
     } finally {
       setProcessingFavorite(false);
     }
@@ -257,9 +261,7 @@ const PlanDetailsScreen = () => {
           {processingFavorite ? (
             <ActivityIndicator size="small" color="#FF6B6B" />
           ) : (
-            <Text style={styles.favoriteIcon}>
-              {isFavorited ? '❤️' : '🤍'}
-            </Text>
+            <Text style={styles.favoriteIcon}>{isFavorited ? "❤️" : "🤍"}</Text>
           )}
         </TouchableOpacity>
       </View>
@@ -275,7 +277,9 @@ const PlanDetailsScreen = () => {
               <Text style={styles.summaryValue}>{plan.totalDuration}</Text>
             </View>
             <View style={styles.summaryItem}>
-              <Text style={styles.summaryIcon}>💰</Text>
+              <Text style={styles.summaryIcon}>
+                <FontAwesome name="money" size={24} color="#28A745" />{" "}
+              </Text>
               <Text style={styles.summaryLabel}>Chi phí</Text>
               <Text style={styles.summaryValue}>
                 {plan.estimatedCost.toLocaleString()}đ
@@ -301,14 +305,19 @@ const PlanDetailsScreen = () => {
       {/* Bottom Action */}
       <View style={styles.bottomBar}>
         <TouchableOpacity
-          style={[styles.selectButton, processingPayment && styles.disabledButton]}
+          style={[
+            styles.selectButton,
+            processingPayment && styles.disabledButton,
+          ]}
           onPress={handleCreateWithPayment}
           disabled={processingPayment}
         >
           {processingPayment ? (
             <ActivityIndicator size="small" color="#FFF" />
           ) : (
-            <Text style={styles.selectButtonText}>Thanh toán và tạo kế hoạch</Text>
+            <Text style={styles.selectButtonText}>
+              Thanh toán và tạo kế hoạch
+            </Text>
           )}
         </TouchableOpacity>
       </View>
