@@ -16,6 +16,7 @@ import PlanDetailsScreen from "../screens/TripPlanning/PlanDetailsScreen";
 import TravelHistoryScreen from "../screens/Profile/TravelHistoryScreen";
 import PlanDetailHistoryScreen from "../screens/Profile/PlanDetailHistoryScreen";
 import { FontAwesome } from "@expo/vector-icons";
+import SelectScheduleScreen from "../screens/TripPlanning/SelectScheduleScreen";
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -43,6 +44,10 @@ const MainStack = () => {
       <Stack.Screen
         name="SelectDestination"
         component={SelectDestinationScreen}
+      />
+      <Stack.Screen
+        name="SelectScheduleScreen"
+        component={SelectScheduleScreen}
       />
       <Stack.Screen name="SuggestedPlans" component={SuggestedPlansScreen} />
       <Stack.Screen name="PlanDetails" component={PlanDetailsScreen} />

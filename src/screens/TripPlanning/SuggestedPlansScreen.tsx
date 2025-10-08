@@ -53,17 +53,75 @@ interface SuggestedPlan {
   isSelected?: boolean;
 }
 
+const weatherLabelToIcon = (label: string) => {
+  switch (label) {
+    case "Quang":
+      return "☀️";
+    case "Chủ yếu quang":
+      return "🌤️";
+    case "Một phần mây":
+      return "⛅";
+    case "Âm u":
+      return "☁️";
+    case "Mưa nhẹ":
+      return "🌦️";
+    case "Mưa vừa":
+      return "🌧️";
+    case "Mưa to":
+      return "🌧️🌧️";
+    case "Mưa rào nhẹ":
+      return "🌦️";
+    case "Mưa rào vừa":
+      return "🌧️";
+    case "Mưa rào to":
+      return "🌧️🌧️";
+    case "Dông":
+      return "⛈️";
+    case "Dông + mưa đá nhẹ":
+      return "🌩️";
+    case "Dông + mưa đá to":
+      return "🌩️❄️";
+    default:
+      return "❓";
+  }
+};
+
 const SuggestedPlansScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const { start, end, selectedPurpose, selectedDuration, radius } =
-    route.params as {
-      start: { lat: number; lng: number; address: string };
-      end: { lat: number; lng: number; address: string };
-      selectedPurpose: string;
-      selectedDuration: string;
-      radius: number;
+  const {
+    start,
+    end,
+    selectedPurpose,
+    selectedDuration,
+    radius,
+    weatherStart,
+    weatherEnd,
+    travelDate,
+  } = route.params as {
+    start: { lat: number; lng: number; address: string };
+    end: { lat: number; lng: number; address: string };
+    selectedPurpose: string;
+    selectedDuration: string;
+    radius: number;
+    weatherStart: {
+      temperatureMax: number;
+      temperatureMin: number;
+      precipitation: number;
+      precipitationProbability: number;
+      weatherLabel: string;
     };
+    weatherEnd: {
+      temperatureMax: number;
+      temperatureMin: number;
+      precipitation: number;
+      precipitationProbability: number;
+      weatherLabel: string;
+    };
+    travelDate: string;
+  };
+
+  const travelDateObj = travelDate ? new Date(travelDate) : new Date();
 
   // Lấy label từ id
   const selectedPurposeLabel =
@@ -116,7 +174,7 @@ const SuggestedPlansScreen = () => {
           <View style={styles.planDetails}>
             <Text style={styles.planDuration}>⏰ {item.totalDuration}</Text>
             <Text style={styles.planCost}>
-              💰 {item.estimatedCost.toLocaleString()}đ
+              💰 {item.estimatedCost}đ
             </Text>
           </View>
           <Text style={styles.planPlacesCount}>
@@ -292,16 +350,27 @@ const SuggestedPlansScreen = () => {
 
       {/* Travel Info Card */}
       <View style={styles.travelCard}>
+        <Text style={styles.travelLabel}>Ngày: {travelDate}</Text>
         <View style={styles.travelInfo}>
-          <View style={styles.travelFrom}>
-            <Text style={styles.travelLabel}>Từ: {start.address}</Text>
+          <View style={styles.travelHalf}>
             <View style={styles.travelDetails}>
-              <Text style={styles.travelIcon}>📍</Text>
-              <Text style={styles.travelText}>
-                {distance ? `${distance.toFixed(2)} km` : "Đang tính..."}
-              </Text>
+              <View style={styles.weatherCard}>
+                <Text style={styles.dayLabel}>{travelDate}</Text>
+                <Text style={styles.weatherIcon}>
+                  {weatherLabelToIcon(weatherStart.weatherLabel)}
+                </Text>
+                <Text style={styles.tempText}>
+                  {weatherStart.temperatureMax}° / {weatherStart.temperatureMin}
+                  °
+                </Text>
+                <Text style={styles.weatherLabel}>
+                  {weatherStart.weatherLabel} (
+                  {weatherStart.precipitationProbability}%)
+                </Text>
+              </View>
             </View>
-            <View style={styles.travelDetails}>
+            <Text style={styles.titleLabel}>Từ: {start.address}</Text>
+            <View style={styles.travelDetails2}>
               <Text style={styles.travelIcon}>⏰</Text>
               {distance !== null && travelTime && (
                 <Text style={styles.travelText}>
@@ -311,17 +380,40 @@ const SuggestedPlansScreen = () => {
               )}
             </View>
           </View>
-
-          <View style={styles.travelTo}>
-            <Text style={styles.travelLabel}>Đến: {end.address}</Text>
-            <Text style={styles.travelLabel}>
-              Mục đích: {selectedPurposeLabel}
-            </Text>
-            <Text style={styles.travelLabel}>
-              Thời gian: {selectedDurationLabel}
-            </Text>
-            <Text style={styles.travelLabel}>Bán kính: {radius / 1000} km</Text>
+          <View style={styles.travelHalf}>
+            <View style={styles.travelDetails}>
+              <View style={styles.weatherCard}>
+                <Text style={styles.dayLabel}>{travelDate}</Text>
+                <Text style={styles.weatherIcon}>
+                  {weatherLabelToIcon(weatherStart.weatherLabel)}
+                </Text>
+                <Text style={styles.tempText}>
+                  {weatherEnd.temperatureMax}° / {weatherEnd.temperatureMin}°
+                </Text>
+                <Text style={styles.weatherLabel}>
+                  {weatherEnd.weatherLabel} (
+                  {weatherEnd.precipitationProbability}%)
+                </Text>
+              </View>
+            </View>
+            <Text style={styles.titleLabel}>Đến: {end.address}</Text>
+            <View style={styles.travelDetails2}>
+              <Text style={styles.travelIcon}>📍</Text>
+              <Text style={styles.travelText}>
+                {distance ? `${distance.toFixed(2)} km` : "Đang tính..."}
+              </Text>
+            </View>
           </View>
+        </View>
+
+        <View style={styles.travelTo}>
+          <Text style={styles.titleLabel2}>
+            Mục đích: {selectedPurposeLabel}
+          </Text>
+          <Text style={styles.titleLabel2}>
+            Thời gian: {selectedDurationLabel}
+          </Text>
+          <Text style={styles.titleLabel2}>Bán kính: {radius / 1000} km</Text>
         </View>
       </View>
 
@@ -390,12 +482,12 @@ const styles = StyleSheet.create({
     borderBottomColor: "#E9ECEF",
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "700",
     color: "#212529",
   },
   headerContainer: {
-    height: 200,
+    height: 150,
     position: "relative",
   },
   headerBackground: {
@@ -468,8 +560,10 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   travelInfo: {
-    flexDirection: "column",
-    gap: 16,
+    flexDirection: "row", // 2 phần tử xếp ngang
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
   },
   travelFrom: {
     width: "100%",
@@ -478,35 +572,51 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   travelLabel: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "700",
     color: "#212529",
-    marginBottom: 12,
+    marginBottom: 5,
+  },
+  titleLabel: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#212529",
+    marginBottom: 3,
+  },
+  titleLabel2: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#212529",
+    // marginBottom: 12,
   },
   travelDetails: {
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 8,
   },
+  travelDetails2: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
   travelIcon: {
-    fontSize: 16,
+    fontSize: 12,
     marginRight: 8,
   },
   travelText: {
-    fontSize: 14,
+    fontSize: 12,
     color: "#6C757D",
     fontWeight: "500",
   },
   plansSection: {
     flex: 1,
     paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingTop: 10,
   },
   sectionTitle: {
     fontSize: 20,
     fontWeight: "800",
     color: "#212529",
-    marginBottom: 20,
+    marginBottom: 10,
   },
   plansGrid: {
     paddingBottom: 20,
@@ -578,7 +688,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 20,
-    paddingVertical: 16,
     backgroundColor: "#F8F9FA",
     borderTopWidth: 1,
     borderTopColor: "#E9ECEF",
@@ -636,6 +745,38 @@ const styles = StyleSheet.create({
     height: 200,
     marginHorizontal: 16,
     marginBottom: 20,
+  },
+  weatherCard: {
+    backgroundColor: "#444746",
+    padding: 12,
+    borderRadius: 12,
+    alignItems: "center",
+    width: 120,
+    minHeight: 125,
+    marginLeft: 0,
+  },
+  dayLabel: {
+    color: "#fff",
+    fontWeight: "700",
+    marginBottom: 4,
+  },
+  weatherIcon: {
+    fontSize: 24,
+    marginBottom: 4,
+  },
+  tempText: {
+    color: "#fff",
+    fontWeight: "600",
+    marginBottom: 2,
+  },
+  weatherLabel: {
+    color: "#ccc",
+    fontSize: 12,
+    textAlign: "center",
+  },
+  travelHalf: {
+    flex: 1,
+    alignItems: "center",
   },
 });
 

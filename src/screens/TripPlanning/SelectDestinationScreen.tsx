@@ -253,7 +253,7 @@ const SelectDestinationScreen = () => {
           address: currentLocation,
         };
 
-    (navigation as any).navigate("SuggestedPlans", {
+    (navigation as any).navigate("SelectScheduleScreen", {
       selectedPurpose,
       selectedDuration,
       radius,
