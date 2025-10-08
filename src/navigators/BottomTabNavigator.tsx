@@ -3,6 +3,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createStackNavigator } from "@react-navigation/stack";
 import { View, Text, TouchableOpacity } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import { LinearGradient } from "expo-linear-gradient";
 import HomeScreen from "../screens/TabsScreen/HomeScreen";
 import FavoritesScreen from "../screens/TabsScreen/FavoritesScreen";
 import SearchScreen from "../screens/TabsScreen/SearchScreen";
@@ -27,10 +28,6 @@ const ProfileStack = () => {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="ProfileMain" component={ProfileScreen} />
       <Stack.Screen name="Wallet" component={WalletScreen} />
-      <Stack.Screen
-        name="PlanDetailHistory"
-        component={PlanDetailHistoryScreen}
-      />
     </Stack.Navigator>
   );
 };
@@ -51,6 +48,10 @@ const MainStack = () => {
       />
       <Stack.Screen name="SuggestedPlans" component={SuggestedPlansScreen} />
       <Stack.Screen name="PlanDetails" component={PlanDetailsScreen} />
+      <Stack.Screen
+        name="PlanDetailHistoryScreen"
+        component={PlanDetailHistoryScreen}
+      />
       <Stack.Screen name="TravelHistory" component={TravelHistoryScreen} />
       <Stack.Screen
         name="TransactionHistory"
@@ -68,28 +69,16 @@ interface TabIconProps {
 
 const HomeIcon = ({ focused, color }: TabIconProps) => (
   <View style={{ alignItems: "center" }}>
-    {/* <Text style={{ fontSize: 22, color: focused ? "#5A9FD8" : "#999" }}>
-      🏠
-    </Text> */}
-    {/* <FontAwesome name="home" size={22} color="#000000" /> */}
-    <FontAwesome
-      name="home" 
-      size={22}
-      color={focused ? "#000000" : "#999"} // màu đỏ khi chọn
-    />
+    <FontAwesome name="home" size={22} color={focused ? "#4facfe" : "#999"} />
   </View>
 );
 
 const FavoritesIcon = ({ focused, color }: TabIconProps) => (
   <View style={{ alignItems: "center" }}>
-    {/* <Text style={{ fontSize: 22, color: focused ? "#5A9FD8" : "#999" }}>
-      ❤️
-    </Text> */}
-    {/* <FontAwesome name="heart-o" size={22} color="#000000" /> */}
     <FontAwesome
-      name={focused ? "heart" : "heart-o"} // ❤️ khi active, 🤍 khi inactive
+      name={focused ? "heart" : "heart-o"}
       size={22}
-      color={focused ? "#000000" : "#999"}
+      color={focused ? "#4facfe" : "#999"}
     />
   </View>
 );
@@ -103,51 +92,47 @@ const AddIcon = ({ focused, color }: TabIconProps) => {
         width: 56,
         height: 56,
         borderRadius: 28,
-        backgroundColor: "#5A9FD8",
-        justifyContent: "center",
-        alignItems: "center",
         marginBottom: 5,
-        shadowColor: "#000",
+        shadowColor: "#4facfe",
         shadowOffset: {
           width: 0,
           height: 4,
         },
         shadowOpacity: 0.3,
-        shadowRadius: 5,
+        shadowRadius: 8,
         elevation: 8,
       }}
       onPress={() => navigation.navigate("TripPlanning" as never)}
     >
-      <Text style={{ fontSize: 26, color: "#FFF", fontWeight: "bold" }}>+</Text>
+      <LinearGradient
+        colors={["#4facfe", "#00f2fe"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={{
+          width: 56,
+          height: 56,
+          borderRadius: 28,
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <Text style={{ fontSize: 26, color: "#FFF", fontWeight: "bold" }}>
+          +
+        </Text>
+      </LinearGradient>
     </TouchableOpacity>
   );
 };
 
 const SearchIcon = ({ focused, color }: TabIconProps) => (
   <View style={{ alignItems: "center" }}>
-    {/* <Text style={{ fontSize: 22, color: focused ? "#5A9FD8" : "#999" }}>
-      🔍
-    </Text> */}
-    {/* <FontAwesome name="search" size={22} color="#000000" /> */}
-    <FontAwesome
-      name="search" 
-      size={22}
-      color={focused ? "#000000" : "#999"} // màu đỏ khi chọn
-    />
+    <FontAwesome name="search" size={22} color={focused ? "#4facfe" : "#999"} />
   </View>
 );
 
 const ProfileIcon = ({ focused, color }: TabIconProps) => (
   <View style={{ alignItems: "center" }}>
-    {/* <Text style={{ fontSize: 22, color: focused ? "#5A9FD8" : "#999" }}>
-      👤
-    </Text> */}
-    {/* <FontAwesome name="user" size={22} color="#000000" /> */}
-    <FontAwesome
-      name="user" 
-      size={22}
-      color={focused ? "#000000" : "#999"} // màu đỏ khi chọn
-    />
+    <FontAwesome name="user" size={22} color={focused ? "#4facfe" : "#999"} />
   </View>
 );
 
@@ -198,7 +183,7 @@ const BottomTabNavigator = () => {
           paddingBottom: 8,
           paddingTop: 8,
         },
-        tabBarActiveTintColor: "#5A9FD8",
+        tabBarActiveTintColor: "#4facfe",
         tabBarInactiveTintColor: "#999",
         tabBarLabelStyle: {
           fontSize: 11,

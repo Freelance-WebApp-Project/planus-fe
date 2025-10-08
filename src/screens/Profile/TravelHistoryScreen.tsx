@@ -59,7 +59,7 @@ const TravelHistoryScreen = () => {
         style={styles.planCard}
         onPress={() => {
           // Navigate to plan details
-          (navigation as any).navigate("PlanDetails", {
+          (navigation as any).navigate("PlanDetailHistoryScreen", {
             plan: {
               planTitle: item.planTitle,
               totalDuration: item.totalDuration,
@@ -97,21 +97,59 @@ const TravelHistoryScreen = () => {
         <View style={styles.planInfo}>
           <Text style={styles.planTitle}>{item.planTitle}</Text>
           <View style={styles.planDetails}>
-            <Text style={styles.planDuration}>⏰ {item.totalDuration}</Text>
-            <Text style={styles.planCost}>
-              💰 {item.estimatedCost.toLocaleString()}đ
+            <View style={styles.planDetailItem}>
+              <FontAwesome 
+                name="clock-o" 
+                size={14} 
+                color="#6C757D" 
+                style={styles.planDetailIcon}
+              />
+              <Text style={styles.planDuration}>{item.totalDuration}</Text>
+            </View>
+            <View style={styles.planDetailItem}>
+              <FontAwesome 
+                name="money" 
+                size={14} 
+                color="#28A745" 
+                style={styles.planDetailIcon}
+              />
+              <Text style={styles.planCost}>
+                {item.estimatedCost.toLocaleString()}đ
+              </Text>
+            </View>
+          </View>
+          <View style={styles.planDetailItem}>
+            <FontAwesome 
+              name="map-marker" 
+              size={14} 
+              color="#6C757D" 
+              style={styles.planDetailIcon}
+            />
+            <Text style={styles.planPlacesCount}>
+              {item.itinerary.length} địa điểm
             </Text>
           </View>
-          <Text style={styles.planPlacesCount}>
-            📍 {item.itinerary.length} địa điểm
-          </Text>
           <View style={styles.statusContainer}>
             <View style={styles.paidBadge}>
-              <Text style={styles.paidText}>✓ Đã thanh toán</Text>
+              <FontAwesome 
+                name="check" 
+                size={12} 
+                color="#FFF" 
+                style={styles.paidIcon}
+              />
+              <Text style={styles.paidText}>Đã thanh toán</Text>
             </View>
-            <Text style={styles.createdDate}>
-              📅 {new Date(item.createdAt).toLocaleDateString("vi-VN")}
-            </Text>
+            <View style={styles.dateContainer}>
+              <FontAwesome 
+                name="calendar" 
+                size={12} 
+                color="#6C757D" 
+                style={styles.dateIcon}
+              />
+              <Text style={styles.createdDate}>
+                {new Date(item.createdAt).toLocaleDateString("vi-VN")}
+              </Text>
+            </View>
           </View>
         </View>
       </TouchableOpacity>
@@ -126,14 +164,18 @@ const TravelHistoryScreen = () => {
             style={styles.backButton}
             onPress={() => navigation.goBack()}
           >
-            <Text style={styles.backIcon}>←</Text>
+            <FontAwesome 
+              name="arrow-left" 
+              size={18} 
+              color="#4facfe" 
+            />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Lịch sử chuyến đi
           </Text>
           <View style={styles.placeholder} />
         </View>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#5A9FD8" />
+          <ActivityIndicator size="large" color="#4facfe" />
           <Text style={styles.loadingText}>Đang tải...</Text>
         </View>
       </SafeAreaView>
@@ -147,7 +189,11 @@ const TravelHistoryScreen = () => {
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Text style={styles.backIcon}>←</Text>
+          <FontAwesome 
+            name="arrow-left" 
+            size={18} 
+            color="#4facfe" 
+          />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Lịch sử chuyến đi</Text>
         <View style={styles.placeholder} />
@@ -155,14 +201,22 @@ const TravelHistoryScreen = () => {
           style={styles.backButton}
           onPress={() => (navigation as any).navigate("MainTabs", { screen: "Home" })}
         >
-          {/* <Text style={styles.backIcon}>🏠</Text> */}
-          <FontAwesome name="home" size={24} color="#212529" style={{marginBottom: 5}} />
+          <FontAwesome 
+            name="home" 
+            size={20} 
+            color="#4facfe" 
+          />
         </TouchableOpacity>
       </View>
 
       {plans.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyIcon}>📋</Text>
+          <FontAwesome 
+            name="list-alt" 
+            size={64} 
+            color="#4facfe" 
+            style={styles.emptyIcon}
+          />
           <Text style={styles.emptyTitle}>Chưa có chuyến đi nào</Text>
           <Text style={styles.emptyDescription}>
             Các kế hoạch đã thanh toán sẽ hiển thị ở đây
@@ -202,10 +256,6 @@ const styles = StyleSheet.create({
   backButton: {
     padding: 8,
   },
-  backIcon: {
-    fontSize: 20,
-    color: "#5A9FD8",
-  },
   headerTitle: {
     fontSize: 18,
     fontWeight: "700",
@@ -231,7 +281,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   emptyIcon: {
-    fontSize: 64,
     marginBottom: 20,
   },
   emptyTitle: {
@@ -283,6 +332,13 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: 8,
   },
+  planDetailItem: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  planDetailIcon: {
+    marginRight: 6,
+  },
   planDuration: {
     fontSize: 14,
     color: "#6C757D",
@@ -309,11 +365,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  paidIcon: {
+    marginRight: 4,
   },
   paidText: {
     fontSize: 12,
     color: "#FFF",
     fontWeight: "600",
+  },
+  dateContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  dateIcon: {
+    marginRight: 4,
   },
   createdDate: {
     fontSize: 12,

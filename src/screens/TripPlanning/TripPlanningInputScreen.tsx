@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
+import { FontAwesome } from "@expo/vector-icons";
 import Slider from "@react-native-community/slider";
 
 const { width } = Dimensions.get("window");
@@ -21,17 +22,17 @@ const TripPlanningInputScreen = () => {
   const [radius, setRadius] = useState<number>(5);
 
   const purposes = [
-    { id: "dating", label: "Hẹn hò", icon: "💕" },
-    { id: "relax", label: "Thư giãn", icon: "🧘" },
-    { id: "coffee", label: "Cà phê", icon: "☕" },
-    { id: "explore", label: "Khám phá", icon: "🗺️" },
-    { id: "food", label: "Ẩm thực", icon: "🍜" },
+    { id: "dating", label: "Hẹn hò", icon: "heart", color: "#FF6B6B" },
+    { id: "relax", label: "Thư giãn", icon: "leaf", color: "#4ECDC4" },
+    { id: "coffee", label: "Cà phê", icon: "coffee", color: "#8B4513" },
+    { id: "explore", label: "Khám phá", icon: "compass", color: "#4facfe" },
+    { id: "food", label: "Ẩm thực", icon: "cutlery", color: "#FFA726" },
   ];
 
   const durations = [
-    { id: "half-day", label: "Nửa ngày", icon: "🌅" },
-    { id: "full-day", label: "Cả ngày", icon: "🌞" },
-    { id: "multi-day", label: "Nhiều ngày", icon: "📅" },
+    { id: "half-day", label: "Nửa ngày", icon: "sun-o", color: "#FFD700" },
+    { id: "full-day", label: "Cả ngày", icon: "sun", color: "#FF8C00" },
+    { id: "multi-day", label: "Nhiều ngày", icon: "calendar", color: "#9C27B0" },
   ];
 
   const handlePurposeSelect = (purposeId: string) => {
@@ -78,13 +79,6 @@ const TripPlanningInputScreen = () => {
       {/* Main Content */}
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.card}>
-          {/* Current Location Input */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Tại đây</Text>
-            <TouchableOpacity style={styles.inputButton}>
-              <Text style={styles.inputButtonIcon}>→</Text>
-            </TouchableOpacity>
-          </View>
 
           {/* Purpose Selection */}
           <View style={styles.section}>
@@ -100,7 +94,12 @@ const TripPlanningInputScreen = () => {
                   ]}
                   onPress={() => handlePurposeSelect(purpose.id)}
                 >
-                  <Text style={styles.optionIcon}>{purpose.icon}</Text>
+                  <FontAwesome 
+                    name={purpose.icon as any} 
+                    size={16} 
+                    color={selectedPurpose === purpose.id ? "#FFFFFF" : purpose.color} 
+                    style={styles.optionIcon} 
+                  />
                   <Text
                     style={[
                       styles.optionText,
@@ -131,7 +130,12 @@ const TripPlanningInputScreen = () => {
                   ]}
                   onPress={() => handleDurationSelect(duration.id)}
                 >
-                  <Text style={styles.optionIcon}>{duration.icon}</Text>
+                  <FontAwesome 
+                    name={duration.icon as any} 
+                    size={16} 
+                    color={selectedDuration === duration.id ? "#FFFFFF" : duration.color} 
+                    style={styles.optionIcon} 
+                  />
                   <Text
                     style={[
                       styles.optionText,
@@ -160,7 +164,7 @@ const TripPlanningInputScreen = () => {
                 step={1}
                 value={radius}
                 onValueChange={setRadius}
-                minimumTrackTintColor="#5A9FD8"
+                minimumTrackTintColor="#4facfe"
                 maximumTrackTintColor="#E9ECEF"
               />
             </View>
@@ -174,7 +178,7 @@ const TripPlanningInputScreen = () => {
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Text style={styles.backIcon}>←</Text>
+          <FontAwesome name="arrow-left" size={20} color="#4facfe" style={styles.backIcon} />
           <Text style={styles.backText}>Quay lại</Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -294,10 +298,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  inputButtonIcon: {
-    fontSize: 16,
-    color: "#6C757D",
-  },
   section: {
     marginBottom: 20,
   },
@@ -323,11 +323,10 @@ const styles = StyleSheet.create({
     borderColor: "#E9ECEF",
   },
   selectedOptionButton: {
-    backgroundColor: "#5A9FD8",
-    borderColor: "#5A9FD8",
+    backgroundColor: "#4facfe",
+    borderColor: "#4facfe",
   },
   optionIcon: {
-    fontSize: 16,
     marginRight: 4,
   },
   optionText: {
@@ -349,7 +348,7 @@ const styles = StyleSheet.create({
   radiusLabel: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#5A9FD8",
+    color: "#4facfe",
     marginBottom: 16,
   },
   slider: {
@@ -372,21 +371,19 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   backIcon: {
-    fontSize: 20,
-    color: "#5A9FD8",
     marginRight: 8,
   },
   backText: {
     fontSize: 16,
-    color: "#5A9FD8",
+    color: "#4facfe",
     fontWeight: "600",
   },
   continueButton: {
-    backgroundColor: "#5A9FD8",
+    backgroundColor: "#4facfe",
     paddingHorizontal: 32,
     paddingVertical: 12,
     borderRadius: 25,
-    shadowColor: "#5A9FD8",
+    shadowColor: "#4facfe",
     shadowOffset: {
       width: 0,
       height: 2,

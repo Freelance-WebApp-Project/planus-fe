@@ -13,6 +13,7 @@ import {
   ActivityIndicator,
   Dimensions,
 } from "react-native";
+import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from "expo-status-bar";
 import { useAuth } from "../../hoc/AuthContext";
 import { LoginRequest, AuthError } from "../../types/auth.types";
@@ -75,7 +76,12 @@ const LoginScreen = ({ navigation }: any) => {
       <StatusBar style="light" />
 
       {/* Background Gradient */}
-      <View style={styles.backgroundGradient} />
+      <LinearGradient
+        colors={['#4facfe', '#00f2fe']}
+        style={styles.backgroundGradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      />
 
       {/* Decorative Circles */}
       <View style={styles.circle1} />
@@ -180,20 +186,27 @@ const LoginScreen = ({ navigation }: any) => {
               </View>
 
               {/* Login button */}
-              <TouchableOpacity
+              <LinearGradient
+                colors={['#4facfe', '#00f2fe']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
                 style={[
                   styles.loginButton,
                   isLoading && styles.loginButtonDisabled,
                 ]}
-                onPress={handleLogin}
-                disabled={isLoading}
               >
-                {isLoading ? (
-                  <ActivityIndicator color="#FFF" size="small" />
-                ) : (
-                  <Text style={styles.loginButtonText}>Đăng nhập</Text>
-                )}
-              </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.loginButtonTouchable}
+                  onPress={handleLogin}
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <ActivityIndicator color="#FFF" size="small" />
+                  ) : (
+                    <Text style={styles.loginButtonText}>Đăng nhập</Text>
+                  )}
+                </TouchableOpacity>
+              </LinearGradient>
 
               {/* Divider */}
               <View style={styles.dividerContainer}>
@@ -220,7 +233,7 @@ const LoginScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#1a1a2e",
+    backgroundColor: "#4facfe",
   },
   backgroundGradient: {
     position: "absolute",
@@ -228,7 +241,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: "#16213e",
   },
   circle1: {
     position: "absolute",
@@ -271,21 +283,28 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   logoContainer: {
-    alignItems: "center",
-  },
-  logoWrapper: {
-    position: "relative",
-    marginBottom: 20,
-  },
-  logoIcon: {
     width: 80,
     height: 80,
-    borderRadius: 40,
-    backgroundColor: "rgba(135, 206, 235, 0.2)",
-    alignItems: "center",
+    marginBottom: 20,
     justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    borderRadius: 40,
     borderWidth: 2,
-    borderColor: "rgba(135, 206, 235, 0.3)",
+    borderColor: "rgba(255, 255, 255, 0.3)",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  logo: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
   },
   logoText: {
     fontSize: 32,
@@ -406,12 +425,9 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   loginButton: {
-    backgroundColor: "#87CEEB",
     borderRadius: 16,
-    paddingVertical: 18,
-    alignItems: "center",
     marginBottom: 20,
-    shadowColor: "#87CEEB",
+    shadowColor: "#4facfe",
     shadowOffset: {
       width: 0,
       height: 4,
@@ -419,6 +435,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 5,
+  },
+  loginButtonTouchable: {
+    paddingVertical: 18,
+    alignItems: "center",
   },
   loginButtonText: {
     color: "#FFF",

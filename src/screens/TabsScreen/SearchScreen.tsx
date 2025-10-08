@@ -10,6 +10,7 @@ import {
   FlatList,
   RefreshControl,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { usePlaces } from "../../hooks/usePlace";
@@ -41,6 +42,8 @@ const SearchScreen = () => {
     filterByType,
   } = usePlaces();
 
+  console.log(params);
+
   // Reset state when params change
   useEffect(() => {
     setSearchQuery(params.searchQuery || "");
@@ -58,6 +61,7 @@ const SearchScreen = () => {
     } else if (params.showPopularPlaces) {
       fetchPlaces({ sortBy: "rating", sortOrder: "desc" });
     } else {
+      // Default: show all categories when params is empty or no specific params
       fetchPlaces();
     }
   }, [
@@ -107,7 +111,7 @@ const SearchScreen = () => {
         <Text style={styles.placeLocation}>{item.location?.city || "N/A"}</Text>
         <Text style={styles.placeRating}>⭐ {item.rating || 0}/5</Text>
         <Text style={styles.placePrice}>
-          <FontAwesome name="money" size={20} color="#green"/>{' '}
+          <FontAwesome name="money" size={16} color="#28A745"/>{' '}
           {item.priceRange ? item.priceRange.toLocaleString() : 0} VND
         </Text>
         {item.tags && item.tags.length > 0 && (
@@ -128,7 +132,7 @@ const SearchScreen = () => {
     if (!loading) return null;
     return (
       <View style={styles.footerLoader}>
-        <ActivityIndicator size="small" color="#007AFF" />
+        <ActivityIndicator size="small" color="#4facfe" />
       </View>
     );
   };
@@ -138,13 +142,19 @@ const SearchScreen = () => {
     if (params.searchQuery) return `Kết quả cho "${params.searchQuery}"`;
     if (params.showAllCategories) return "Danh sách địa điểm";
     if (params.showPopularPlaces) return "Địa điểm phổ biến";
-    return "Tìm kiếm";
+    // Default title when params is empty
+    return "Địa điểm";
   };
 
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
+      <LinearGradient
+        colors={["#4facfe", "#00f2fe"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.header}
+      >
         <View style={styles.headerTop}>
           <Text style={styles.headerTitle}>{getScreenTitle()}</Text>
           {params.filterType && (
@@ -173,14 +183,14 @@ const SearchScreen = () => {
             returnKeyType="search"
           />
           <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
-            {/* <Text style={styles.searchIcon}>🔍</Text> */}
-            <FontAwesome name="search" size={20} color="#5A9FD8" />
+            <FontAwesome name="search" size={20} color="#4facfe" />
           </TouchableOpacity>
         </View>
-      </View>
+      </LinearGradient>
+      
 
-      {/* Category Filters - Only show when viewing all categories */}
-      {params.showAllCategories && !params.filterType && (
+      {/* Category Filters - Show when viewing all categories or when params is empty */}
+      {(params.showAllCategories || (!params.searchQuery && !params.filterType && !params.showPopularPlaces)) && (
         <View style={styles.filtersContainer}>
           <ScrollView
             horizontal
@@ -214,7 +224,7 @@ const SearchScreen = () => {
       <View style={styles.content}>
         {loading ? (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#5A9FD8" />
+            <ActivityIndicator size="large" color="#4facfe" />
             <Text style={styles.loadingText}>Đang tải...</Text>
           </View>
         ) : error ? (
@@ -242,8 +252,7 @@ const SearchScreen = () => {
           />
         ) : (
           <View style={styles.emptyContainer}>
-            {/* <Text style={styles.emptyIcon}>🔍</Text> */}
-            <FontAwesome name="search" style={styles.emptyIcon} />
+            <FontAwesome name="search" size={80} color="#4facfe" />
             <Text style={styles.emptyTitle}>Không tìm thấy kết quả</Text>
             <Text style={styles.emptyDescription}>
               Thử tìm kiếm với từ khóa khác hoặc thay đổi bộ lọc
@@ -261,20 +270,19 @@ const styles = StyleSheet.create({
     backgroundColor: "#F5F5F5",
   },
   header: {
-    backgroundColor: "#87CEEB",
     paddingTop: 20,
     paddingBottom: 24,
     paddingHorizontal: 20,
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
-    shadowColor: "#000",
+    shadowColor: "#4facfe",
     shadowOffset: {
       width: 0,
       height: 4,
     },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.3,
     shadowRadius: 8,
-    elevation: 6,
+    elevation: 8,
   },
   headerTop: {
     flexDirection: "row",
@@ -369,11 +377,11 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   retryButton: {
-    backgroundColor: "#5A9FD8",
+    backgroundColor: "#4facfe",
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 25,
-    shadowColor: "#5A9FD8",
+    shadowColor: "#4facfe",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -392,11 +400,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     padding: 40,
-  },
-  emptyIcon: {
-    fontSize: 80,
-    marginBottom: 24,
-    opacity: 0.6,
   },
   emptyTitle: {
     fontSize: 22,
@@ -542,9 +545,9 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   activeFilterButton: {
-    backgroundColor: "#5A9FD8",
-    borderColor: "#5A9FD8",
-    shadowColor: "#5A9FD8",
+    backgroundColor: "#4facfe",
+    borderColor: "#4facfe",
+    shadowColor: "#4facfe",
     shadowOffset: {
       width: 0,
       height: 2,

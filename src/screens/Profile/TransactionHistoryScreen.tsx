@@ -10,6 +10,7 @@ import {
   Dimensions
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { FontAwesome } from '@expo/vector-icons';
 import { useWallet } from '../../hooks/useWallet';
 import { WalletTransaction } from '../../types/wallet.types';
 
@@ -54,15 +55,15 @@ const TransactionHistoryScreen = ({ navigation }: any) => {
   const getTransactionIcon = (type: string) => {
     switch (type) {
       case 'deposit':
-        return '📥';
+        return { name: 'arrow-down' as const, color: '#4CAF50' };
       case 'withdraw':
-        return '📤';
+        return { name: 'arrow-up' as const, color: '#FF5722' };
       case 'payment':
-        return '💳';
+        return { name: 'credit-card' as const, color: '#FF5722' };
       case 'vip_purchase':
-        return '👑';
+        return { name: 'star' as const, color: '#FFD700' };
       default:
-        return '💰';
+        return { name: 'money' as const, color: '#4facfe' };
     }
   };
 
@@ -111,13 +112,17 @@ const TransactionHistoryScreen = ({ navigation }: any) => {
     }
   };
 
-  const renderTransaction = ({ item }: { item: WalletTransaction }) => (
-    <View style={styles.transactionItem}>
-      <View style={styles.transactionIcon}>
-        <Text style={styles.transactionIconText}>
-          {getTransactionIcon(item.type)}
-        </Text>
-      </View>
+  const renderTransaction = ({ item }: { item: WalletTransaction }) => {
+    const iconData = getTransactionIcon(item.type);
+    return (
+      <View style={styles.transactionItem}>
+        <View style={styles.transactionIcon}>
+          <FontAwesome 
+            name={iconData.name} 
+            size={20} 
+            color={iconData.color} 
+          />
+        </View>
       
       <View style={styles.transactionDetails}>
         <Text style={styles.transactionTitle}>
@@ -140,11 +145,17 @@ const TransactionHistoryScreen = ({ navigation }: any) => {
         </Text>
       </View>
     </View>
-  );
+    );
+  };
 
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
-      <Text style={styles.emptyIcon}>📊</Text>
+      <FontAwesome 
+        name="list-alt" 
+        size={80} 
+        color="#4facfe" 
+        style={styles.emptyIcon}
+      />
       <Text style={styles.emptyTitle}>Chưa có giao dịch</Text>
       <Text style={styles.emptyDescription}>
         Các giao dịch của bạn sẽ hiển thị ở đây
@@ -158,7 +169,12 @@ const TransactionHistoryScreen = ({ navigation }: any) => {
         style={styles.backButton} 
         onPress={() => navigation.goBack()}
       >
-        <Text style={styles.backButtonText}>← Quay lại</Text>
+        <FontAwesome 
+          name="arrow-left" 
+          size={18} 
+          color="#4facfe" 
+        />
+        <Text style={styles.backButtonText}> Quay lại</Text>
       </TouchableOpacity>
       <Text style={styles.headerTitle}>Lịch sử giao dịch</Text>
       <View style={styles.placeholder} />
@@ -170,7 +186,7 @@ const TransactionHistoryScreen = ({ navigation }: any) => {
       <SafeAreaView style={styles.container}>
         {renderHeader()}
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#2196F3" />
+          <ActivityIndicator size="large" color="#4facfe" />
           <Text style={styles.loadingText}>Đang tải...</Text>
         </View>
       </SafeAreaView>
@@ -199,8 +215,8 @@ const TransactionHistoryScreen = ({ navigation }: any) => {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              colors={['#2196F3']}
-              tintColor="#2196F3"
+              colors={['#4facfe']}
+              tintColor="#4facfe"
             />
           }
           ListEmptyComponent={renderEmptyState}
@@ -227,13 +243,16 @@ const styles = StyleSheet.create({
     borderBottomColor: '#F0F0F0',
   },
   backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingVertical: 8,
     paddingHorizontal: 12,
   },
   backButtonText: {
     fontSize: 16,
-    color: '#2196F3',
+    color: '#4facfe',
     fontWeight: '600',
+    marginLeft: 4,
   },
   headerTitle: {
     fontSize: 18,
@@ -279,7 +298,7 @@ const styles = StyleSheet.create({
   },
   summaryValue: {
     fontSize: 16,
-    color: '#2196F3',
+    color: '#4facfe',
     fontWeight: 'bold',
   },
   listContainer: {
@@ -313,9 +332,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
-  },
-  transactionIconText: {
-    fontSize: 20,
   },
   transactionDetails: {
     flex: 1,
@@ -367,9 +383,7 @@ const styles = StyleSheet.create({
     paddingVertical: 60,
   },
   emptyIcon: {
-    fontSize: 80,
     marginBottom: 24,
-    opacity: 0.6,
   },
   emptyTitle: {
     fontSize: 20,

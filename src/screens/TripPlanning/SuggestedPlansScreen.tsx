@@ -9,8 +9,8 @@ import {
   Dimensions,
   FlatList,
   ActivityIndicator,
-  Alert,
 } from "react-native";
+import { FontAwesome } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import * as Location from "expo-location";
@@ -23,6 +23,7 @@ import {
 } from "../../types/plan.types";
 import { planService } from "../../services/plan.service";
 import { API_CONFIG } from "../../constants/api.constants";
+import { showToast } from "../../utils/toast.utils";
 
 const { width } = Dimensions.get("window");
 const cardWidth = (width - 60) / 3; // 3 cards per row with margins
@@ -51,6 +52,28 @@ interface SuggestedPlan {
   duration: string;
   price: string;
   isSelected?: boolean;
+}
+
+interface ApiTravelPlan {
+  planTitle: string;
+  totalDuration: string;
+  totalCost: number;
+  totalDistance: number;
+  itinerary: {
+    distance: number;
+    order: number;
+    place: {
+      _id: string;
+      images: string[];
+      location: any;
+      name: string;
+      priceRange: number;
+      rating: number;
+      tags: string[];
+      type: string;
+    };
+    travelTime: string;
+  }[];
 }
 
 const weatherLabelToIcon = (label: string) => {
@@ -139,21 +162,16 @@ const SuggestedPlansScreen = () => {
   );
 
   const [loading, setLoading] = useState(true);
-  const [suggestedPlans, setSuggestedPlans] = useState<TravelPlan[]>([]);
+  const [suggestedPlans, setSuggestedPlans] = useState<ApiTravelPlan[]>([]);
 
-  const handlePlanSelect = (plan: TravelPlan) => {
+  const handlePlanSelect = (plan: ApiTravelPlan) => {
     setSelectedPlan(plan.planTitle);
     // Navigate to plan details
     (navigation as any).navigate("PlanDetails", { plan });
   };
 
-  const handleContinue = () => {
-    // Navigate to plan details or next step
-    console.log("Selected plan:", selectedPlan);
-  };
-
-  const renderPlanCard = ({ item }: { item: TravelPlan }) => {
-    const firstPlace = item.itinerary[0]?.placeInfo;
+  const renderPlanCard = ({ item }: { item: ApiTravelPlan }) => {
+    const firstPlace = item.itinerary[0]?.place;
     const imageUrl = firstPlace?.images?.[0]
       ? `${API_CONFIG.UPLOADS_URL}/${firstPlace.images[0]}`
       : `https://via.placeholder.com/200x150/87CEEB/FFFFFF?text=${encodeURIComponent(
@@ -174,11 +192,14 @@ const SuggestedPlansScreen = () => {
           <View style={styles.planDetails}>
             <Text style={styles.planDuration}>⏰ {item.totalDuration}</Text>
             <Text style={styles.planCost}>
-              💰 {item.estimatedCost}đ
+              💰 {(item.totalCost || 0).toLocaleString()}đ
             </Text>
           </View>
           <Text style={styles.planPlacesCount}>
             📍 {item.itinerary.length} địa điểm
+          </Text>
+          <Text style={styles.planDistance}>
+            🗺️ {(item.totalDistance || 0).toFixed(1)} km
           </Text>
         </View>
       </TouchableOpacity>
@@ -253,7 +274,7 @@ const SuggestedPlansScreen = () => {
 
   const generatePlan = async () => {
     if (!selectedPurpose || !selectedDuration || !radius || !start || !end) {
-      alert("Vui lòng nhập đầy đủ thông tin");
+      showToast.error("Thiếu thông tin", "Vui lòng nhập đầy đủ thông tin");
       return;
     }
 
@@ -270,26 +291,18 @@ const SuggestedPlansScreen = () => {
     try {
       setLoading(true);
       const response = await planService.generatePlan(request);
+      console.log(response?.data?.plans[0].itinerary);
       if (response && response.success && response.data) {
-        setSuggestedPlans(response.data.plans);
-        alert("Tạo kế hoạch thành công!");
+        setSuggestedPlans(response.data.plans as unknown as ApiTravelPlan[]);
+        showToast.success("Thành công", "Tạo kế hoạch thành công!");
       } else {
         setLoading(false);
-        Alert.alert(
-          "Có lỗi xảy ra",
-          "Hệ thống gặp sự cố khi tạo kế hoạch. Bạn có muốn thử lại không?",
-          [
-            {
-              text: "Không",
-              onPress: () => navigation.goBack(),
-              style: "cancel",
-            },
-            { text: "Thử lại", onPress: () => generatePlan() },
-          ]
-        );
+        showToast.error("Có lỗi xảy ra", "Hệ thống gặp sự cố khi tạo kế hoạch");
       }
     } catch (error) {
       console.error("Error calling generatePlan:", error);
+      setLoading(false);
+      showToast.error("Lỗi kết nối", "Không thể kết nối đến server");
     } finally {
       setLoading(false);
     }
@@ -350,26 +363,32 @@ const SuggestedPlansScreen = () => {
 
       {/* Travel Info Card */}
       <View style={styles.travelCard}>
-        <Text style={styles.travelLabel}>Ngày: {travelDate}</Text>
+          <View style={styles.dateRow}>
+            <FontAwesome name="calendar" size={16} color="#4facfe" style={styles.dateIcon} />
+            <Text style={styles.travelLabel}>Ngày: {travelDate}</Text>
+          </View>
         <View style={styles.travelInfo}>
           <View style={styles.travelHalf}>
+            <Text style={styles.titleLabel} numberOfLines={0} allowFontScaling={false}>
+              Từ: {start.address}
+            </Text>
             <View style={styles.travelDetails}>
               <View style={styles.weatherCard}>
-                <Text style={styles.dayLabel}>{travelDate}</Text>
-                <Text style={styles.weatherIcon}>
-                  {weatherLabelToIcon(weatherStart.weatherLabel)}
-                </Text>
-                <Text style={styles.tempText}>
-                  {weatherStart.temperatureMax}° / {weatherStart.temperatureMin}
-                  °
-                </Text>
+                <View style={styles.weatherTopRow}>
+                  <Text style={styles.weatherIcon}>
+                    {weatherLabelToIcon(weatherStart.weatherLabel)}
+                  </Text>
+                  <Text style={styles.tempText}>
+                    {weatherStart.temperatureMax}° / {weatherStart.temperatureMin}
+                    °
+                  </Text>
+                </View>
                 <Text style={styles.weatherLabel}>
                   {weatherStart.weatherLabel} (
                   {weatherStart.precipitationProbability}%)
                 </Text>
               </View>
             </View>
-            <Text style={styles.titleLabel}>Từ: {start.address}</Text>
             <View style={styles.travelDetails2}>
               <Text style={styles.travelIcon}>⏰</Text>
               {distance !== null && travelTime && (
@@ -381,22 +400,25 @@ const SuggestedPlansScreen = () => {
             </View>
           </View>
           <View style={styles.travelHalf}>
+            <Text style={styles.titleLabel} numberOfLines={0} allowFontScaling={false}>
+              Đến: {end.address}
+            </Text>
             <View style={styles.travelDetails}>
               <View style={styles.weatherCard}>
-                <Text style={styles.dayLabel}>{travelDate}</Text>
-                <Text style={styles.weatherIcon}>
-                  {weatherLabelToIcon(weatherStart.weatherLabel)}
-                </Text>
-                <Text style={styles.tempText}>
-                  {weatherEnd.temperatureMax}° / {weatherEnd.temperatureMin}°
-                </Text>
+                <View style={styles.weatherTopRow}>
+                  <Text style={styles.weatherIcon}>
+                    {weatherLabelToIcon(weatherEnd.weatherLabel)}
+                  </Text>
+                  <Text style={styles.tempText}>
+                    {weatherEnd.temperatureMax}° / {weatherEnd.temperatureMin}°
+                  </Text>
+                </View>
                 <Text style={styles.weatherLabel}>
                   {weatherEnd.weatherLabel} (
                   {weatherEnd.precipitationProbability}%)
                 </Text>
               </View>
             </View>
-            <Text style={styles.titleLabel}>Đến: {end.address}</Text>
             <View style={styles.travelDetails2}>
               <Text style={styles.travelIcon}>📍</Text>
               <Text style={styles.travelText}>
@@ -407,13 +429,22 @@ const SuggestedPlansScreen = () => {
         </View>
 
         <View style={styles.travelTo}>
-          <Text style={styles.titleLabel2}>
-            Mục đích: {selectedPurposeLabel}
-          </Text>
-          <Text style={styles.titleLabel2}>
-            Thời gian: {selectedDurationLabel}
-          </Text>
-          <Text style={styles.titleLabel2}>Bán kính: {radius / 1000} km</Text>
+          <View style={styles.infoRow}>
+            <FontAwesome name="bullseye" size={14} color="#FF6B6B" style={styles.infoIcon} />
+            <Text style={styles.titleLabel2}>
+              Mục đích: {selectedPurposeLabel}
+            </Text>
+          </View>
+          <View style={styles.infoRow}>
+            <FontAwesome name="clock-o" size={14} color="#4ECDC4" style={styles.infoIcon} />
+            <Text style={styles.titleLabel2}>
+              Thời gian: {selectedDurationLabel}
+            </Text>
+          </View>
+          <View style={styles.infoRow}>
+            <FontAwesome name="map-marker" size={14} color="#FFA726" style={styles.infoIcon} />
+            <Text style={styles.titleLabel2}>Bán kính: {radius / 1000} km</Text>
+          </View>
         </View>
       </View>
 
@@ -570,6 +601,23 @@ const styles = StyleSheet.create({
   },
   travelTo: {
     width: "100%",
+    marginTop: 12,
+  },
+  dateRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  dateIcon: {
+    marginRight: 8,
+  },
+  infoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 6,
+  },
+  infoIcon: {
+    marginRight: 8,
   },
   travelLabel: {
     fontSize: 15,
@@ -578,32 +626,38 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   titleLabel: {
-    fontSize: 12,
-    fontWeight: "700",
+    fontSize: 13,
+    fontWeight: "600",
     color: "#212529",
-    marginBottom: 3,
+    textAlign: "center",
+    width: "100%",
+    height: 40,
+    lineHeight: 20,
   },
   titleLabel2: {
     fontSize: 12,
-    fontWeight: "700",
+    fontWeight: "600",
     color: "#212529",
-    // marginBottom: 12,
   },
   travelDetails: {
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 8,
+    justifyContent: "center",
+    marginTop: 8,
   },
   travelDetails2: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
+    marginTop: 4,
   },
   travelIcon: {
-    fontSize: 12,
-    marginRight: 8,
+    fontSize: 14,
+    marginRight: 6,
   },
   travelText: {
-    fontSize: 12,
+    fontSize: 13,
     color: "#6C757D",
     fontWeight: "500",
   },
@@ -674,13 +728,19 @@ const styles = StyleSheet.create({
     color: "#6C757D",
     fontWeight: "500",
   },
+  planDistance: {
+    fontSize: 14,
+    color: "#6C757D",
+    fontWeight: "500",
+    marginTop: 4,
+  },
   moreButton: {
     alignItems: "center",
     paddingVertical: 16,
   },
   moreButtonText: {
     fontSize: 16,
-    color: "#5A9FD8",
+    color: "#4facfe",
     fontWeight: "600",
   },
   bottomBar: {
@@ -699,22 +759,22 @@ const styles = StyleSheet.create({
   },
   backIcon: {
     fontSize: 20,
-    color: "#5A9FD8",
+    color: "#4facfe",
     marginRight: 8,
   },
   backLabel: {
     fontSize: 14,
-    color: "#5A9FD8",
+    color: "#4facfe",
     fontWeight: "600",
   },
   continueButton: {
-    backgroundColor: "#5A9FD8",
+    backgroundColor: "#4facfe",
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 25,
     flexDirection: "row",
     alignItems: "center",
-    shadowColor: "#5A9FD8",
+    shadowColor: "#4facfe",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -747,36 +807,56 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   weatherCard: {
-    backgroundColor: "#444746",
-    padding: 12,
-    borderRadius: 12,
+    backgroundColor: "#F8F9FA",
+    padding: 4,
+    borderRadius: 8,
     alignItems: "center",
-    width: 120,
-    minHeight: 125,
-    marginLeft: 0,
+    flex: 1,
+    marginHorizontal: 2,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+    justifyContent: "center",
+    minHeight: 45,
+    flexDirection: "column",
+  },
+  weatherTopRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 4,
   },
   dayLabel: {
-    color: "#fff",
+    color: "#212529",
     fontWeight: "700",
     marginBottom: 4,
+    fontSize: 12,
   },
   weatherIcon: {
-    fontSize: 24,
-    marginBottom: 4,
+    fontSize: 16,
+    marginRight: 6,
   },
   tempText: {
-    color: "#fff",
+    color: "#212529",
     fontWeight: "600",
-    marginBottom: 2,
+    fontSize: 11,
   },
   weatherLabel: {
-    color: "#ccc",
-    fontSize: 12,
+    color: "#6C757D",
+    fontSize: 8,
     textAlign: "center",
+    fontWeight: "500",
+    lineHeight: 10,
+    marginLeft: 10,
   },
   travelHalf: {
     flex: 1,
     alignItems: "center",
+    maxWidth: "50%",
   },
 });
 

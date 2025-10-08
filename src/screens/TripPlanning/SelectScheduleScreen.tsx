@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, useRoute } from "@react-navigation/native";
+import { FontAwesome } from "@expo/vector-icons";
 import { Calendar, DateData } from "react-native-calendars";
 
 interface Location {
@@ -18,23 +19,23 @@ interface Location {
   address: string;
 }
 
-// Chuyển code thời tiết sang nhãn
-const weatherCodeToLabel = (code: number) => {
+// Chuyển code thời tiết sang nhãn và icon
+const weatherCodeToInfo = (code: number) => {
   switch (code) {
-    case 0: return "Quang";
-    case 1: return "Chủ yếu quang";
-    case 2: return "Một phần mây";
-    case 3: return "Âm u";
-    case 61: return "Mưa nhẹ";
-    case 63: return "Mưa vừa";
-    case 65: return "Mưa to";
-    case 80: return "Mưa rào nhẹ";
-    case 81: return "Mưa rào vừa";
-    case 82: return "Mưa rào to";
-    case 95: return "Dông";
-    case 96: return "Dông + mưa đá nhẹ";
-    case 99: return "Dông + mưa đá to";
-    default: return "Không rõ";
+    case 0: return { label: "Quang", icon: "sun-o", color: "#FFD700" };
+    case 1: return { label: "Chủ yếu quang", icon: "sun-o", color: "#FFD700" };
+    case 2: return { label: "Một phần mây", icon: "cloud", color: "#87CEEB" };
+    case 3: return { label: "Âm u", icon: "cloud", color: "#708090" };
+    case 61: return { label: "Mưa nhẹ", icon: "tint", color: "#4facfe" };
+    case 63: return { label: "Mưa vừa", icon: "tint", color: "#2196F3" };
+    case 65: return { label: "Mưa to", icon: "tint", color: "#1976D2" };
+    case 80: return { label: "Mưa rào nhẹ", icon: "tint", color: "#4facfe" };
+    case 81: return { label: "Mưa rào vừa", icon: "tint", color: "#2196F3" };
+    case 82: return { label: "Mưa rào to", icon: "tint", color: "#1976D2" };
+    case 95: return { label: "Dông", icon: "bolt", color: "#9C27B0" };
+    case 96: return { label: "Dông + mưa đá nhẹ", icon: "bolt", color: "#7B1FA2" };
+    case 99: return { label: "Dông + mưa đá to", icon: "bolt", color: "#6A1B9A" };
+    default: return { label: "Không rõ", icon: "question-circle", color: "#6C757D" };
   }
 };
 
@@ -82,7 +83,7 @@ const SelectScheduleScreen = () => {
     ...getNext10Days(),
     [selectedDate]: {
       selected: true,
-      selectedColor: "#3498db",
+      selectedColor: "#4facfe",
       selectedTextColor: "#fff",
     },
   };
@@ -94,12 +95,15 @@ const SelectScheduleScreen = () => {
     try {
       const res = await fetch(url);
       const data = await res.json();
+      const weatherInfo = weatherCodeToInfo(data.daily.weathercode[0]);
       return {
         temperatureMax: data.daily.temperature_2m_max[0],
         temperatureMin: data.daily.temperature_2m_min[0],
         precipitation: data.daily.precipitation_sum[0],
         precipitationProbability: data.daily.precipitation_probability_max[0],
-        weatherLabel: weatherCodeToLabel(data.daily.weathercode[0]),
+        weatherLabel: weatherInfo.label,
+        weatherIcon: weatherInfo.icon,
+        weatherColor: weatherInfo.color,
       };
     } catch (err) {
       console.error(err);
@@ -172,8 +176,8 @@ const SelectScheduleScreen = () => {
             onDayPress={onDayPress}
             markedDates={markedDates}
             theme={{
-              todayTextColor: "#e67e22",
-              arrowColor: "#3498db",
+              todayTextColor: "#4facfe",
+              arrowColor: "#4facfe",
             }}
           />
 
@@ -183,15 +187,22 @@ const SelectScheduleScreen = () => {
               <Text style={styles.weatherTitle}>
                 Điểm đi ({start.address})
               </Text>
-              <Text>
-                🌡 {weatherStart.temperatureMin}°C -{" "}
-                {weatherStart.temperatureMax}°C
-              </Text>
-              <Text>
-                🌧 {weatherStart.precipitation} mm (
-                {weatherStart.precipitationProbability}%)
-              </Text>
-              <Text>☀️ {weatherStart.weatherLabel}</Text>
+              <View style={styles.weatherItem}>
+                <FontAwesome name="thermometer-half" size={16} color="#4facfe" style={styles.weatherIcon} />
+                <Text style={styles.weatherText}>
+                  {weatherStart.temperatureMin}°C - {weatherStart.temperatureMax}°C
+                </Text>
+              </View>
+              <View style={styles.weatherItem}>
+                <FontAwesome name="tint" size={16} color="#4facfe" style={styles.weatherIcon} />
+                <Text style={styles.weatherText}>
+                  {weatherStart.precipitation} mm ({weatherStart.precipitationProbability}%)
+                </Text>
+              </View>
+              <View style={styles.weatherItem}>
+                <FontAwesome name={weatherStart.weatherIcon as any} size={16} color={weatherStart.weatherColor} style={styles.weatherIcon} />
+                <Text style={styles.weatherText}>{weatherStart.weatherLabel}</Text>
+              </View>
             </View>
           )}
 
@@ -201,14 +212,22 @@ const SelectScheduleScreen = () => {
               <Text style={styles.weatherTitle}>
                 Điểm đến ({end.address})
               </Text>
-              <Text>
-                🌡 {weatherEnd.temperatureMin}°C - {weatherEnd.temperatureMax}°C
-              </Text>
-              <Text>
-                🌧 {weatherEnd.precipitation} mm (
-                {weatherEnd.precipitationProbability}%)
-              </Text>
-              <Text>☀️ {weatherEnd.weatherLabel}</Text>
+              <View style={styles.weatherItem}>
+                <FontAwesome name="thermometer-half" size={16} color="#4facfe" style={styles.weatherIcon} />
+                <Text style={styles.weatherText}>
+                  {weatherEnd.temperatureMin}°C - {weatherEnd.temperatureMax}°C
+                </Text>
+              </View>
+              <View style={styles.weatherItem}>
+                <FontAwesome name="tint" size={16} color="#4facfe" style={styles.weatherIcon} />
+                <Text style={styles.weatherText}>
+                  {weatherEnd.precipitation} mm ({weatherEnd.precipitationProbability}%)
+                </Text>
+              </View>
+              <View style={styles.weatherItem}>
+                <FontAwesome name={weatherEnd.weatherIcon as any} size={16} color={weatherEnd.weatherColor} style={styles.weatherIcon} />
+                <Text style={styles.weatherText}>{weatherEnd.weatherLabel}</Text>
+              </View>
             </View>
           )}
         </ScrollView>
@@ -219,7 +238,7 @@ const SelectScheduleScreen = () => {
             style={styles.navItem}
             onPress={() => navigation.goBack()}
           >
-            <Text style={styles.navIcon}>←</Text>
+            <FontAwesome name="arrow-left" size={20} color="#4facfe" style={styles.navIcon} />
             <Text style={styles.navText}>Quay lại</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
@@ -248,14 +267,47 @@ const styles = StyleSheet.create({
   content: { padding: 20 },
   weatherBox: {
     marginTop: 20,
-    padding: 16,
+    padding: 20,
     backgroundColor: "#FFF",
-    borderRadius: 12,
+    borderRadius: 16,
     shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+    borderLeftWidth: 4,
+    borderLeftColor: "#4facfe",
   },
-  weatherTitle: { fontWeight: "700", marginBottom: 8, fontSize: 15 },
+  weatherTitle: { 
+    fontWeight: "700", 
+    marginBottom: 16, 
+    fontSize: 16,
+    color: "#212529",
+    textAlign: "center",
+  },
+  weatherItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: "#F8F9FA",
+    borderRadius: 8,
+  },
+  weatherIcon: {
+    marginRight: 12,
+    width: 20,
+    textAlign: "center",
+  },
+  weatherText: {
+    fontSize: 15,
+    color: "#212529",
+    fontWeight: "600",
+    flex: 1,
+  },
   bottomNavBar: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -267,16 +319,17 @@ const styles = StyleSheet.create({
     borderTopColor: "#E9ECEF",
   },
   navItem: { flexDirection: "row", alignItems: "center", padding: 12 },
-  navIcon: { fontSize: 20, color: "#5A9FD8", marginRight: 8 },
-  navText: { fontSize: 16, color: "#5A9FD8", fontWeight: "600" },
+  navIcon: { marginRight: 8 },
+  navText: { fontSize: 16, color: "#4facfe", fontWeight: "600" },
   nextButton: {
-    backgroundColor: "#5A9FD8",
+    backgroundColor: "#4facfe",
     paddingHorizontal: 32,
     paddingVertical: 12,
     borderRadius: 25,
-    shadowColor: "#5A9FD8",
+    shadowColor: "#4facfe",
     shadowOpacity: 0.3,
     shadowRadius: 4,
+    elevation: 3,
   },
   nextButtonText: { color: "#FFF", fontSize: 16, fontWeight: "700" },
 });

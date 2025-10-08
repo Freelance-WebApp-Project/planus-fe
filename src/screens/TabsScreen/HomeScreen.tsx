@@ -10,6 +10,7 @@ import {
   FlatList,
   Dimensions,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { CategoryItem, PlaceType, Place } from "../../types/place.types";
@@ -66,6 +67,21 @@ const HomeScreen = ({ navigation }: any) => {
     return title.length > maxLength
       ? title.substring(0, maxLength) + "..."
       : title;
+  };
+
+  // Helper function to get simple FontAwesome icons with colors
+  const getCategoryIcon = (id: string) => {
+    switch (id) {
+      case "1": return { name: "umbrella" as const, color: "#FF6B6B" }; // Resort - Red
+      case "2": return { name: "home" as const, color: "#4ECDC4" }; // Homestay - Teal
+      case "3": return { name: "building" as const, color: "#45B7D1" }; // Hotel - Blue
+      case "4": return { name: "bed" as const, color: "#96CEB4" }; // Guesthouse - Green
+      case "5": return { name: "home" as const, color: "#FFEAA7" }; // Villa - Yellow
+      case "6": return { name: "building" as const, color: "#DDA0DD" }; // Apartment - Purple
+      case "7": return { name: "graduation-cap" as const, color: "#98D8C8" }; // Dormitory - Mint
+      case "8": return { name: "ellipsis-h" as const, color: "#F7DC6F" }; // More - Gold
+      default: return { name: "circle" as const, color: "#4facfe" };
+    }
   };
   // Convert random places to destinations format (3 items)
   const destinations: DestinationItem[] = randomPlaces
@@ -128,17 +144,24 @@ const HomeScreen = ({ navigation }: any) => {
     });
   };
 
-  const renderCategoryItem = ({ item }: { item: CategoryItem }) => (
-    <TouchableOpacity
-      style={styles.categoryItem}
-      onPress={() => handleCategoryPress(item)}
-    >
-      <View style={styles.categoryIcon}>
-        <Text style={styles.categoryIconText}>{item.icon}</Text>
-      </View>
-      <Text style={styles.categoryText}>{item.title}</Text>
-    </TouchableOpacity>
-  );
+  const renderCategoryItem = ({ item }: { item: CategoryItem }) => {
+    const iconData = getCategoryIcon(item.id);
+    return (
+      <TouchableOpacity
+        style={styles.categoryItem}
+        onPress={() => handleCategoryPress(item)}
+      >
+        <View style={styles.categoryIcon}>
+          <FontAwesome 
+            name={iconData.name} 
+            size={24} 
+            color={iconData.color} 
+          />
+        </View>
+        <Text style={styles.categoryText}>{item.title}</Text>
+      </TouchableOpacity>
+    );
+  };
 
   const renderDestinationItem = ({ item }: { item: DestinationItem }) => (
     <TouchableOpacity style={styles.destinationItem}>
@@ -181,12 +204,21 @@ const HomeScreen = ({ navigation }: any) => {
       <StatusBar style="light" />
 
       {/* Header */}
-      <View style={styles.header}>
+      <LinearGradient
+        colors={["#4facfe", "#00f2fe"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.header}
+      >
         <View style={styles.headerContent}>
-          {/* User avatar and greeting */}
+          {/* Logo and greeting */}
           <View style={styles.userSection}>
-            <View style={styles.avatar}>
-              <View style={styles.avatarImage} />
+            <View style={styles.logoContainer}>
+              <Image 
+                source={require('../../../assets/logo.png')} 
+                style={styles.logo}
+                resizeMode="cover"
+              />
             </View>
             <View style={styles.greetingSection}>
               <Text style={styles.greeting}>Chào mừng!</Text>
@@ -194,11 +226,6 @@ const HomeScreen = ({ navigation }: any) => {
             </View>
           </View>
 
-          {/* Notification icon */}
-          <TouchableOpacity style={styles.notificationIcon}>
-            {/* <Text style={styles.notificationIconText}>🔔</Text> */}
-            <FontAwesome name="bell-o" size={18} color="#FFF" />
-          </TouchableOpacity>
         </View>
 
         {/* Search bar */}
@@ -217,12 +244,11 @@ const HomeScreen = ({ navigation }: any) => {
               style={styles.searchButton}
               onPress={handleSearch}
             >
-              {/* <Text style={styles.searchIcon}>🔍</Text> */}
-              <FontAwesome name="search" size={18} color="#87CEEB" />
+              <FontAwesome name="search" size={18} color="#4facfe" />
             </TouchableOpacity>
           </View>
         </View>
-      </View>
+      </LinearGradient>
 
       {/* Content */}
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -293,12 +319,19 @@ const styles = StyleSheet.create({
     backgroundColor: "#F5F5F5",
   },
   header: {
-    backgroundColor: "#87CEEB",
     paddingTop: 20,
     paddingBottom: 20,
     paddingHorizontal: 20,
     borderBottomLeftRadius: 25,
     borderBottomRightRadius: 25,
+    shadowColor: "#4facfe",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
   headerContent: {
     flexDirection: "row",
@@ -310,17 +343,26 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
-  avatar: {
+  logoContainer: {
     width: 50,
     height: 50,
-    borderRadius: 25,
     marginRight: 12,
-    overflow: "hidden",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    borderRadius: 25,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  avatarImage: {
-    width: "100%",
-    height: "100%",
-    backgroundColor: "#FFF",
+  logo: {
+    width: 50,
+    height: 50,
     borderRadius: 25,
   },
   greetingSection: {
@@ -335,18 +377,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#FFF",
     opacity: 0.8,
-  },
-  notificationIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "rgba(255,255,255,0.2)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  notificationIconText: {
-    fontSize: 18,
-    color: "#FFF",
   },
   searchContainer: {
     marginTop: 10,
@@ -377,7 +407,7 @@ const styles = StyleSheet.create({
   },
   searchIcon: {
     fontSize: 18,
-    color: "#87CEEB",
+    color: "#4facfe",
   },
   content: {
     flex: 1,
@@ -418,10 +448,10 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
   },
   categoryIcon: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: "#5A9FD8",
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: "#FFFFFF",
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 8,
@@ -430,13 +460,9 @@ const styles = StyleSheet.create({
       width: 0,
       height: 2,
     },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 3,
-  },
-  categoryIconText: {
-    fontSize: 24,
-    color: "#FFF",
   },
   categoryText: {
     fontSize: 12,

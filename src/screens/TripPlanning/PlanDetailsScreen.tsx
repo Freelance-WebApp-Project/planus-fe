@@ -8,7 +8,6 @@ import {
   Image,
   Dimensions,
   ActivityIndicator,
-  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, useRoute } from "@react-navigation/native";
@@ -16,6 +15,8 @@ import { TravelPlan, CreatePlanDto } from "../../types/plan.types";
 import { API_CONFIG } from "../../constants/api.constants";
 import { planService } from "../../services/plan.service";
 import { FontAwesome } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import { showToast } from "../../utils/toast.utils";
 
 const { width } = Dimensions.get("window");
 
@@ -23,7 +24,7 @@ const PlanDetailsScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { plan, planId } = route.params as {
-    plan: TravelPlan;
+    plan: any; // Sử dụng any để tương thích với dữ liệu API mới
     planId?: string;
   };
   const [processingPayment, setProcessingPayment] = useState(false);
@@ -37,12 +38,12 @@ const PlanDetailsScreen = () => {
       const createPlanData: CreatePlanDto = {
         planTitle: plan.planTitle,
         totalDuration: plan.totalDuration,
-        estimatedCost: plan.estimatedCost,
-        itinerary: plan.itinerary.map((item) => ({
-          placeId: item.placeInfo._id,
+        estimatedCost: plan.totalCost || plan.estimatedCost || 0,
+        itinerary: plan.itinerary.map((item: any) => ({
+          placeId: item.place?._id || item.placeInfo?._id,
           order: item.order,
-          distance: item.distance,
-          travelTime: item.travelTime,
+          distance: item.distance?.toString() || "0",
+          travelTime: item.travelTime || "0 phút",
         })),
         isPaid: true,
       };
@@ -51,24 +52,15 @@ const PlanDetailsScreen = () => {
 
       if (response.success) {
         console.log("Plan created with payment successfully");
-
-        // Show success alert
-        Alert.alert(
-          "Thanh toán thành công!",
-          "Kế hoạch đã được tạo và thanh toán thành công.",
-          [
-            {
-              text: "Xem lịch sử",
-              onPress: () => {
-                // Navigate to TravelHistory screen
-                (navigation as any).navigate("TravelHistory");
-              },
-            },
-          ]
-        );
+        showToast.success("Thanh toán thành công!", "Kế hoạch đã được tạo và thanh toán thành công.");
+        // Navigate to TravelHistory screen
+        setTimeout(() => {
+          (navigation as any).navigate("TravelHistory");
+        }, 1500);
       }
     } catch (error) {
       console.error("Error creating plan with payment:", error);
+      showToast.error("Lỗi thanh toán", "Không thể tạo kế hoạch. Vui lòng thử lại.");
     } finally {
       setProcessingPayment(false);
     }
@@ -95,12 +87,12 @@ const PlanDetailsScreen = () => {
         const favoritePlanData: CreatePlanDto = {
           planTitle: plan.planTitle,
           totalDuration: plan.totalDuration,
-          estimatedCost: plan.estimatedCost,
-          itinerary: plan.itinerary.map((item) => ({
-            placeId: item.placeInfo._id,
+          estimatedCost: plan.totalCost || plan.estimatedCost || 0,
+          itinerary: plan.itinerary.map((item: any) => ({
+            placeId: item.place?._id || item.placeInfo?._id,
             order: item.order,
-            distance: item.distance,
-            travelTime: item.travelTime,
+            distance: item.distance?.toString() || "0",
+            travelTime: item.travelTime || "0 phút",
           })),
           isPaid: false,
           isShared: false,
@@ -112,21 +104,23 @@ const PlanDetailsScreen = () => {
         if (response.success) {
           setIsFavorited(true);
           console.log("Plan favorited successfully");
+          showToast.success("Đã thêm vào yêu thích", "Kế hoạch đã được lưu vào danh sách yêu thích");
         }
       }
     } catch (error) {
       console.error("Error toggling favorite status:", error);
+      showToast.error("Lỗi", "Không thể cập nhật trạng thái yêu thích");
     } finally {
       setProcessingFavorite(false);
     }
   };
 
   const renderPlaceItem = (item: any, index: number) => {
-    const place = item.placeInfo;
-    const imageUrl = place.images?.[0]
+    const place = item.place || item.placeInfo;
+    const imageUrl = place?.images?.[0]
       ? `${API_CONFIG.UPLOADS_URL}/${place.images[0]}`
       : `https://via.placeholder.com/300x200/87CEEB/FFFFFF?text=${encodeURIComponent(
-          place.name
+          place?.name || "Địa điểm"
         )}`;
 
     return (
@@ -164,9 +158,8 @@ const PlanDetailsScreen = () => {
               <View style={styles.orderBadge}>
                 <Text style={styles.orderText}>{item.order}</Text>
               </View>
-              <View style={styles.placeInfo}>
-                <Text style={styles.placeName}>{place.name}</Text>
-                {/* <Text style={styles.placeType}>{place.type}</Text> */}
+              <View>
+                <Text style={styles.placeName}>{place?.name || "Địa điểm"}</Text>
               </View>
             </View>
 
@@ -178,7 +171,7 @@ const PlanDetailsScreen = () => {
                       key={i}
                       style={[
                         styles.star,
-                        i < Math.round(place.rating)
+                        i < Math.round(place?.rating || 0)
                           ? styles.starFilled
                           : styles.starEmpty,
                       ]}
@@ -192,27 +185,25 @@ const PlanDetailsScreen = () => {
               {/* Hình chữ nhật bo tròn gắn vào hình tròn */}
               <View style={styles.rectangle}>
                 <View style={styles.locationInfo}>
-                  <Text style={styles.locationIcon}>📍</Text>
+                  <FontAwesome name="map-marker" size={12} color="#FFF" />
                   <Text style={styles.locationText}>
-                    {place.location.address}
+                    {place?.location?.address || "Địa chỉ không có"}
                   </Text>
                 </View>
                 <Text style={styles.priceText}>
-                  {place.priceRange.toLocaleString()}VND/Người
+                  {(place?.priceRange || 0).toLocaleString()}VND/Người
                 </Text>
               </View>
             </View>
 
             <View style={styles.tagsContainer}>
-              {
-                place.tags && place.tags.length > 0
-                  ? place.tags.map((tag: string, tagIndex: number) => (
-                      <View key={tagIndex} style={styles.tag}>
-                        <Text style={styles.tagText}>{tag}</Text>
-                      </View>
-                    ))
-                  : null // không hiển thị gì bên trong nhưng container vẫn tồn tại
-              }
+              {place?.tags && place.tags.length > 0
+                ? place.tags.map((tag: string, tagIndex: number) => (
+                    <View key={tagIndex} style={styles.tag}>
+                      <Text style={styles.tagText}>{tag}</Text>
+                    </View>
+                  ))
+                : null}
             </View>
 
             <View style={styles.placeDetails}>
@@ -245,12 +236,15 @@ const PlanDetailsScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
+      <LinearGradient
+        colors={["#4facfe", "#00f2fe"]}
+        style={styles.header}
+      >
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Text style={styles.backIcon}>←</Text>
+          <FontAwesome name="arrow-left" size={20} color="#FFF" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Chi tiết kế hoạch</Text>
         <TouchableOpacity
@@ -259,12 +253,16 @@ const PlanDetailsScreen = () => {
           disabled={processingFavorite}
         >
           {processingFavorite ? (
-            <ActivityIndicator size="small" color="#FF6B6B" />
+            <ActivityIndicator size="small" color="#FFF" />
           ) : (
-            <Text style={styles.favoriteIcon}>{isFavorited ? "❤️" : "🤍"}</Text>
+            <FontAwesome 
+              name={isFavorited ? "heart" : "heart-o"} 
+              size={20} 
+              color="#FFF" 
+            />
           )}
         </TouchableOpacity>
-      </View>
+      </LinearGradient>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Plan Summary */}
@@ -272,21 +270,19 @@ const PlanDetailsScreen = () => {
           <Text style={styles.planTitle}>{plan.planTitle}</Text>
           <View style={styles.summaryInfo}>
             <View style={styles.summaryItem}>
-              <Text style={styles.summaryIcon}>⏰</Text>
+              <FontAwesome name="clock-o" size={24} color="#4facfe" />
               <Text style={styles.summaryLabel}>Thời gian</Text>
               <Text style={styles.summaryValue}>{plan.totalDuration}</Text>
             </View>
             <View style={styles.summaryItem}>
-              <Text style={styles.summaryIcon}>
-                <FontAwesome name="money" size={24} color="#28A745" />{" "}
-              </Text>
+              <FontAwesome name="money" size={24} color="#28A745" />
               <Text style={styles.summaryLabel}>Chi phí</Text>
               <Text style={styles.summaryValue}>
-                {plan.estimatedCost.toLocaleString()}đ
+                {(plan.totalCost || plan.estimatedCost || 0).toLocaleString()}đ
               </Text>
             </View>
             <View style={styles.summaryItem}>
-              <Text style={styles.summaryIcon}>📍</Text>
+              <FontAwesome name="map-marker" size={24} color="#FF6B6B" />
               <Text style={styles.summaryLabel}>Địa điểm</Text>
               <Text style={styles.summaryValue}>
                 {plan.itinerary.length} nơi
@@ -298,7 +294,7 @@ const PlanDetailsScreen = () => {
         {/* Places List */}
         <View style={styles.placesSection}>
           <Text style={styles.sectionTitle}>Lộ trình chi tiết</Text>
-          {plan.itinerary.map((item, index) => renderPlaceItem(item, index))}
+          {plan.itinerary.map((item: any, index: number) => renderPlaceItem(item, index))}
         </View>
       </ScrollView>
 
@@ -312,13 +308,18 @@ const PlanDetailsScreen = () => {
           onPress={handleCreateWithPayment}
           disabled={processingPayment}
         >
-          {processingPayment ? (
-            <ActivityIndicator size="small" color="#FFF" />
-          ) : (
-            <Text style={styles.selectButtonText}>
-              Thanh toán và tạo kế hoạch
-            </Text>
-          )}
+          <LinearGradient
+            colors={processingPayment ? ["#ccc", "#999"] : ["#4facfe", "#00f2fe"]}
+            style={styles.gradientButton}
+          >
+            {processingPayment ? (
+              <ActivityIndicator size="small" color="#FFF" />
+            ) : (
+              <Text style={styles.selectButtonText}>
+                Thanh toán và tạo kế hoạch
+              </Text>
+            )}
+          </LinearGradient>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -336,9 +337,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 20,
     paddingVertical: 16,
-    backgroundColor: "#FFF",
-    borderBottomWidth: 1,
-    borderBottomColor: "#E9ECEF",
   },
   backButton: {
     padding: 8,
@@ -350,7 +348,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#212529",
+    color: "#FFF",
   },
   placeholder: {
     width: 36,
@@ -395,7 +393,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   summaryIcon: {
-    fontSize: 24,
     marginBottom: 8,
   },
   summaryLabel: {
@@ -441,7 +438,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: "#5A9FD8",
+    backgroundColor: "#4facfe",
     justifyContent: "center",
     alignItems: "center",
     marginRight: 3,
@@ -451,19 +448,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
   },
-  placeInfo: {
-    flex: 1,
-    minWidth: 120,
-  },
   placeName: {
     fontSize: 12,
     fontWeight: "600",
     color: "#212529",
-  },
-  placeType: {
-    fontSize: 14,
-    color: "#6C757D",
-    textTransform: "capitalize",
+    marginTop: 5,
   },
   placeImage: {
     width: "60%",
@@ -579,11 +568,8 @@ const styles = StyleSheet.create({
     borderTopColor: "#E9ECEF",
   },
   selectButton: {
-    backgroundColor: "#5A9FD8",
-    paddingVertical: 16,
     borderRadius: 12,
-    alignItems: "center",
-    shadowColor: "#5A9FD8",
+    shadowColor: "#4facfe",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -591,6 +577,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 4,
+  },
+  gradientButton: {
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: "center",
   },
   selectButtonText: {
     color: "#FFF",

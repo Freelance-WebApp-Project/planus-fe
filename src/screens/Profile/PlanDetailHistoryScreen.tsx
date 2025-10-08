@@ -11,6 +11,7 @@ import {
   Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { FontAwesome } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { TravelPlan, CreatePlanDto } from "../../types/plan.types";
 import { API_CONFIG } from "../../constants/api.constants";
@@ -22,99 +23,18 @@ const PlanDetailHistoryScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { plan, planId } = route.params as { plan: TravelPlan; planId?: string };
-  const [processingPayment, setProcessingPayment] = useState(false);
-  const [processingFavorite, setProcessingFavorite] = useState(false);
-  const [isFavorited, setIsFavorited] = useState(false);
+  const [visitedPlaces, setVisitedPlaces] = useState<Set<number>>(new Set());
 
-  const handleCreateWithPayment = async () => {
-    try {
-      setProcessingPayment(true);
-      
-      const createPlanData: CreatePlanDto = {
-        planTitle: plan.planTitle,
-        totalDuration: plan.totalDuration,
-        estimatedCost: plan.estimatedCost,
-        itinerary: plan.itinerary.map(item => ({
-          placeId: item.placeInfo._id,
-          order: item.order,
-          distance: item.distance,
-          travelTime: item.travelTime,
-        })),
-        isPaid: true,
-      };
-
-      const response = await planService.createWithPayment(createPlanData);
-      
-      if (response.success) {
-        console.log('Plan created with payment successfully');
-        
-        // Show success alert
-        Alert.alert(
-          'Thanh toán thành công!',
-          'Kế hoạch đã được tạo và thanh toán thành công.',
-          [
-            {
-              text: 'Xem lịch sử',
-              onPress: () => {
-                // Navigate to TravelHistory screen
-                (navigation as any).navigate('TravelHistory');
-              }
-            }
-          ]
-        );
-      }
-    } catch (error) {
-      console.error('Error creating plan with payment:', error);
-    } finally {
-      setProcessingPayment(false);
-    }
-  };
-
-  const handleToggleFavorite = async () => {
-    try {
-      setProcessingFavorite(true);
-      
-      if (isFavorited) {
-        // If already favorited, unfavorite using plan ID
-        if (planId) {
-          const response = await planService.unfavorite(planId);
-          
-          if (response.success) {
-            setIsFavorited(false);
-            console.log('Plan unfavorited successfully');
-          }
-        } else {
-          console.error('Plan ID not found for unfavorite operation');
-        }
+  const toggleVisited = (index: number) => {
+    setVisitedPlaces(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(index)) {
+        newSet.delete(index);
       } else {
-        // If not favorited, add to favorites
-        const favoritePlanData: CreatePlanDto = {
-          planTitle: plan.planTitle,
-          totalDuration: plan.totalDuration,
-          estimatedCost: plan.estimatedCost,
-          itinerary: plan.itinerary.map(item => ({
-            placeId: item.placeInfo._id,
-            order: item.order,
-            distance: item.distance,
-            travelTime: item.travelTime,
-          })),
-          isPaid: false,
-          isShared: false,
-          isFavorite: true,
-        };
-
-        const response = await planService.toggleFavorite(favoritePlanData);
-        
-        if (response.success) {
-          setIsFavorited(true);
-          console.log('Plan favorited successfully');
-        }
+        newSet.add(index);
       }
-    } catch (error) {
-      console.error('Error toggling favorite status:', error);
-    } finally {
-      setProcessingFavorite(false);
-    }
+      return newSet;
+    });
   };
 
   const renderPlaceItem = (item: any, index: number) => {
@@ -134,7 +54,12 @@ const PlanDetailHistoryScreen = () => {
               <View style={styles.verticalContainer}>
                 <View style={styles.verticalLine} />
                 <View style={styles.orderBadge}>
-                  <Text style={styles.heartIcon}>🏍️</Text>
+                  <FontAwesome 
+                    name="motorcycle" 
+                    size={18} 
+                    color="#FFF" 
+                    style={styles.heartIcon}
+                  />
                   <View
                     style={[
                       styles.diagonalLine,
@@ -164,6 +89,22 @@ const PlanDetailHistoryScreen = () => {
                 <Text style={styles.placeName}>{place.name}</Text>
                 {/* <Text style={styles.placeType}>{place.type}</Text> */}
               </View>
+              <TouchableOpacity 
+                style={styles.checkboxContainer}
+                onPress={() => toggleVisited(index)}
+              >
+                <View style={[
+                  styles.checkbox,
+                  visitedPlaces.has(index) && styles.checkboxChecked
+                ]}>
+                  {visitedPlaces.has(index) && (
+                    <FontAwesome name="check" size={12} color="#FFF" />
+                  )}
+                </View>
+                <Text style={styles.checkboxLabel}>
+                  {visitedPlaces.has(index) ? "Đã đến" : "Chưa đến"}
+                </Text>
+              </TouchableOpacity>
             </View>
 
             <View style={styles.placeContainer}>
@@ -188,7 +129,12 @@ const PlanDetailHistoryScreen = () => {
               {/* Hình chữ nhật bo tròn gắn vào hình tròn */}
               <View style={styles.rectangle}>
                 <View style={styles.locationInfo}>
-                  <Text style={styles.locationIcon}>📍</Text>
+                  <FontAwesome 
+                    name="map-marker" 
+                    size={10} 
+                    color="#6C757D" 
+                    style={styles.locationIcon}
+                  />
                   <Text style={styles.locationText}>
                     {place.location.address}
                   </Text>
@@ -246,22 +192,14 @@ const PlanDetailHistoryScreen = () => {
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Text style={styles.backIcon}>←</Text>
+          <FontAwesome 
+            name="arrow-left" 
+            size={18} 
+            color="#4facfe" 
+          />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Chi tiết kế hoạch</Text>
-        <TouchableOpacity
-          style={styles.favoriteButton}
-          onPress={handleToggleFavorite}
-          disabled={processingFavorite}
-        >
-          {processingFavorite ? (
-            <ActivityIndicator size="small" color="#FF6B6B" />
-          ) : (
-            <Text style={styles.favoriteIcon}>
-              {isFavorited ? '❤️' : '🤍'}
-            </Text>
-          )}
-        </TouchableOpacity>
+        <View style={styles.placeholder} />
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -270,19 +208,34 @@ const PlanDetailHistoryScreen = () => {
           <Text style={styles.planTitle}>{plan.planTitle}</Text>
           <View style={styles.summaryInfo}>
             <View style={styles.summaryItem}>
-              <Text style={styles.summaryIcon}>⏰</Text>
+              <FontAwesome 
+                name="clock-o" 
+                size={24} 
+                color="#4facfe" 
+                style={styles.summaryIcon}
+              />
               <Text style={styles.summaryLabel}>Thời gian</Text>
               <Text style={styles.summaryValue}>{plan.totalDuration}</Text>
             </View>
             <View style={styles.summaryItem}>
-              <Text style={styles.summaryIcon}>💰</Text>
+              <FontAwesome 
+                name="money" 
+                size={24} 
+                color="#28A745" 
+                style={styles.summaryIcon}
+              />
               <Text style={styles.summaryLabel}>Chi phí</Text>
               <Text style={styles.summaryValue}>
                 {plan.estimatedCost.toLocaleString()}đ
               </Text>
             </View>
             <View style={styles.summaryItem}>
-              <Text style={styles.summaryIcon}>📍</Text>
+              <FontAwesome 
+                name="map-marker" 
+                size={24} 
+                color="#FF6B6B" 
+                style={styles.summaryIcon}
+              />
               <Text style={styles.summaryLabel}>Địa điểm</Text>
               <Text style={styles.summaryValue}>
                 {plan.itinerary.length} nơi
@@ -334,10 +287,6 @@ const styles = StyleSheet.create({
   backButton: {
     padding: 8,
   },
-  backIcon: {
-    fontSize: 20,
-    color: "#5A9FD8",
-  },
   headerTitle: {
     fontSize: 18,
     fontWeight: "700",
@@ -345,12 +294,6 @@ const styles = StyleSheet.create({
   },
   placeholder: {
     width: 36,
-  },
-  favoriteButton: {
-    padding: 8,
-  },
-  favoriteIcon: {
-    fontSize: 20,
   },
   content: {
     flex: 1,
@@ -386,7 +329,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   summaryIcon: {
-    fontSize: 24,
     marginBottom: 8,
   },
   summaryLabel: {
@@ -432,7 +374,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: "#5A9FD8",
+    backgroundColor: "#4facfe",
     justifyContent: "center",
     alignItems: "center",
     marginRight: 3,
@@ -479,7 +421,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   locationIcon: {
-    fontSize: 10,
+    marginRight: 4,
   },
   locationText: {
     fontSize: 10,
@@ -570,11 +512,11 @@ const styles = StyleSheet.create({
     borderTopColor: "#E9ECEF",
   },
   selectButton: {
-    backgroundColor: "#5A9FD8",
+    backgroundColor: "#4facfe",
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: "center",
-    shadowColor: "#5A9FD8",
+    shadowColor: "#4facfe",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -648,8 +590,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   heartIcon: {
-    fontSize: 18,
-    lineHeight: 15,
     textAlign: "center",
   },
   diagonalLine: {
@@ -659,6 +599,31 @@ const styles = StyleSheet.create({
     backgroundColor: "#000",
     transformOrigin: "top left", // đầu đường là điểm xoay
     zIndex: 1,
+  },
+  checkboxContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginLeft: 12,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: "#4facfe",
+    backgroundColor: "#FFF",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 8,
+  },
+  checkboxChecked: {
+    backgroundColor: "#4facfe",
+    borderColor: "#4facfe",
+  },
+  checkboxLabel: {
+    fontSize: 12,
+    color: "#6C757D",
+    fontWeight: "500",
   },
 });
 

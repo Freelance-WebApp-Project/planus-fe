@@ -11,7 +11,9 @@ import {
   Modal,
   ActivityIndicator,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { FontAwesome } from "@expo/vector-icons";
 import { useAuth } from "../../hoc/AuthContext";
 import { showToast } from "../../utils/toast.utils";
 import { userService } from "../../services/user.service";
@@ -239,21 +241,32 @@ const ProfileScreen = ({ navigation }: any) => {
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.avatarContainer}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>
-                {currentUser?.fullName?.charAt(0)?.toUpperCase() || "👤"}
+        <LinearGradient
+          colors={["#4facfe", "#00f2fe"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.header}
+        >
+          <View style={styles.headerContent}>
+            <View style={styles.avatarContainer}>
+              <View style={styles.avatar}>
+                <FontAwesome 
+                  name="user" 
+                  size={32} 
+                  color="#4facfe" 
+                />
+              </View>
+            </View>
+            <View style={styles.userInfo}>
+              <Text style={styles.userName}>
+                {currentUser?.fullName || "Chưa cập nhật"}
+              </Text>
+              <Text style={styles.userEmail}>
+                {currentUser?.email || "Chưa cập nhật"}
               </Text>
             </View>
           </View>
-          <Text style={styles.userName}>
-            {currentUser?.fullName || "Chưa cập nhật"}
-          </Text>
-          <Text style={styles.userEmail}>
-            {currentUser?.email || "Chưa cập nhật"}
-          </Text>
-        </View>
+        </LinearGradient>
 
         {/* Premium Status Section */}
         <View style={styles.section}>
@@ -262,7 +275,11 @@ const ProfileScreen = ({ navigation }: any) => {
           <View style={styles.premiumCard}>
             <View style={styles.premiumInfo}>
               <View style={styles.premiumIcon}>
-                <Text style={styles.premiumIconText}>👑</Text>
+                <FontAwesome 
+                  name="star" 
+                  size={24} 
+                  color="#FFD700" 
+                />
               </View>
               <View style={styles.premiumDetails}>
                 <Text style={styles.premiumTitle}>
@@ -288,12 +305,21 @@ const ProfileScreen = ({ navigation }: any) => {
                 onPress={() => setIsPremiumPopupVisible(true)}
               >
                 <Text style={styles.premiumButtonText}>Nâng cấp</Text>
-                <Text style={styles.premiumButtonArrow}>→</Text>
+                <FontAwesome 
+                  name="arrow-right" 
+                  size={14} 
+                  color="#000" 
+                  style={styles.premiumButtonArrow}
+                />
               </TouchableOpacity>
             )}
             {isPremiumUser && (
               <View style={styles.premiumActiveBadge}>
-                <Text style={styles.premiumActiveText}>✓</Text>
+                <FontAwesome 
+                  name="check" 
+                  size={16} 
+                  color="#FFFFFF" 
+                />
               </View>
             )}
           </View>
@@ -306,7 +332,11 @@ const ProfileScreen = ({ navigation }: any) => {
           <View style={styles.walletCard}>
             <View style={styles.walletInfo}>
               <View style={styles.walletIcon}>
-                <Text style={styles.walletIconText}>💳</Text>
+                <FontAwesome 
+                  name="credit-card" 
+                  size={24} 
+                  color="#4facfe" 
+                />
               </View>
               <View style={styles.walletDetails}>
                 <Text style={styles.walletTitle}>Ví PLANUS</Text>
@@ -320,7 +350,12 @@ const ProfileScreen = ({ navigation }: any) => {
               onPress={() => navigation.navigate("Wallet")}
             >
               <Text style={styles.walletButtonText}>Xem ví</Text>
-              <Text style={styles.walletButtonArrow}>→</Text>
+              <FontAwesome 
+                name="arrow-right" 
+                size={14} 
+                color="#FFFFFF" 
+                style={styles.walletButtonArrow}
+              />
             </TouchableOpacity>
           </View>
         </View>
@@ -332,7 +367,11 @@ const ProfileScreen = ({ navigation }: any) => {
           <View style={styles.historyCard}>
             <View style={styles.historyInfo}>
               <View style={styles.historyIcon}>
-                <Text style={styles.historyIconText}>🗺️</Text>
+                <FontAwesome 
+                  name="map" 
+                  size={24} 
+                  color="#4CAF50" 
+                />
               </View>
               <View style={styles.historyDetails}>
                 <Text style={styles.historyTitle}>Chuyến đi đã thanh toán</Text>
@@ -346,7 +385,12 @@ const ProfileScreen = ({ navigation }: any) => {
               onPress={() => navigation.navigate("TravelHistory")}
             >
               <Text style={styles.historyButtonText}>Xem lịch sử</Text>
-              <Text style={styles.historyButtonArrow}>→</Text>
+              <FontAwesome 
+                name="arrow-right" 
+                size={14} 
+                color="#FFFFFF" 
+                style={styles.historyButtonArrow}
+              />
             </TouchableOpacity>
           </View>
         </View>
@@ -578,7 +622,7 @@ const ProfileScreen = ({ navigation }: any) => {
 
             {isUpdating && (
               <View style={styles.loadingOverlay}>
-                <ActivityIndicator size="large" color="#2196F3" />
+                <ActivityIndicator size="large" color="#4facfe" />
                 <Text style={styles.loadingText}>Đang cập nhật...</Text>
               </View>
             )}
@@ -615,13 +659,28 @@ const styles = StyleSheet.create({
     color: "#666",
   },
   header: {
-    backgroundColor: "#2196F3",
     paddingVertical: 30,
     paddingHorizontal: 20,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    shadowColor: "#4facfe",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  headerContent: {
+    flexDirection: "row",
     alignItems: "center",
   },
   avatarContainer: {
-    marginBottom: 16,
+    marginRight: 16,
+  },
+  userInfo: {
+    flex: 1,
   },
   avatar: {
     width: 80,
@@ -639,19 +698,14 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  avatarText: {
-    fontSize: 32,
-    fontWeight: "bold",
-    color: "#2196F3",
-  },
   userName: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: "bold",
     color: "#FFFFFF",
     marginBottom: 4,
   },
   userEmail: {
-    fontSize: 16,
+    fontSize: 14,
     color: "rgba(255, 255, 255, 0.8)",
   },
   section: {
@@ -713,7 +767,7 @@ const styles = StyleSheet.create({
   },
   interestText: {
     fontSize: 12,
-    color: "#2196F3",
+    color: "#4facfe",
     fontWeight: "500",
   },
   noDataText: {
@@ -734,7 +788,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginBottom: 12,
     borderWidth: 2,
-    borderColor: "#2196F3",
+    borderColor: "#4facfe",
     alignItems: "center",
     shadowColor: "#000",
     shadowOffset: {
@@ -746,7 +800,7 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   editButtonText: {
-    color: "#2196F3",
+    color: "#4facfe",
     fontSize: 16,
     fontWeight: "bold",
   },
@@ -802,7 +856,7 @@ const styles = StyleSheet.create({
     color: "#666",
   },
   modalButtonPrimary: {
-    color: "#2196F3",
+    color: "#4facfe",
     fontWeight: "bold",
   },
   modalBody: {
@@ -844,8 +898,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
   },
   genderButtonSelected: {
-    backgroundColor: "#2196F3",
-    borderColor: "#2196F3",
+    backgroundColor: "#4facfe",
+    borderColor: "#4facfe",
   },
   genderButtonText: {
     fontSize: 16,
@@ -897,9 +951,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginRight: 12,
   },
-  walletIconText: {
-    fontSize: 24,
-  },
   walletDetails: {
     flex: 1,
   },
@@ -918,7 +969,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 8,
     paddingHorizontal: 12,
-    backgroundColor: "#2196F3",
+    backgroundColor: "#4facfe",
     borderRadius: 8,
   },
   walletButtonText: {
@@ -934,19 +985,21 @@ const styles = StyleSheet.create({
   },
   // Premium styles
   premiumCard: {
-    backgroundColor: "#0A0A0A", // đen sâu
-    borderRadius: 16,
-    padding: 16,
+    backgroundColor: "#1A1A1A", // đen sâu hơn
+    borderRadius: 20,
+    padding: 20,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    borderWidth: 1.5,
+    borderWidth: 2,
     borderColor: "#FFD700", // viền vàng gold
     shadowColor: "#FFD700",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 8,
+    position: "relative",
+    overflow: "hidden",
   },
 
   premiumInfo: {
@@ -956,72 +1009,98 @@ const styles = StyleSheet.create({
   },
 
   premiumIcon: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: "rgba(255,215,0,0.1)",
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "rgba(255,215,0,0.15)",
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 12,
-    borderWidth: 1,
+    marginRight: 16,
+    borderWidth: 2,
     borderColor: "#FFD700",
-  },
-  premiumIconText: {
-    fontSize: 24,
+    shadowColor: "#FFD700",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 4,
   },
   premiumDetails: {
     flex: 1,
   },
   premiumTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
+    fontSize: 18,
+    fontWeight: "800",
     color: "#FFD700",
-    marginBottom: 4,
+    marginBottom: 6,
     textTransform: "uppercase",
-    letterSpacing: 0.5,
+    letterSpacing: 1,
+    textShadowColor: "rgba(255, 215, 0, 0.3)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
 
   premiumSubtitle: {
-    fontSize: 14,
-    color: "#E0E0E0",
+    fontSize: 15,
+    color: "#F0F0F0",
+    fontWeight: "500",
+    lineHeight: 20,
   },
 
   premiumEndDate: {
-    fontSize: 12,
+    fontSize: 13,
     color: "#4CAF50",
-    fontWeight: "600",
-    marginTop: 4,
+    fontWeight: "700",
+    marginTop: 6,
+    backgroundColor: "rgba(76, 175, 80, 0.1)",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+    alignSelf: "flex-start",
   },
 
   premiumButton: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 8,
-    paddingHorizontal: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
     backgroundColor: "#FFD700",
-    borderRadius: 8,
+    borderRadius: 25,
     shadowColor: "#FFD700",
-    shadowOpacity: 0.6,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOpacity: 0.7,
+    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 8,
+    elevation: 6,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.2)",
   },
 
   premiumButtonText: {
-    fontSize: 14,
+    fontSize: 15,
     color: "#000",
-    fontWeight: "700",
-    marginRight: 6,
+    fontWeight: "800",
+    marginRight: 8,
     textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+
+  premiumButtonArrow: {
+    marginLeft: 4,
   },
 
   premiumActiveBadge: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: "#4CAF50",
     justifyContent: "center",
     alignItems: "center",
+    shadowColor: "#4CAF50",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.4,
+    shadowRadius: 6,
+    elevation: 4,
+    borderWidth: 2,
+    borderColor: "rgba(255, 255, 255, 0.3)",
   },
 
   // Travel History styles
@@ -1054,9 +1133,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginRight: 12,
-  },
-  historyIconText: {
-    fontSize: 24,
   },
   historyDetails: {
     flex: 1,

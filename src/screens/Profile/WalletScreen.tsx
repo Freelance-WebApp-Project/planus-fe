@@ -14,6 +14,7 @@ import {
   Linking,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { FontAwesome } from "@expo/vector-icons";
 import { useAuth } from "../../hoc/AuthContext";
 import { showToast } from "../../utils/toast.utils";
 import { useWallet } from "../../hooks/useWallet";
@@ -131,7 +132,7 @@ const WalletScreen = ({ navigation }: any) => {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#2196F3" />
+          <ActivityIndicator size="large" color="#4facfe" />
           <Text style={styles.loadingText}>Đang tải...</Text>
         </View>
       </SafeAreaView>
@@ -152,8 +153,8 @@ const WalletScreen = ({ navigation }: any) => {
           <RefreshControl
             refreshing={walletLoading}
             onRefresh={onRefresh}
-            colors={["#2196F3"]}
-            tintColor="#2196F3"
+            colors={["#4facfe"]}
+            tintColor="#4facfe"
           />
         }
       >
@@ -163,7 +164,12 @@ const WalletScreen = ({ navigation }: any) => {
             style={styles.backButton}
             onPress={() => navigation.goBack()}
           >
-            <Text style={styles.backButtonText}>← Quay lại</Text>
+            <FontAwesome 
+              name="arrow-left" 
+              size={18} 
+              color="#4facfe" 
+            />
+            <Text style={styles.backButtonText}> Quay lại</Text>
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Ví điện tử</Text>
           <View style={styles.placeholder} />
@@ -174,9 +180,11 @@ const WalletScreen = ({ navigation }: any) => {
           <View style={styles.balanceHeader}>
             <Text style={styles.balanceLabel}>Số dư hiện tại</Text>
             <TouchableOpacity onPress={toggleBalanceVisibility}>
-              <Text style={styles.eyeIcon}>
-                {isBalanceVisible ? "👁️" : "🙈"}
-              </Text>
+              <FontAwesome 
+                name={isBalanceVisible ? "eye" : "eye-slash"} 
+                size={20} 
+                color="rgba(255, 255, 255, 0.9)" 
+              />
             </TouchableOpacity>
           </View>
 
@@ -207,7 +215,11 @@ const WalletScreen = ({ navigation }: any) => {
               onPress={handleDeposit}
             >
               <View style={styles.actionIcon}>
-                <Text style={styles.actionIconText}>💳</Text>
+                <FontAwesome 
+                  name="credit-card" 
+                  size={24} 
+                  color="#4facfe" 
+                />
               </View>
               <Text style={styles.actionText}>Nạp tiền</Text>
             </TouchableOpacity>
@@ -217,7 +229,11 @@ const WalletScreen = ({ navigation }: any) => {
               onPress={handleHistory}
             >
               <View style={styles.actionIcon}>
-                <Text style={styles.actionIconText}>📊</Text>
+                <FontAwesome 
+                  name="history" 
+                  size={24} 
+                  color="#4facfe" 
+                />
               </View>
               <Text style={styles.actionText}>Lịch sử</Text>
             </TouchableOpacity>
@@ -231,7 +247,7 @@ const WalletScreen = ({ navigation }: any) => {
           <View style={styles.transactionsCard}>
             {walletLoading ? (
               <View style={styles.transactionLoadingContainer}>
-                <ActivityIndicator size="small" color="#2196F3" />
+                <ActivityIndicator size="small" color="#4facfe" />
                 <Text style={styles.transactionLoadingText}>
                   Đang tải giao dịch...
                 </Text>
@@ -241,15 +257,27 @@ const WalletScreen = ({ navigation }: any) => {
                 {transactions.slice(0, 3).map((transaction) => (
                   <View key={transaction._id} style={styles.transactionItem}>
                     <View style={styles.transactionIcon}>
-                      <Text style={styles.transactionIconText}>
-                        {transaction.type === "deposit"
-                          ? "📥"
-                          : transaction.type === "payment"
-                          ? "💳"
-                          : transaction.type === "vip_purchase"
-                          ? "👑"
-                          : "💰"}
-                      </Text>
+                      <FontAwesome 
+                        name={
+                          transaction.type === "deposit"
+                            ? "arrow-down"
+                            : transaction.type === "payment"
+                            ? "credit-card"
+                            : transaction.type === "vip_purchase"
+                            ? "star"
+                            : "money"
+                        }
+                        size={18} 
+                        color={
+                          transaction.type === "deposit"
+                            ? "#4CAF50"
+                            : transaction.type === "payment"
+                            ? "#FF5722"
+                            : transaction.type === "vip_purchase"
+                            ? "#FFD700"
+                            : "#4facfe"
+                        }
+                      />
                     </View>
                     <View style={styles.transactionDetails}>
                       <Text style={styles.transactionTitle}>
@@ -285,7 +313,12 @@ const WalletScreen = ({ navigation }: any) => {
                   onPress={handleHistory}
                 >
                   <Text style={styles.viewAllText}>Xem tất cả giao dịch</Text>
-                  <Text style={styles.viewAllArrow}>→</Text>
+                  <FontAwesome 
+                    name="arrow-right" 
+                    size={14} 
+                    color="#4facfe" 
+                    style={styles.viewAllArrow}
+                  />
                 </TouchableOpacity>
               </>
             ) : (
@@ -353,7 +386,11 @@ const WalletScreen = ({ navigation }: any) => {
                 onPress={handleDepositCancel}
                 style={styles.modalCloseButton}
               >
-                <Text style={styles.modalCloseText}>✕</Text>
+                <FontAwesome 
+                  name="times" 
+                  size={16} 
+                  color="#666" 
+                />
               </TouchableOpacity>
             </View>
 
@@ -459,13 +496,16 @@ const styles = StyleSheet.create({
     borderBottomColor: "#F0F0F0",
   },
   backButton: {
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: 8,
     paddingHorizontal: 12,
   },
   backButtonText: {
     fontSize: 16,
-    color: "#2196F3",
+    color: "#4facfe",
     fontWeight: "600",
+    marginLeft: 4,
   },
   headerTitle: {
     fontSize: 18,
@@ -477,15 +517,15 @@ const styles = StyleSheet.create({
   },
   balanceCard: {
     margin: 20,
-    backgroundColor: "#2196F3",
+    backgroundColor: "#4facfe",
     borderRadius: 16,
     padding: 24,
-    shadowColor: "#000",
+    shadowColor: "#4facfe",
     shadowOffset: {
       width: 0,
       height: 4,
     },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 5,
   },
@@ -499,9 +539,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "rgba(255, 255, 255, 0.9)",
     fontWeight: "500",
-  },
-  eyeIcon: {
-    fontSize: 20,
   },
   balanceAmount: {
     marginBottom: 8,
@@ -558,9 +595,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 12,
   },
-  actionIconText: {
-    fontSize: 24,
-  },
   actionText: {
     fontSize: 14,
     fontWeight: "600",
@@ -596,9 +630,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginRight: 12,
   },
-  transactionIconText: {
-    fontSize: 18,
-  },
   transactionDetails: {
     flex: 1,
   },
@@ -631,13 +662,11 @@ const styles = StyleSheet.create({
   },
   viewAllText: {
     fontSize: 14,
-    color: "#2196F3",
+    color: "#4facfe",
     fontWeight: "600",
   },
   viewAllArrow: {
-    fontSize: 16,
-    color: "#2196F3",
-    fontWeight: "bold",
+    marginLeft: 4,
   },
   infoCard: {
     backgroundColor: "#FFFFFF",
@@ -752,11 +781,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  modalCloseText: {
-    fontSize: 16,
-    color: "#666",
-    fontWeight: "bold",
-  },
   modalContent: {
     padding: 24,
     flex: 1,
@@ -806,7 +830,7 @@ const styles = StyleSheet.create({
   quickAmountText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#2196F3",
+    color: "#4facfe",
   },
   modalNote: {
     fontSize: 12,
@@ -836,7 +860,7 @@ const styles = StyleSheet.create({
   },
   modalConfirmButton: {
     flex: 1,
-    backgroundColor: "#2196F3",
+    backgroundColor: "#4facfe",
     borderRadius: 8,
     paddingVertical: 12,
     marginLeft: 8,

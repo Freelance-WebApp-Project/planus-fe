@@ -9,6 +9,7 @@ import {
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
+import { FontAwesome } from '@expo/vector-icons';
 import { showToast } from '../../utils/toast.utils';
 
 const { width, height } = Dimensions.get('window');
@@ -44,37 +45,37 @@ const PremiumPopup: React.FC<PremiumPopupProps> = ({ visible, onClose, onSubscri
     {
       id: 'yearly',
       name: 'Hàng năm',
-      price: '500.000',
+      price: '399.000',
       period: 'VND/Năm',
-      originalPrice: '600.000',
-      discount: '17%',
+      originalPrice: '500.000',
+      discount: '20%',
       popular: true,
     },
   ];
 
   const benefits = [
     {
-      icon: '⭐',
+      icon: 'unlock',
       title: 'Mở khoá tất cả plan trên 3 địa điểm',
       description: 'Truy cập không giới hạn các kế hoạch du lịch',
     },
     {
-      icon: '📝',
+      icon: 'edit',
       title: 'Tạo và chia sẻ plan không giới hạn',
       description: 'Tạo bao nhiêu kế hoạch tùy thích và chia sẻ với bạn bè',
     },
     {
-      icon: '🎫',
+      icon: 'ticket',
       title: 'Voucher ưu đãi hàng tháng',
       description: 'Nhận voucher giảm giá độc quyền mỗi tháng',
     },
     {
-      icon: '🎯',
+      icon: 'headphones',
       title: 'Hỗ trợ ưu tiên 24/7',
       description: 'Được hỗ trợ khách hàng ưu tiên mọi lúc',
     },
     {
-      icon: '📊',
+      icon: 'bar-chart',
       title: 'Báo cáo chi tiết',
       description: 'Theo dõi chi tiêu và thống kê du lịch',
     },
@@ -92,11 +93,11 @@ const PremiumPopup: React.FC<PremiumPopupProps> = ({ visible, onClose, onSubscri
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerLeft}>
-              <Text style={styles.crownIcon}>👑</Text>
+              <FontAwesome name="star" size={24} color="#FFD700" style={styles.crownIcon} />
               <Text style={styles.headerTitle}>Premium</Text>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-              <Text style={styles.closeButtonText}>✕</Text>
+              <FontAwesome name="times" size={16} color="#666" />
             </TouchableOpacity>
           </View>
 
@@ -106,7 +107,7 @@ const PremiumPopup: React.FC<PremiumPopupProps> = ({ visible, onClose, onSubscri
               <Text style={styles.sectionTitle}>Quyền lợi Premium</Text>
               {benefits.map((benefit, index) => (
                 <View key={index} style={styles.benefitItem}>
-                  <Text style={styles.benefitIcon}>{benefit.icon}</Text>
+                  <FontAwesome name={benefit.icon as any} size={20} color="#4facfe" style={styles.benefitIcon} />
                   <View style={styles.benefitContent}>
                     <Text style={styles.benefitTitle}>{benefit.title}</Text>
                     <Text style={styles.benefitDescription}>{benefit.description}</Text>
@@ -223,7 +224,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   crownIcon: {
-    fontSize: 24,
     marginRight: 8,
   },
   headerTitle: {
@@ -263,7 +263,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   benefitIcon: {
-    fontSize: 20,
     marginRight: 12,
     marginTop: 2,
   },
@@ -297,7 +296,7 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   planCardSelected: {
-    borderColor: '#2196F3',
+    borderColor: '#4facfe',
     backgroundColor: '#F8F9FF',
   },
   popularPlan: {
@@ -334,7 +333,7 @@ const styles = StyleSheet.create({
   priceValue: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#2196F3',
+    color: '#4facfe',
   },
   pricePeriod: {
     fontSize: 14,
@@ -381,7 +380,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   termsLink: {
-    color: '#2196F3',
+    color: '#4facfe',
     fontWeight: '600',
   },
   footer: {
@@ -391,16 +390,16 @@ const styles = StyleSheet.create({
     borderTopColor: '#F0F0F0',
   },
   subscribeButton: {
-    backgroundColor: '#2196F3',
+    backgroundColor: '#4facfe',
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
-    shadowColor: '#000',
+    shadowColor: '#4facfe',
     shadowOffset: {
       width: 0,
       height: 2,
     },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 3,
   },

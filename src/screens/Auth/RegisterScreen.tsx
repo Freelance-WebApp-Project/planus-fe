@@ -13,6 +13,7 @@ import {
   Dimensions,
   Image,
 } from "react-native";
+import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from "expo-status-bar";
 import { useAuth } from "../../hoc/AuthContext";
 import { RegisterRequest } from "../../types/auth.types";
@@ -89,7 +90,12 @@ const RegisterScreen = ({ navigation }: any) => {
       <StatusBar style="light" />
 
       {/* Background Gradient */}
-      <View style={styles.backgroundGradient} />
+      <LinearGradient
+        colors={['#4facfe', '#00f2fe']}
+        style={styles.backgroundGradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      />
 
       {/* Decorative Circles */}
       <View style={styles.circle1} />
@@ -238,20 +244,27 @@ const RegisterScreen = ({ navigation }: any) => {
               </View>
 
               {/* Register button */}
-              <TouchableOpacity
+              <LinearGradient
+                colors={['#4facfe', '#00f2fe']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
                 style={[
                   styles.registerButton,
                   isLoading && styles.registerButtonDisabled,
                 ]}
-                onPress={handleRegister}
-                disabled={isLoading}
               >
-                {isLoading ? (
-                  <ActivityIndicator color="#FFF" size="small" />
-                ) : (
-                  <Text style={styles.registerButtonText}>Tạo tài khoản</Text>
-                )}
-              </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.registerButtonTouchable}
+                  onPress={handleRegister}
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <ActivityIndicator color="#FFF" size="small" />
+                  ) : (
+                    <Text style={styles.registerButtonText}>Tạo tài khoản</Text>
+                  )}
+                </TouchableOpacity>
+              </LinearGradient>
 
               {/* Divider */}
               <View style={styles.dividerContainer}>
@@ -280,7 +293,7 @@ const RegisterScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#1a1a2e",
+    backgroundColor: "#4facfe",
   },
   backgroundGradient: {
     position: "absolute",
@@ -288,7 +301,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: "#16213e",
   },
   circle1: {
     position: "absolute",
@@ -465,12 +477,9 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   registerButton: {
-    backgroundColor: "#87CEEB",
     borderRadius: 16,
-    paddingVertical: 18,
-    alignItems: "center",
     marginBottom: 20,
-    shadowColor: "#87CEEB",
+    shadowColor: "#4facfe",
     shadowOffset: {
       width: 0,
       height: 4,
@@ -478,6 +487,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 5,
+  },
+  registerButtonTouchable: {
+    paddingVertical: 18,
+    alignItems: "center",
   },
   registerButtonText: {
     color: "#FFF",
@@ -503,15 +516,24 @@ const styles = StyleSheet.create({
     color: "#6c757d",
   },
   loginButton: {
-    backgroundColor: "transparent",
+    backgroundColor: "#FFF",
     borderRadius: 16,
     paddingVertical: 18,
     alignItems: "center",
+    marginBottom: 20,
     borderWidth: 2,
-    borderColor: "#87CEEB",
+    borderColor: "#4facfe",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   loginButtonText: {
-    color: "#87CEEB",
+    color: "#4facfe",
     fontSize: 16,
     fontWeight: "600",
   },
