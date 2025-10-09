@@ -16,6 +16,7 @@ import SuggestedPlansScreen from "../screens/TripPlanning/SuggestedPlansScreen";
 import PlanDetailsScreen from "../screens/TripPlanning/PlanDetailsScreen";
 import TravelHistoryScreen from "../screens/Profile/TravelHistoryScreen";
 import PlanDetailHistoryScreen from "../screens/Profile/PlanDetailHistoryScreen";
+import VoucherScreen from "../screens/TabsScreen/VoucherScreen";
 import { FontAwesome } from "@expo/vector-icons";
 import SelectScheduleScreen from "../screens/TripPlanning/SelectScheduleScreen";
 
@@ -28,6 +29,7 @@ const ProfileStack = () => {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="ProfileMain" component={ProfileScreen} />
       <Stack.Screen name="Wallet" component={WalletScreen} />
+      <Stack.Screen name="VoucherScreen" component={VoucherScreen} />
     </Stack.Navigator>
   );
 };

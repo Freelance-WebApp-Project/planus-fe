@@ -113,7 +113,7 @@ const RegisterScreen = ({ navigation }: any) => {
           {/* Header with logo */}
           <View style={styles.header}>
             <Image
-              source={require("../../../assets/logo.png")}
+              source={require("../../../assets/logo.jpg")}
               style={{
                 width: 80,
                 height: 80,

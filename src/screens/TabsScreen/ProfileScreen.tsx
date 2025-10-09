@@ -360,6 +360,41 @@ const ProfileScreen = ({ navigation }: any) => {
           </View>
         </View>
 
+        {/* Voucher Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Đổi điểm lấy voucher</Text>
+
+          <View style={styles.voucherCard}>
+            <View style={styles.voucherInfo}>
+              <View style={styles.voucherIcon}>
+                <FontAwesome 
+                  name="gift" 
+                  size={24} 
+                  color="#FF6B6B" 
+                />
+              </View>
+              <View style={styles.voucherDetails}>
+                <Text style={styles.voucherTitle}>Voucher & Ưu đãi</Text>
+                <Text style={styles.voucherSubtitle}>
+                  Đổi điểm tích lũy thành voucher giảm giá
+                </Text>
+              </View>
+            </View>
+            <TouchableOpacity
+              style={styles.voucherButton}
+              onPress={() => navigation.navigate("VoucherScreen")}
+            >
+              <Text style={styles.voucherButtonText}>Xem voucher</Text>
+              <FontAwesome 
+                name="arrow-right" 
+                size={14} 
+                color="#FFFFFF" 
+                style={styles.voucherButtonArrow}
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
+
         {/* Travel History Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Lịch sử chuyến đi</Text>
@@ -986,18 +1021,18 @@ const styles = StyleSheet.create({
   // Premium styles
   premiumCard: {
     backgroundColor: "#1A1A1A", // đen sâu hơn
-    borderRadius: 20,
-    padding: 20,
+    borderRadius: 14,
+    padding: 16,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     borderWidth: 2,
     borderColor: "#FFD700", // viền vàng gold
     shadowColor: "#FFD700",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 4,
     position: "relative",
     overflow: "hidden",
   },
@@ -1009,78 +1044,78 @@ const styles = StyleSheet.create({
   },
 
   premiumIcon: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 45,
+    height: 45,
+    borderRadius: 23,
     backgroundColor: "rgba(255,215,0,0.15)",
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 16,
+    marginRight: 12,
     borderWidth: 2,
     borderColor: "#FFD700",
     shadowColor: "#FFD700",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 4,
+    shadowRadius: 4,
+    elevation: 3,
   },
   premiumDetails: {
     flex: 1,
   },
   premiumTitle: {
-    fontSize: 18,
-    fontWeight: "800",
+    fontSize: 15,
+    fontWeight: "700",
     color: "#FFD700",
-    marginBottom: 6,
+    marginBottom: 3,
     textTransform: "uppercase",
-    letterSpacing: 1,
+    letterSpacing: 0.4,
     textShadowColor: "rgba(255, 215, 0, 0.3)",
     textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    textShadowRadius: 1.5,
   },
 
   premiumSubtitle: {
-    fontSize: 15,
+    fontSize: 12,
     color: "#F0F0F0",
     fontWeight: "500",
-    lineHeight: 20,
+    lineHeight: 16,
   },
 
   premiumEndDate: {
-    fontSize: 13,
+    fontSize: 11,
     color: "#4CAF50",
-    fontWeight: "700",
-    marginTop: 6,
+    fontWeight: "600",
+    marginTop: 3,
     backgroundColor: "rgba(76, 175, 80, 0.1)",
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 12,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
     alignSelf: "flex-start",
   },
 
   premiumButton: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 20,
+    paddingVertical: 9,
+    paddingHorizontal: 14,
     backgroundColor: "#FFD700",
-    borderRadius: 25,
+    borderRadius: 18,
     shadowColor: "#FFD700",
-    shadowOpacity: 0.7,
-    shadowOffset: { width: 0, height: 3 },
-    shadowRadius: 8,
-    elevation: 6,
+    shadowOpacity: 0.6,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 3,
     borderWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.2)",
   },
 
   premiumButtonText: {
-    fontSize: 15,
+    fontSize: 12,
     color: "#000",
-    fontWeight: "800",
-    marginRight: 8,
+    fontWeight: "700",
+    marginRight: 5,
     textTransform: "uppercase",
-    letterSpacing: 0.5,
+    letterSpacing: 0.3,
   },
 
   premiumButtonArrow: {
@@ -1088,19 +1123,83 @@ const styles = StyleSheet.create({
   },
 
   premiumActiveBadge: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: "#4CAF50",
     justifyContent: "center",
     alignItems: "center",
     shadowColor: "#4CAF50",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.4,
-    shadowRadius: 6,
-    elevation: 4,
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 3,
     borderWidth: 2,
     borderColor: "rgba(255, 255, 255, 0.3)",
+  },
+
+  // Voucher styles
+  voucherCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    padding: 16,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  voucherInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  voucherIcon: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: "#FFE8E8",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  voucherDetails: {
+    flex: 1,
+  },
+  voucherTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 4,
+  },
+  voucherSubtitle: {
+    fontSize: 14,
+    color: "#666",
+  },
+  voucherButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: "#FF6B6B",
+    borderRadius: 8,
+  },
+  voucherButtonText: {
+    fontSize: 14,
+    color: "#FFFFFF",
+    fontWeight: "600",
+    marginRight: 4,
+  },
+  voucherButtonArrow: {
+    fontSize: 16,
+    color: "#FFFFFF",
+    fontWeight: "bold",
   },
 
   // Travel History styles
@@ -1169,3 +1268,4 @@ const styles = StyleSheet.create({
 });
 
 export default ProfileScreen;
+

@@ -14,6 +14,7 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { FontAwesome } from "@expo/vector-icons";
 import { showToast } from "../../utils/toast.utils";
 
 const { width, height } = Dimensions.get("window");
@@ -152,7 +153,7 @@ const ProfileSetupScreen = ({ navigation }: any) => {
 
           <View style={styles.inputContainer}>
             <View style={styles.inputWrapper}>
-              <Text style={styles.inputIcon}>👤</Text>
+              <FontAwesome name="user" size={16} color="#4facfe" style={styles.inputIconFA} />
               <TextInput
                 style={styles.input}
                 placeholder="Tên đầy đủ"
@@ -173,9 +174,9 @@ const ProfileSetupScreen = ({ navigation }: any) => {
               }}
             >
               <View style={styles.dateButtonContent}>
-                <Text style={styles.dateIcon}>🎂</Text>
+                <FontAwesome name="birthday-cake" size={16} color="#FF6B6B" style={styles.dateIconFA} />
                 <Text style={styles.dateText}>{formatDate(dob)}</Text>
-                <Text style={styles.dateArrow}>▼</Text>
+                <FontAwesome name="chevron-down" size={12} color="#4facfe" />
               </View>
             </TouchableOpacity>
           </View>
@@ -336,7 +337,8 @@ const ProfileSetupScreen = ({ navigation }: any) => {
                       setTempDate(newDate);
                     }}
                   >
-                    <Text style={styles.controlButtonText}>-10</Text>
+                    <FontAwesome name="minus" size={12} color="#4facfe" />
+                    <Text style={styles.controlButtonText}>10</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.controlButton}
@@ -346,7 +348,8 @@ const ProfileSetupScreen = ({ navigation }: any) => {
                       setTempDate(newDate);
                     }}
                   >
-                    <Text style={styles.controlButtonText}>-1</Text>
+                    <FontAwesome name="minus" size={12} color="#4facfe" />
+                    <Text style={styles.controlButtonText}>1</Text>
                   </TouchableOpacity>
                   <View style={styles.currentValue}>
                     <Text style={styles.currentValueText}>
@@ -361,7 +364,8 @@ const ProfileSetupScreen = ({ navigation }: any) => {
                       setTempDate(newDate);
                     }}
                   >
-                    <Text style={styles.controlButtonText}>+1</Text>
+                    <FontAwesome name="plus" size={12} color="#4facfe" />
+                    <Text style={styles.controlButtonText}>1</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.controlButton}
@@ -371,7 +375,8 @@ const ProfileSetupScreen = ({ navigation }: any) => {
                       setTempDate(newDate);
                     }}
                   >
-                    <Text style={styles.controlButtonText}>+10</Text>
+                    <FontAwesome name="plus" size={12} color="#4facfe" />
+                    <Text style={styles.controlButtonText}>10</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -542,19 +547,6 @@ const styles = StyleSheet.create({
     color: "rgba(255, 255, 255, 0.8)",
     fontWeight: "600",
   },
-  menuButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "#E3F2FD",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  menuIcon: {
-    fontSize: 16,
-    color: "#2196F3",
-    fontWeight: "bold",
-  },
   content: {
     flex: 1,
     paddingHorizontal: 20,
@@ -601,10 +593,8 @@ const styles = StyleSheet.create({
     borderColor: "#E0E0E0",
     minHeight: 56,
   },
-  inputIcon: {
-    fontSize: 16,
+  inputIconFA: {
     marginRight: 10,
-    color: "#9E9E9E",
   },
   input: {
     flex: 1,
@@ -653,19 +643,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
   },
-  dateIcon: {
-    fontSize: 16,
+  dateIconFA: {
     marginRight: 10,
-    color: "#9E9E9E",
   },
   dateText: {
     flex: 1,
     fontSize: 16,
     color: "#000000",
-  },
-  dateArrow: {
-    fontSize: 12,
-    color: "#9E9E9E",
   },
   modalOverlay: {
     flex: 1,
@@ -676,7 +660,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    paddingBottom: 34, // Safe area for iPhone
+    paddingBottom: 34,
   },
   modalHeader: {
     flexDirection: "row",
@@ -704,9 +688,6 @@ const styles = StyleSheet.create({
     color: "#2196F3",
     fontWeight: "bold",
   },
-  datePicker: {
-    height: 200,
-  },
   datePreview: {
     backgroundColor: "#F5F5F5",
     marginHorizontal: 20,
@@ -725,32 +706,6 @@ const styles = StyleSheet.create({
   datePreviewAge: {
     fontSize: 14,
     color: "#666666",
-  },
-  yearNavigation: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginHorizontal: 20,
-    marginBottom: 16,
-  },
-  yearButton: {
-    backgroundColor: "#E3F2FD",
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    minWidth: 50,
-    alignItems: "center",
-  },
-  yearButtonText: {
-    fontSize: 14,
-    fontWeight: "bold",
-    color: "#2196F3",
-  },
-  currentYear: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#000000",
-    paddingHorizontal: 16,
   },
   customDatePicker: {
     paddingHorizontal: 20,
@@ -778,11 +733,14 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     minWidth: 50,
     alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "center",
   },
   controlButtonText: {
     fontSize: 14,
     fontWeight: "bold",
     color: "#2196F3",
+    marginLeft: 4,
   },
   currentValue: {
     backgroundColor: "#F5F5F5",
@@ -927,11 +885,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "600",
     marginBottom: 0,
-  },
-  nextButtonIcon: {
-    color: "#FFFFFF",
-    fontSize: 20,
-    fontWeight: "600",
   },
 });
 

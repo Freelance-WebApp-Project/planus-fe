@@ -72,15 +72,24 @@ const HomeScreen = ({ navigation }: any) => {
   // Helper function to get simple FontAwesome icons with colors
   const getCategoryIcon = (id: string) => {
     switch (id) {
-      case "1": return { name: "umbrella" as const, color: "#FF6B6B" }; // Resort - Red
-      case "2": return { name: "home" as const, color: "#4ECDC4" }; // Homestay - Teal
-      case "3": return { name: "building" as const, color: "#45B7D1" }; // Hotel - Blue
-      case "4": return { name: "bed" as const, color: "#96CEB4" }; // Guesthouse - Green
-      case "5": return { name: "home" as const, color: "#FFEAA7" }; // Villa - Yellow
-      case "6": return { name: "building" as const, color: "#DDA0DD" }; // Apartment - Purple
-      case "7": return { name: "graduation-cap" as const, color: "#98D8C8" }; // Dormitory - Mint
-      case "8": return { name: "ellipsis-h" as const, color: "#F7DC6F" }; // More - Gold
-      default: return { name: "circle" as const, color: "#4facfe" };
+      case "1":
+        return { name: "umbrella" as const, color: "#FF6B6B" }; // Resort - Red
+      case "2":
+        return { name: "home" as const, color: "#4ECDC4" }; // Homestay - Teal
+      case "3":
+        return { name: "building" as const, color: "#45B7D1" }; // Hotel - Blue
+      case "4":
+        return { name: "bed" as const, color: "#96CEB4" }; // Guesthouse - Green
+      case "5":
+        return { name: "home" as const, color: "#FFEAA7" }; // Villa - Yellow
+      case "6":
+        return { name: "building" as const, color: "#DDA0DD" }; // Apartment - Purple
+      case "7":
+        return { name: "graduation-cap" as const, color: "#98D8C8" }; // Dormitory - Mint
+      case "8":
+        return { name: "ellipsis-h" as const, color: "#F7DC6F" }; // More - Gold
+      default:
+        return { name: "circle" as const, color: "#4facfe" };
     }
   };
   // Convert random places to destinations format (3 items)
@@ -152,11 +161,7 @@ const HomeScreen = ({ navigation }: any) => {
         onPress={() => handleCategoryPress(item)}
       >
         <View style={styles.categoryIcon}>
-          <FontAwesome 
-            name={iconData.name} 
-            size={24} 
-            color={iconData.color} 
-          />
+          <FontAwesome name={iconData.name} size={24} color={iconData.color} />
         </View>
         <Text style={styles.categoryText}>{item.title}</Text>
       </TouchableOpacity>
@@ -214,8 +219,8 @@ const HomeScreen = ({ navigation }: any) => {
           {/* Logo and greeting */}
           <View style={styles.userSection}>
             <View style={styles.logoContainer}>
-              <Image 
-                source={require('../../../assets/logo.png')} 
+              <Image
+                source={require("../../../assets/logo.jpg")}
                 style={styles.logo}
                 resizeMode="cover"
               />
@@ -225,7 +230,6 @@ const HomeScreen = ({ navigation }: any) => {
               <Text style={styles.appName}>PlanUS</Text>
             </View>
           </View>
-
         </View>
 
         {/* Search bar */}
