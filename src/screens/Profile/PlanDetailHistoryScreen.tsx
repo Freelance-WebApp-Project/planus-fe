@@ -22,11 +22,14 @@ const { width } = Dimensions.get("window");
 const PlanDetailHistoryScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const { plan, planId } = route.params as { plan: TravelPlan; planId?: string };
+  const { plan, planId } = route.params as {
+    plan: TravelPlan;
+    planId?: string;
+  };
   const [visitedPlaces, setVisitedPlaces] = useState<Set<number>>(new Set());
 
   const toggleVisited = (index: number) => {
-    setVisitedPlaces(prev => {
+    setVisitedPlaces((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(index)) {
         newSet.delete(index);
@@ -36,6 +39,13 @@ const PlanDetailHistoryScreen = () => {
       return newSet;
     });
   };
+
+  const handleTracking = () => {
+  (navigation as any).navigate("CurrentRouteTrackingScreen", {
+    plan, 
+  });
+};
+
 
   const renderPlaceItem = (item: any, index: number) => {
     const place = item.placeInfo;
@@ -54,10 +64,10 @@ const PlanDetailHistoryScreen = () => {
               <View style={styles.verticalContainer}>
                 <View style={styles.verticalLine} />
                 <View style={styles.orderBadge}>
-                  <FontAwesome 
-                    name="motorcycle" 
-                    size={18} 
-                    color="#FFF" 
+                  <FontAwesome
+                    name="motorcycle"
+                    size={18}
+                    color="#FFF"
                     style={styles.heartIcon}
                   />
                   <View
@@ -89,14 +99,16 @@ const PlanDetailHistoryScreen = () => {
                 <Text style={styles.placeName}>{place.name}</Text>
                 {/* <Text style={styles.placeType}>{place.type}</Text> */}
               </View>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.checkboxContainer}
                 onPress={() => toggleVisited(index)}
               >
-                <View style={[
-                  styles.checkbox,
-                  visitedPlaces.has(index) && styles.checkboxChecked
-                ]}>
+                <View
+                  style={[
+                    styles.checkbox,
+                    visitedPlaces.has(index) && styles.checkboxChecked,
+                  ]}
+                >
                   {visitedPlaces.has(index) && (
                     <FontAwesome name="check" size={12} color="#FFF" />
                   )}
@@ -129,10 +141,10 @@ const PlanDetailHistoryScreen = () => {
               {/* Hình chữ nhật bo tròn gắn vào hình tròn */}
               <View style={styles.rectangle}>
                 <View style={styles.locationInfo}>
-                  <FontAwesome 
-                    name="map-marker" 
-                    size={10} 
-                    color="#6C757D" 
+                  <FontAwesome
+                    name="map-marker"
+                    size={10}
+                    color="#6C757D"
                     style={styles.locationIcon}
                   />
                   <Text style={styles.locationText}>
@@ -192,11 +204,7 @@ const PlanDetailHistoryScreen = () => {
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <FontAwesome 
-            name="arrow-left" 
-            size={18} 
-            color="#4facfe" 
-          />
+          <FontAwesome name="arrow-left" size={18} color="#4facfe" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Chi tiết kế hoạch</Text>
         <View style={styles.placeholder} />
@@ -208,20 +216,20 @@ const PlanDetailHistoryScreen = () => {
           <Text style={styles.planTitle}>{plan.planTitle}</Text>
           <View style={styles.summaryInfo}>
             <View style={styles.summaryItem}>
-              <FontAwesome 
-                name="clock-o" 
-                size={24} 
-                color="#4facfe" 
+              <FontAwesome
+                name="clock-o"
+                size={24}
+                color="#4facfe"
                 style={styles.summaryIcon}
               />
               <Text style={styles.summaryLabel}>Thời gian</Text>
               <Text style={styles.summaryValue}>{plan.totalDuration}</Text>
             </View>
             <View style={styles.summaryItem}>
-              <FontAwesome 
-                name="money" 
-                size={24} 
-                color="#28A745" 
+              <FontAwesome
+                name="money"
+                size={24}
+                color="#28A745"
                 style={styles.summaryIcon}
               />
               <Text style={styles.summaryLabel}>Chi phí</Text>
@@ -230,10 +238,10 @@ const PlanDetailHistoryScreen = () => {
               </Text>
             </View>
             <View style={styles.summaryItem}>
-              <FontAwesome 
-                name="map-marker" 
-                size={24} 
-                color="#FF6B6B" 
+              <FontAwesome
+                name="map-marker"
+                size={24}
+                color="#FF6B6B"
                 style={styles.summaryIcon}
               />
               <Text style={styles.summaryLabel}>Địa điểm</Text>
@@ -252,19 +260,14 @@ const PlanDetailHistoryScreen = () => {
       </ScrollView>
 
       {/* Bottom Action */}
-      {/* <View style={styles.bottomBar}>
+      <View style={styles.bottomBar}>
         <TouchableOpacity
-          style={[styles.selectButton, processingPayment && styles.disabledButton]}
-          onPress={handleCreateWithPayment}
-          disabled={processingPayment}
+          style={[styles.selectButton]}
+          onPress={handleTracking}
         >
-          {processingPayment ? (
-            <ActivityIndicator size="small" color="#FFF" />
-          ) : (
-            <Text style={styles.selectButtonText}>Thanh toán và tạo kế hoạch</Text>
-          )}
+          <Text style={styles.selectButtonText}>Theo dõi lộ trình</Text>
         </TouchableOpacity>
-      </View> */}
+      </View>
     </SafeAreaView>
   );
 };
