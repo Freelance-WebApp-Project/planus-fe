@@ -9,6 +9,9 @@ import {
   Dimensions,
   ActivityIndicator,
   Alert,
+  Modal,
+  Animated,
+  Easing,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { FontAwesome } from "@expo/vector-icons";
@@ -27,6 +30,8 @@ const PlanDetailHistoryScreen = () => {
     planId?: string;
   };
   const [visitedPlaces, setVisitedPlaces] = useState<Set<number>>(new Set());
+  const [showModal, setShowModal] = useState(false);
+  const slideAnim = useState(new Animated.Value(300))[0];
 
   const toggleVisited = (index: number) => {
     setVisitedPlaces((prev) => {
@@ -36,16 +41,45 @@ const PlanDetailHistoryScreen = () => {
       } else {
         newSet.add(index);
       }
+
+      if (newSet.size === plan.itinerary.length) {
+        openModal();
+      }
+
       return newSet;
     });
   };
 
   const handleTracking = () => {
-  (navigation as any).navigate("CurrentRouteTrackingScreen", {
-    plan, 
-  });
-};
+    (navigation as any).navigate("CurrentRouteTrackingScreen", {
+      plan,
+      visitedPlaces: Array.from(visitedPlaces),
+    });
+  };
 
+  const handleReview = () => {
+    setShowModal(false);
+    (navigation as any).navigate("ReviewScreen", {
+      plan,
+    });
+  };
+
+  const handleFullCheckBox = () => {
+    // Khi bấm "Kết thúc lộ trình" → tích hết tất cả checkbox
+    const allIndexes = new Set(plan.itinerary.map((_, i) => i));
+    setVisitedPlaces(allIndexes);
+    openModal();
+  };
+
+  const openModal = () => {
+    setShowModal(true);
+    Animated.timing(slideAnim, {
+      toValue: 0,
+      duration: 400,
+      easing: Easing.out(Easing.ease),
+      useNativeDriver: true,
+    }).start();
+  };
 
   const renderPlaceItem = (item: any, index: number) => {
     const place = item.placeInfo;
@@ -257,6 +291,49 @@ const PlanDetailHistoryScreen = () => {
           <Text style={styles.sectionTitle}>Lộ trình chi tiết</Text>
           {plan.itinerary.map((item, index) => renderPlaceItem(item, index))}
         </View>
+
+        <Modal transparent visible={showModal} animationType="none">
+          <View style={styles.overlay}>
+            <Animated.View
+              style={[
+                styles.modalContent,
+                { transform: [{ translateY: slideAnim }] },
+              ]}
+            >
+              <Text style={styles.title}>🎉 Bạn đã đến đích!</Text>
+              <View style={styles.headerLogo}>
+                <Image
+                  source={require("../../../assets/logo.png")}
+                  style={{
+                    width: 80,
+                    height: 80,
+                    borderRadius: 40,
+                  }}
+                />
+              </View>
+              <Text style={styles.subText}>
+                Xin vui lòng đánh giá dịch vụ của chúng tôi!
+              </Text>
+
+              <View style={styles.placeModal}>
+                <TouchableOpacity
+                  onPress={() => setShowModal(false)}
+                  style={styles.closeButton}
+                >
+                  <Text style={{ color: "#fff", fontWeight: "600" }}>Đóng</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={handleReview}
+                  style={styles.reviewButton}
+                >
+                  <Text style={{ color: "#fff", fontWeight: "600" }}>
+                    Đánh giá
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </Animated.View>
+          </View>
+        </Modal>
       </ScrollView>
 
       {/* Bottom Action */}
@@ -266,6 +343,12 @@ const PlanDetailHistoryScreen = () => {
           onPress={handleTracking}
         >
           <Text style={styles.selectButtonText}>Theo dõi lộ trình</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.selectReviewButton]}
+          onPress={handleFullCheckBox}
+        >
+          <Text style={styles.selectButtonText}>Kết thúc lộ trình</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -285,6 +368,16 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     backgroundColor: "#FFF",
     borderBottomWidth: 1,
+    borderBottomColor: "#E9ECEF",
+  },
+  headerLogo: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: "#FFF",
+    // borderBottomWidth: 1,
     borderBottomColor: "#E9ECEF",
   },
   backButton: {
@@ -410,6 +503,14 @@ const styles = StyleSheet.create({
   placeContainer: {
     flexDirection: "row",
   },
+  placeModal: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    width: "100%",
+    paddingHorizontal: 8,
+    marginTop: 5,
+  },
   placeDetails: {
     paddingTop: 5,
   },
@@ -513,6 +614,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#F8F9FA",
     borderTopWidth: 1,
     borderTopColor: "#E9ECEF",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   selectButton: {
     backgroundColor: "#4facfe",
@@ -527,6 +631,22 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 4,
+    paddingHorizontal: 20,
+  },
+  selectReviewButton: {
+    backgroundColor: "#FFCC33",
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: "center",
+    shadowColor: "#4facfe",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
+    paddingHorizontal: 20,
   },
   selectButtonText: {
     color: "#FFF",
@@ -627,6 +747,48 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#6C757D",
     fontWeight: "500",
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.3)",
+    justifyContent: "flex-end",
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 35,
+    alignItems: "center",
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "green",
+    marginBottom: 10,
+  },
+  subText: {
+    fontSize: 15,
+    color: "#555",
+    marginTop: 10,
+    textAlign: "center",
+  },
+  stars: {
+    flexDirection: "row",
+    marginVertical: 10,
+  },
+  closeButton: {
+    backgroundColor: "#3b82f6",
+    paddingVertical: 10,
+    paddingHorizontal: 40,
+    borderRadius: 10,
+    marginTop: 20,
+  },
+  reviewButton: {
+    backgroundColor: "#FFCC33",
+    paddingVertical: 10,
+    paddingHorizontal: 40,
+    borderRadius: 10,
+    marginTop: 20,
   },
 });
 

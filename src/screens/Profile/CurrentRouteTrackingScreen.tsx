@@ -20,8 +20,10 @@ const NOMINATIM_URL = "https://nominatim.openstreetmap.org";
 const CurrentRouteTrackingScreen = () => {
   const route = useRoute();
   const navigation = useNavigation();
-  const { plan } = route.params as { plan: TravelPlan };
-
+  const { plan, visitedPlaces = [] } = route.params as {
+    plan: TravelPlan;
+    visitedPlaces?: number[];
+  };
   const mapRef = useRef<MapView>(null);
   const [locations, setLocations] = useState<
     { name: string; address: string; lat: number; lon: number }[]
@@ -140,75 +142,103 @@ const CurrentRouteTrackingScreen = () => {
         <View style={styles.placeholder} />
       </View>
 
-
-    <View style={styles.container}>
-      <MapView ref={mapRef} style={StyleSheet.absoluteFillObject} region={region}>
-        {locations.map((loc, i) => (
-          <Marker
-            key={i}
-            coordinate={{ latitude: loc.lat, longitude: loc.lon }}
-            title={`${i + 1}. ${loc.name}`}
-            description={loc.address}
-            pinColor={
-              i === 0 ? "green" : i === locations.length - 1 ? "red" : "blue"
-            }
-          />
-        ))}
-
-        <Polyline
-          coordinates={locations.map((l) => ({
-            latitude: l.lat,
-            longitude: l.lon,
-          }))}
-          strokeWidth={4}
-          strokeColor="#007bff"
-        />
-      </MapView>
-
-      {/* 🔹 Thẻ địa điểm nằm ngang */}
-      <View style={styles.infoBox}>
-        <Text style={styles.title}>{plan.planTitle}</Text>
-
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={{ marginTop: 8 }}
+      <View style={styles.container}>
+        <MapView
+          ref={mapRef}
+          style={StyleSheet.absoluteFillObject}
+          region={region}
         >
-          {plan.itinerary.map((item, index) => (
-            <TouchableOpacity
-              key={index}
-              style={[
-                styles.card,
-                selectedIndex === index && styles.selectedCard,
-              ]}
-              onPress={() => setSelectedIndex(index)}
-              activeOpacity={0.8}
-            >
-              <Image
-                source={{
-                  uri:
-                    // item.placeInfo.image ||
-                    "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=600&q=60",
-                }}
-                style={styles.cardImage}
-              />
-              <View style={{ padding: 10 }}>
-                <View style={styles.rowBetween}>
-                  <Text style={styles.cardTitle}>{item.placeInfo.name}</Text>
-                  <Text style={styles.rating}>⭐ 5.0</Text>
-                </View>
-                <Text style={styles.price}>
-                  Giá: {item.placeInfo.priceRange || "N/A"} VND
-                </Text>
-                <Text numberOfLines={2} style={styles.desc}>
-                  Mô tả: {item.placeInfo.description || "Chưa có mô tả"}
-                </Text>
-              </View>
-            </TouchableOpacity>
+          {locations.map((loc, i) => (
+            <Marker
+              key={i}
+              coordinate={{ latitude: loc.lat, longitude: loc.lon }}
+              title={`${i + 1}. ${loc.name}`}
+              description={loc.address}
+              pinColor={
+                i === 0 ? "green" : i === locations.length - 1 ? "red" : "blue"
+              }
+            />
           ))}
-        </ScrollView>
+
+          <Polyline
+            coordinates={locations.map((l) => ({
+              latitude: l.lat,
+              longitude: l.lon,
+            }))}
+            strokeWidth={4}
+            strokeColor="#007bff"
+          />
+        </MapView>
+
+        {/* 🔹 Thẻ địa điểm nằm ngang */}
+        <View style={styles.infoBox}>
+          <Text style={styles.title}>{plan.planTitle}</Text>
+
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={{ marginTop: 8 }}
+          >
+            {plan.itinerary.map((item, index) => (
+              <TouchableOpacity
+                key={index}
+                style={[
+                  styles.card,
+                  selectedIndex === index && styles.selectedCard,
+                ]}
+                onPress={() => setSelectedIndex(index)}
+                activeOpacity={0.8}
+              >
+                <View style={styles.imageContainer}>
+                  <Image
+                    source={{
+                      uri: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=600&q=60",
+                    }}
+                    style={styles.cardImage}
+                  />
+
+                  {/* ✅ Dấu tích ở góc trên phải */}
+                  {visitedPlaces.includes(index) && (
+                    <View style={styles.checkIconContainer}>
+                      <FontAwesome
+                        name="check-circle"
+                        size={22}
+                        color="#4CAF50"
+                      />
+                    </View>
+                  )}
+                </View>
+                <View style={{ padding: 10 }}>
+                  <View>
+                    <Text style={styles.cardTitle}>{item.placeInfo.name}</Text>
+                    <View style={styles.starsContainer}>
+                      {[...Array(5)].map((_, i) => (
+                        <Text
+                          key={i}
+                          style={[
+                            styles.star,
+                            i < Math.round(item.placeInfo.rating)
+                              ? styles.starFilled
+                              : styles.starEmpty,
+                          ]}
+                        >
+                          ★
+                        </Text>
+                      ))}
+                    </View>
+                  </View>
+                  <Text style={styles.price}>
+                    Giá: {item.placeInfo.priceRange || "N/A"} VND
+                  </Text>
+                  <Text numberOfLines={2} style={styles.desc}>
+                    Mô tả: {item.placeInfo.description || "Chưa có mô tả"}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
       </View>
-    </View>
     </SafeAreaView>
   );
 };
@@ -255,7 +285,7 @@ const styles = StyleSheet.create({
   rating: { color: "#ffb400", fontWeight: "bold" },
   price: { color: "#555", fontStyle: "italic", marginTop: 4 },
   desc: { color: "#666", fontSize: 12, marginTop: 4 },
-   header: {
+  header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
@@ -275,5 +305,30 @@ const styles = StyleSheet.create({
   },
   placeholder: {
     width: 36,
+  },
+  imageContainer: {
+    position: "relative",
+  },
+  checkIconContainer: {
+    position: "absolute",
+    top: 5,
+    right: 8,
+    backgroundColor: "rgba(255, 255, 255, 0.8)",
+    borderRadius: 20,
+    padding: 3,
+    zIndex: 10,
+  },
+  starsContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+  },
+  star: {
+    fontSize: 15,
+  },
+  starFilled: {
+    color: "#FFD700",
+  },
+  starEmpty: {
+    color: "#E9ECEF",
   },
 });

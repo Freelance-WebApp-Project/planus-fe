@@ -37,6 +37,13 @@ export const API_CONFIG = {
       PAYOS_SUCCESS: '/wallet/payos-success',
       BUY_VIP: '/wallet/buy-vip',
     },
+    FEEDBACK: {
+      CREATE: '/reviews/create-or-update',
+      GETPLACEID: '/reviews/place',
+    },
+    GALLERY: {
+      UPLOAD: '/galleries/upload',
+    },
   },
   TIMEOUT: APP_CONFIG.TIMEOUT,
 };
