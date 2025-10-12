@@ -25,8 +25,10 @@ const ReviewDetailScreen = () => {
   const route = useRoute();
   const { user } = useAuth();
   const navigation = useNavigation();
-  const { placeId } = route.params as {
+  const { placeId, imageUrl, address } = route.params as {
     placeId?: any;
+    imageUrl?: string;
+    address?: string;
   };
 
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -188,7 +190,7 @@ const ReviewDetailScreen = () => {
         {/* Ảnh địa điểm */}
         <Image
           source={{
-            uri: "https://i.pravatar.cc/100?img=5",
+            uri: imageUrl || "https://i.pravatar.cc/100?img=5",
           }}
           style={styles.fieldImage}
         />
@@ -198,7 +200,7 @@ const ReviewDetailScreen = () => {
           <Text style={styles.fieldName}>
             {place?.name || "Không rõ tên địa điểm"}
           </Text>
-          <Text style={styles.fieldAddress}>Địa chỉ: Đang cập nhật</Text>
+          <Text style={styles.fieldAddress}>Địa chỉ: {address}</Text>
         </View>
 
         {/* DANH SÁCH REVIEW */}
@@ -444,6 +446,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flexWrap: "wrap",
     gap: 6,
+    marginBottom: -20,
   },
   addImageButton: {
     width: 65,
