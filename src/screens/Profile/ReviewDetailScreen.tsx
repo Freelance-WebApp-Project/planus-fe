@@ -284,7 +284,9 @@ const ReviewDetailScreen = () => {
             source={{ uri: "https://i.pravatar.cc/100?img=5" }}
             style={styles.avatar}
           />
-          <Text style={styles.userNameIndent}>{user?.fullName|| "Người dùng ẩn danh"}</Text>
+          <Text style={styles.userNameIndent}>
+            {user?.username || user?.fullName || "Người dùng ẩn danh"}
+          </Text>
         </View>
 
         <View style={styles.commentInputContainer}>

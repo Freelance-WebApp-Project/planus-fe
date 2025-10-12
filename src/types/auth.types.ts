@@ -2,6 +2,7 @@ export interface User {
   _id: string;
   email: string;
   fullName: string;
+  username: string;
   role: string;
   phone?: string;
   twofa?: boolean;
