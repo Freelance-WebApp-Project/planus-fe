@@ -195,11 +195,12 @@ const HomeScreen = ({ navigation }: any) => {
     });
   };
 
-  const handleReview = (placeId: string, imageUrl: string, address: string) => {
+  const handleReview = (placeId: string, imageUrl: string, address: string, title?: string) => {
     (navigation as any).navigate("ReviewDetailScreen", {
       placeId,
       imageUrl,
       address,
+      title
     });
   };
 
@@ -222,7 +223,7 @@ const HomeScreen = ({ navigation }: any) => {
     <TouchableOpacity
       style={styles.destinationItem}
       onPress={() =>
-        handleReview(item?.id, destinations[0].image, item?.location?.address)
+        handleReview(item?.id, destinations[0].image, item?.location?.address, item.title)
       }
     >
       <View style={styles.destinationImageContainer}>
@@ -245,7 +246,7 @@ const HomeScreen = ({ navigation }: any) => {
     <TouchableOpacity
       style={styles.suggestionItem}
       onPress={() =>
-        handleReview(item?.id, destinations[0].image, item?.location?.address)
+        handleReview(item?.id, destinations[0].image, item?.location?.address, item.title)
       }
     >
       <View style={styles.suggestionImageContainer}>

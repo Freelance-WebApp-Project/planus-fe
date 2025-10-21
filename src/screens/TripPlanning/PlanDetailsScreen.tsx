@@ -8,6 +8,7 @@ import {
   Image,
   Dimensions,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, useRoute } from "@react-navigation/native";
@@ -31,7 +32,26 @@ const PlanDetailsScreen = () => {
   const [processingFavorite, setProcessingFavorite] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
 
-  const handleCreateWithPayment = async () => {
+  const handleCreateWithPayment = () => {
+    const totalCost = (plan.totalCost || plan.estimatedCost || 0).toLocaleString();
+    Alert.alert(
+      "Xác nhận thanh toán", 
+      `Thanh toán ${totalCost}đ cho kế hoạch "${plan.planTitle}"?`,  
+      [
+        {
+          text: "Hủy",  
+          style: "cancel",  
+        },
+        {
+          text: "Xác nhận",  
+          onPress: processPayment, 
+        },
+      ],
+      { cancelable: true } 
+    );
+  };
+
+  const processPayment = async () => {
     try {
       setProcessingPayment(true);
 

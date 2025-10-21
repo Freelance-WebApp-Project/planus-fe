@@ -17,11 +17,12 @@ const ReviewScreen = () => {
   const route = useRoute();
   const { plan } = route.params as { plan: any };
 
-  const handleReview = (placeId: string, imageUrl: string, address: string) => {
+  const handleReview = (placeId: string, imageUrl: string, address: string, title: string) => {
     (navigation as any).navigate("ReviewDetailScreen", {
       placeId,
       imageUrl,
       address,
+      title
     });
   };
 
@@ -37,7 +38,7 @@ const ReviewScreen = () => {
     return (
       <TouchableOpacity
         style={styles.planCard}
-        onPress={() => handleReview(place?._id, imageUrl, place?.location?.address)}
+        onPress={() => handleReview(place?._id, imageUrl, place?.location?.address, place?.name)}
       >
         <View style={styles.card}>
           <Image source={{ uri: imageUrl }} style={styles.cardImage} />

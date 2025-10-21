@@ -93,11 +93,12 @@ const SearchScreen = () => {
     console.log("Place pressed:", place);
   };
 
-  const handleReview = (placeId: string, imageUrl: string, address: string) => {
+  const handleReview = (placeId: string, imageUrl: string, address: string, title: string) => {
     (navigation as any).navigate("ReviewDetailScreen", {
       placeId,
       imageUrl,
       address,
+      title
     });
   };
 
@@ -127,7 +128,7 @@ const SearchScreen = () => {
       <TouchableOpacity
         style={styles.placeCard}
         // onPress={() => handlePlacePress(item)}
-        onPress={() => handleReview(item._id, imageUrl, item.location.address)}
+        onPress={() => handleReview(item._id, imageUrl, item.location.address, item.name)}
       >
         <View style={styles.placeImage}>
           {/* <Text style={styles.placeImageText}>🏢{item.images[0].imageUrl}</Text> */}

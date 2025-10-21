@@ -25,10 +25,11 @@ const ReviewDetailScreen = () => {
   const route = useRoute();
   const { user } = useAuth();
   const navigation = useNavigation();
-  const { placeId, imageUrl, address } = route.params as {
+  const { placeId, imageUrl, address, title } = route.params as {
     placeId?: any;
     imageUrl?: string;
     address?: string;
+    title?: string;
   };
 
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -173,7 +174,6 @@ const ReviewDetailScreen = () => {
         </TouchableOpacity>
         <View style={styles.titleContainer}>
           <Text style={styles.headerTitle}>Đánh giá địa điểm</Text>
-          <Text style={styles.headerSubtitle}>{place?.name}</Text>
         </View>
         <View style={styles.placeholder} />
         <TouchableOpacity
@@ -198,7 +198,7 @@ const ReviewDetailScreen = () => {
         {/* Thông tin địa điểm */}
         <View style={styles.fieldInfo}>
           <Text style={styles.fieldName}>
-            {place?.name || "Không rõ tên địa điểm"}
+            {title || "Địa điểm không xác định"}
           </Text>
           <Text style={styles.fieldAddress}>Địa chỉ: {address}</Text>
         </View>
@@ -207,25 +207,25 @@ const ReviewDetailScreen = () => {
         {reviews.length > 0 ? (
           reviews.map((review: any, index: number) => (
             <View key={review._id}>
-              {/* User info */}
-              <View style={styles.userRow}>
+              {review.userId?.avatar ? (
                 <Image
-                  source={{
-                    uri:
-                      review.userId?.avatar ||
-                      "https://i.pravatar.cc/100?img=5",
-                  }}
+                  source={{ uri: review.userId.avatar }}
                   style={styles.avatar}
                 />
-                <View>
-                  <Text style={styles.userName}>
-                    {review.userId?.username || "Người dùng ẩn danh"}
-                  </Text>
-                  <Text style={styles.reviewDate}>
-                    {new Date(review.createdAt).toLocaleDateString("vi-VN")}
-                  </Text>
+              ) : (
+                <View
+                  style={[
+                    styles.avatar,
+                    {
+                      justifyContent: "center",
+                      alignItems: "center",
+                      backgroundColor: "#F0F0F0",
+                    },
+                  ]}
+                >
+                  <FontAwesome name="user" size={32} color="#4facfe" />
                 </View>
-              </View>
+              )}
 
               {/* Rating */}
               <View style={styles.ratingRow}>
@@ -282,10 +282,18 @@ const ReviewDetailScreen = () => {
       <View style={styles.card}>
         {/* --- Hàng thông tin user --- */}
         <View style={styles.commentRow}>
-          <Image
-            source={{ uri: "https://i.pravatar.cc/100?img=5" }}
-            style={styles.avatar}
-          />
+          <View
+            style={[
+              styles.avatar,
+              {
+                justifyContent: "center",
+                alignItems: "center",
+                backgroundColor: "#F0F0F0",
+              },
+            ]}
+          >
+            <FontAwesome name="user" size={32} color="#4facfe" />
+          </View>
           <Text style={styles.userNameIndent}>
             {user?.username || user?.fullName || "Người dùng ẩn danh"}
           </Text>
@@ -387,19 +395,26 @@ const styles = StyleSheet.create({
     borderBottomColor: "#E9ECEF",
   },
   backButton: { padding: 8 },
-  headerTitle: { fontSize: 18, fontWeight: "700", color: "#212529" },
-  titleContainer: {
-    flexDirection: "column", // 👈 giúp 2 text xếp dọc
-    alignItems: "center", // căn giữa theo chiều ngang (nếu muốn)
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#212529",
   },
-
+  titleContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginLeft: 45,
+  },
   headerSubtitle: {
     fontSize: 14,
     color: "#4facfe",
     marginTop: 2,
   },
   placeholder: { width: 36 },
-  content: { flex: 1, paddingHorizontal: 20 },
+  content: {
+    flex: 1,
+    paddingHorizontal: 20,
+  },
   card: {
     backgroundColor: "#fff",
     borderRadius: 12,
