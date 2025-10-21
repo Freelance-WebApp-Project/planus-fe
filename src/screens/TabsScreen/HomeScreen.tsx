@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -41,6 +41,16 @@ interface SuggestionItem {
 const HomeScreen = ({ navigation }: any) => {
   const [searchText, setSearchText] = useState("");
   const [randomPlaces, setRandomPlaces] = useState<Place[]>([]);
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const sliderRef = useRef<FlatList>(null);
+
+  // Slider data
+  const sliderImages = [
+    require("../../../assets/slider1.jpg"),
+    require("../../../assets/slider2.jpg"),
+    require("../../../assets/slider3.jpg"),
+    require("../../../assets/slider4.jpg"),
+  ];
 
   // Categories data
   const categories: CategoryItem[] = [
@@ -68,6 +78,25 @@ const HomeScreen = ({ navigation }: any) => {
 
     fetchRandomPlaces();
   }, []);
+
+  // Auto-scroll slider
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % sliderImages.length);
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Scroll to current slide
+  useEffect(() => {
+    if (sliderRef.current) {
+      sliderRef.current.scrollToIndex({
+        index: currentSlide,
+        animated: true,
+      });
+    }
+  }, [currentSlide]);
 
   // Helper function to truncate title if too long
   const truncateTitle = (title: string, maxLength: number = 20) => {
@@ -104,14 +133,14 @@ const HomeScreen = ({ navigation }: any) => {
     .slice(0, 3)
     .map((place, index) => ({
       id: place._id,
-      title: truncateTitle(place.name),
+      title: truncateTitle(place.name || 'Unknown Place'),
       image: place.images?.[0]?.imageUrl
         ? `${API_CONFIG.UPLOADS_URL}/${place.images[0].imageUrl}`
         : `https://via.placeholder.com/200x150/87CEEB/FFFFFF?text=${encodeURIComponent(
-            place.name
+            place.name || 'Place'
           )}`,
       location: {
-        address: place.location.address,
+        address: place.location?.address || 'Unknown Address',
       },
     }));
 
@@ -235,6 +264,12 @@ const HomeScreen = ({ navigation }: any) => {
     </TouchableOpacity>
   );
 
+  const renderSliderItem = ({ item }: { item: any }) => (
+    <View style={styles.sliderItem}>
+      <Image source={item} style={styles.sliderImage} resizeMode="cover" />
+    </View>
+  );
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="light" />
@@ -309,17 +344,46 @@ const HomeScreen = ({ navigation }: any) => {
           />
         </View>
 
+        {/* Slider Section */}
+        <View style={styles.section}>
+          <View style={styles.sliderContainer}>
+            <FlatList
+              ref={sliderRef}
+              data={sliderImages}
+              renderItem={renderSliderItem}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              onMomentumScrollEnd={(event) => {
+                const slideIndex = Math.round(
+                  event.nativeEvent.contentOffset.x / width
+                );
+                setCurrentSlide(slideIndex);
+              }}
+              keyExtractor={(item, index) => index.toString()}
+            />
+            
+            {/* Slider Indicators */}
+            <View style={styles.sliderIndicators}>
+              {sliderImages.map((_, index) => (
+                <View
+                  key={index}
+                  style={[
+                    styles.indicator,
+                    currentSlide === index && styles.activeIndicator,
+                  ]}
+                />
+              ))}
+            </View>
+          </View>
+        </View>
+
+        
+
         {/* Popular Destinations Section */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Địa điểm phổ biến</Text>
-            <TouchableOpacity onPress={handleSeeMoreDestinations}>
-              <View style={styles.menuIcon}>
-                <View style={styles.menuLine} />
-                <View style={styles.menuLine} />
-                <View style={styles.menuLine} />
-              </View>
-            </TouchableOpacity>
           </View>
 
           <FlatList
@@ -458,7 +522,6 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   sectionTitle: {
-    marginTop: 10,
     fontSize: 20,
     fontWeight: "bold",
     color: "#333",
@@ -566,6 +629,44 @@ const styles = StyleSheet.create({
     color: "#333",
     marginTop: 8,
     textAlign: "center",
+  },
+  sliderContainer: {
+    height: 200,
+    borderRadius: 15,
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  sliderItem: {
+    width: width - 40,
+    height: 200,
+  },
+  sliderImage: {
+    width: "100%",
+    height: "100%",
+  },
+  sliderIndicators: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 15,
+  },
+  indicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#D3D3D3",
+    marginHorizontal: 4,
+  },
+  activeIndicator: {
+    backgroundColor: "#4facfe",
+    width: 20,
   },
 });
 

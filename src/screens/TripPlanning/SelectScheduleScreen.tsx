@@ -22,8 +22,8 @@ interface Location {
 // Chuyển code thời tiết sang nhãn và icon
 const weatherCodeToInfo = (code: number) => {
   switch (code) {
-    case 0: return { label: "Quang", icon: "sun-o", color: "#FFD700" };
-    case 1: return { label: "Chủ yếu quang", icon: "sun-o", color: "#FFD700" };
+    case 0: return { label: "Quang", icon: "star", color: "#FFD700" };
+    case 1: return { label: "Chủ yếu quang", icon: "star", color: "#FFD700" };
     case 2: return { label: "Một phần mây", icon: "cloud", color: "#87CEEB" };
     case 3: return { label: "Âm u", icon: "cloud", color: "#708090" };
     case 61: return { label: "Mưa nhẹ", icon: "tint", color: "#4facfe" };

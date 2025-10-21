@@ -30,8 +30,8 @@ const TripPlanningInputScreen = () => {
   ];
 
   const durations = [
-    { id: "half-day", label: "Nửa ngày", icon: "sun-o", color: "#FFD700" },
-    { id: "full-day", label: "Cả ngày", icon: "sun", color: "#FF8C00" },
+    { id: "half-day", label: "Nửa ngày", icon: "star", color: "#FFD700" },
+    { id: "full-day", label: "Cả ngày", icon: "star", color: "#FF8C00" },
     { id: "multi-day", label: "Nhiều ngày", icon: "calendar", color: "#9C27B0" },
   ];
 
