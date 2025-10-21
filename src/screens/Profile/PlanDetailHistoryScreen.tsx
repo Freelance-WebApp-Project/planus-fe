@@ -29,6 +29,7 @@ const PlanDetailHistoryScreen = () => {
     plan: TravelPlan;
     planId?: string;
   };
+
   const [visitedPlaces, setVisitedPlaces] = useState<Set<number>>(new Set());
   const [showModal, setShowModal] = useState(false);
   const slideAnim = useState(new Animated.Value(300))[0];
@@ -242,6 +243,14 @@ const PlanDetailHistoryScreen = () => {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Chi tiết kế hoạch</Text>
         <View style={styles.placeholder} />
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() =>
+            (navigation as any).navigate("MainTabs", { screen: "Home" })
+          }
+        >
+          <FontAwesome name="home" size={20} color="#4facfe" />
+        </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>

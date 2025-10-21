@@ -9,6 +9,7 @@ import {
   ScrollView,
   FlatList,
   RefreshControl,
+  Image,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -16,6 +17,7 @@ import { useRoute, useNavigation } from "@react-navigation/native";
 import { usePlaces } from "../../hooks/usePlace";
 import { PlaceType, SearchScreenParams, Place } from "../../types/place.types";
 import { FontAwesome } from "@expo/vector-icons";
+import { API_CONFIG } from "../../constants/api.constants";
 
 const SearchScreen = () => {
   const route = useRoute();
@@ -91,41 +93,80 @@ const SearchScreen = () => {
     console.log("Place pressed:", place);
   };
 
+  const handleReview = (placeId: string, imageUrl: string, address: string) => {
+    (navigation as any).navigate("ReviewDetailScreen", {
+      placeId,
+      imageUrl,
+      address,
+    });
+  };
+
   // Render place item
-  const renderPlace = ({ item }: { item: Place }) => (
-    <TouchableOpacity
-      style={styles.placeCard}
-      onPress={() => handlePlacePress(item)}
-    >
-      <View style={styles.placeImage}>
-        <Text style={styles.placeImageText}>🏢</Text>
-      </View>
-      <View style={styles.placeInfo}>
-        <Text style={styles.placeName}>{item.name || "N/A"}</Text>
-        <Text style={styles.placeType}>
-          {item.type ? item.type.replace("_", " ").toUpperCase() : "N/A"}
-        </Text>
-        <Text style={styles.placeDescription} numberOfLines={2}>
-          {item.description || "N/A"}
-        </Text>
-        <Text style={styles.placeLocation}>{item.location?.city || "N/A"}</Text>
-        <Text style={styles.placeRating}>⭐ {item.rating || 0}/5</Text>
-        <Text style={styles.placePrice}>
-          <FontAwesome name="money" size={16} color="#28A745"/>{' '}
-          {item.priceRange ? item.priceRange.toLocaleString() : 0} VND
-        </Text>
-        {item.tags && item.tags.length > 0 && (
-          <View style={styles.tagsContainer}>
-            {item.tags.slice(0, 2).map((tag, index) => (
-              <Text key={index} style={styles.tag}>
-                {tag}
-              </Text>
-            ))}
-          </View>
-        )}
-      </View>
-    </TouchableOpacity>
-  );
+  const renderPlace = ({ item }: { item: Place }) => {
+   const firstImage = item?.images?.[0];
+
+  const getImageFilename = (img: any) => {
+    if (!img) return "";
+    if (typeof img === "string") return img;
+    // kiểm tra các trường phổ biến nếu img là object
+    return img.imageUrl || img.url || img.path || "";
+  };
+
+  const filename = getImageFilename(firstImage);
+
+  // chuẩn hoá uploads url (loại bỏ / cuối nếu có)
+  const uploadsBase = API_CONFIG.UPLOADS_URL?.replace(/\/$/, "") || "";
+
+  const imageUrl = filename
+    ? `${uploadsBase}/${filename}`
+    : `https://via.placeholder.com/300x200/87CEEB/FFFFFF?text=${encodeURIComponent(
+        item?.name || "Địa điểm"
+      )}`;
+
+    return (
+      <TouchableOpacity
+        style={styles.placeCard}
+        // onPress={() => handlePlacePress(item)}
+        onPress={() => handleReview(item._id, imageUrl, item.location.address)}
+      >
+        <View style={styles.placeImage}>
+          {/* <Text style={styles.placeImageText}>🏢{item.images[0].imageUrl}</Text> */}
+          <Image
+            source={{
+              uri: imageUrl || "https://i.pravatar.cc/100?img=5",
+            }}
+            style={styles.cardImage}
+          />
+        </View>
+        <View style={styles.placeInfo}>
+          <Text style={styles.placeName}>{item.name || "N/A"}</Text>
+          <Text style={styles.placeType}>
+            {item.type ? item.type.replace("_", " ").toUpperCase() : "N/A"}
+          </Text>
+          <Text style={styles.placeDescription} numberOfLines={2}>
+            {item.description || "N/A"}
+          </Text>
+          <Text style={styles.placeLocation}>
+            {item.location?.city || "N/A"}
+          </Text>
+          <Text style={styles.placeRating}>⭐ {item.rating || 0}/5</Text>
+          <Text style={styles.placePrice}>
+            <FontAwesome name="money" size={16} color="#28A745" />{" "}
+            {item.priceRange ? item.priceRange.toLocaleString() : 0} VND
+          </Text>
+          {item.tags && item.tags.length > 0 && (
+            <View style={styles.tagsContainer}>
+              {item.tags.slice(0, 2).map((tag, index) => (
+                <Text key={index} style={styles.tag}>
+                  {tag}
+                </Text>
+              ))}
+            </View>
+          )}
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   // Render footer for loading more
   const renderFooter = () => {
@@ -187,10 +228,12 @@ const SearchScreen = () => {
           </TouchableOpacity>
         </View>
       </LinearGradient>
-      
 
       {/* Category Filters - Show when viewing all categories or when params is empty */}
-      {(params.showAllCategories || (!params.searchQuery && !params.filterType && !params.showPopularPlaces)) && (
+      {(params.showAllCategories ||
+        (!params.searchQuery &&
+          !params.filterType &&
+          !params.showPopularPlaces)) && (
         <View style={styles.filtersContainer}>
           <ScrollView
             horizontal
@@ -565,6 +608,12 @@ const styles = StyleSheet.create({
   activeFilterButtonText: {
     color: "#FFF",
     fontWeight: "700",
+  },
+   cardImage: {
+    width: 90,
+    height: 90,
+    resizeMode: "cover",
+    borderRadius: 12,
   },
 });
 

@@ -170,7 +170,7 @@ const TravelHistoryScreen = () => {
               color="#4facfe" 
             />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Lịch sử chuyến đi
+          <Text style={styles.headerTitle}>Lịch sử chuyến đi 
           </Text>
           <View style={styles.placeholder} />
         </View>

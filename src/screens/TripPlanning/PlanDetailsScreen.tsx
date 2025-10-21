@@ -51,18 +51,76 @@ const PlanDetailsScreen = () => {
       const response = await planService.createWithPayment(createPlanData);
 
       if (response.success) {
-        console.log("Plan created with payment successfully");
-        showToast.success("Thanh toán thành công!", "Kế hoạch đã được tạo và thanh toán thành công.");
-        // Navigate to TravelHistory screen
-        setTimeout(() => {
-          (navigation as any).navigate("TravelHistory");
-        }, 1500);
+        console.log("Plan created with payment successfully", response.data);
+        showToast.success(
+          "Thanh toán thành công!",
+          "Kế hoạch đã được tạo và thanh toán thành công."
+        );
+
+        const createdPlanId = response?.data?.data?._id;
+
+        await fetchAndNavigateToPaidPlan(createdPlanId);
       }
     } catch (error) {
       console.error("Error creating plan with payment:", error);
-      showToast.error("Lỗi thanh toán", "Không thể tạo kế hoạch. Vui lòng thử lại.");
+      showToast.error(
+        "Lỗi thanh toán",
+        "Không thể tạo kế hoạch. Vui lòng thử lại."
+      );
     } finally {
       setProcessingPayment(false);
+    }
+  };
+
+  const fetchAndNavigateToPaidPlan = async (planId?: string) => {
+    try {
+      // Lấy danh sách plan đã thanh toán
+      const res = await planService.getMe({ isPaid: true });
+      const plans = res?.data?.records || [];
+
+      // Tìm plan vừa tạo
+      const newPlan = plans.find((p: any) => p._id === planId) || plans[0];
+
+      if (!newPlan) {
+        console.warn("⚠️ No paid plan found!");
+        return;
+      }
+
+      // Điều hướng sang màn chi tiết
+      (navigation as any).navigate("PlanDetailHistoryScreen", {
+        plan: {
+          planTitle: newPlan.planTitle,
+          totalDuration: newPlan.totalDuration,
+          estimatedCost: newPlan.estimatedCost,
+          itinerary: newPlan.itinerary.map((it) => ({
+            _id: it.placeId._id,
+            order: it.order,
+            distance: it.distance,
+            travelTime: it.travelTime,
+            placeInfo: {
+              _id: it.placeId._id,
+              name: it.placeId.name,
+              type: it.placeId.type,
+              description: "",
+              location: {
+                address: it.placeId.location.address,
+                city: it.placeId.location.city,
+                coordinates: {
+                  type: "Point" as const,
+                  coordinates: it.placeId.location.coordinates.coordinates,
+                },
+              },
+              priceRange: it.placeId.priceRange,
+              rating: it.placeId.rating,
+              tags: [],
+              images: it.placeId.images.map((img) => img.imageUrl),
+            },
+          })),
+        },
+        planId: newPlan._id,
+      });
+    } catch (error) {
+      console.error("❌ Error fetching paid plans:", error);
     }
   };
 
@@ -104,7 +162,10 @@ const PlanDetailsScreen = () => {
         if (response.success) {
           setIsFavorited(true);
           console.log("Plan favorited successfully");
-          showToast.success("Đã thêm vào yêu thích", "Kế hoạch đã được lưu vào danh sách yêu thích");
+          showToast.success(
+            "Đã thêm vào yêu thích",
+            "Kế hoạch đã được lưu vào danh sách yêu thích"
+          );
         }
       }
     } catch (error) {
@@ -124,7 +185,7 @@ const PlanDetailsScreen = () => {
         )}`;
 
     return (
-      <View key={item._id}>
+      <View key={index}>
         <View style={styles.placeContainer}>
           <View key={item._id} style={styles.itineraryItem}>
             <Image source={{ uri: imageUrl }} style={styles.placeImage} />
@@ -159,7 +220,9 @@ const PlanDetailsScreen = () => {
                 <Text style={styles.orderText}>{item.order}</Text>
               </View>
               <View>
-                <Text style={styles.placeName}>{place?.name || "Địa điểm"}</Text>
+                <Text style={styles.placeName}>
+                  {place?.name || "Địa điểm"}
+                </Text>
               </View>
             </View>
 
@@ -236,10 +299,7 @@ const PlanDetailsScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
-      <LinearGradient
-        colors={["#4facfe", "#00f2fe"]}
-        style={styles.header}
-      >
+      <LinearGradient colors={["#4facfe", "#00f2fe"]} style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
@@ -255,10 +315,10 @@ const PlanDetailsScreen = () => {
           {processingFavorite ? (
             <ActivityIndicator size="small" color="#FFF" />
           ) : (
-            <FontAwesome 
-              name={isFavorited ? "heart" : "heart-o"} 
-              size={20} 
-              color="#FFF" 
+            <FontAwesome
+              name={isFavorited ? "heart" : "heart-o"}
+              size={20}
+              color="#FFF"
             />
           )}
         </TouchableOpacity>
@@ -294,7 +354,9 @@ const PlanDetailsScreen = () => {
         {/* Places List */}
         <View style={styles.placesSection}>
           <Text style={styles.sectionTitle}>Lộ trình chi tiết</Text>
-          {plan.itinerary.map((item: any, index: number) => renderPlaceItem(item, index))}
+          {plan.itinerary.map((item: any, index: number) =>
+            renderPlaceItem(item, index)
+          )}
         </View>
       </ScrollView>
 
@@ -309,7 +371,9 @@ const PlanDetailsScreen = () => {
           disabled={processingPayment}
         >
           <LinearGradient
-            colors={processingPayment ? ["#ccc", "#999"] : ["#4facfe", "#00f2fe"]}
+            colors={
+              processingPayment ? ["#ccc", "#999"] : ["#4facfe", "#00f2fe"]
+            }
             style={styles.gradientButton}
           >
             {processingPayment ? (

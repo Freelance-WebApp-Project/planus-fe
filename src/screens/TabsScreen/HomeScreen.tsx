@@ -24,12 +24,18 @@ interface DestinationItem {
   id: string;
   title: string;
   image: string;
+  location: {
+    address: string;
+  };
 }
 
 interface SuggestionItem {
   id: string;
   title: string;
   image: string;
+  location: {
+    address: string;
+  };
 }
 
 const HomeScreen = ({ navigation }: any) => {
@@ -53,6 +59,7 @@ const HomeScreen = ({ navigation }: any) => {
     const fetchRandomPlaces = async () => {
       try {
         const places = await placeService.getRandom();
+        console.log("Random places:", places[0]);
         setRandomPlaces(places);
       } catch (error) {
         console.error("Error fetching random places:", error);
@@ -103,6 +110,9 @@ const HomeScreen = ({ navigation }: any) => {
         : `https://via.placeholder.com/200x150/87CEEB/FFFFFF?text=${encodeURIComponent(
             place.name
           )}`,
+      location: {
+        address: place.location.address,
+      },
     }));
 
   // Convert random places to suggestions format (3 items)
@@ -116,6 +126,9 @@ const HomeScreen = ({ navigation }: any) => {
         : `https://via.placeholder.com/300x150/228B22/FFFFFF?text=${encodeURIComponent(
             place.name
           )}`,
+      location: {
+        address: place.location.address,
+      },
     }));
 
   const handleCategoryPress = (item: CategoryItem) => {
@@ -153,6 +166,14 @@ const HomeScreen = ({ navigation }: any) => {
     });
   };
 
+  const handleReview = (placeId: string, imageUrl: string, address: string) => {
+    (navigation as any).navigate("ReviewDetailScreen", {
+      placeId,
+      imageUrl,
+      address,
+    });
+  };
+
   const renderCategoryItem = ({ item }: { item: CategoryItem }) => {
     const iconData = getCategoryIcon(item.id);
     return (
@@ -168,8 +189,13 @@ const HomeScreen = ({ navigation }: any) => {
     );
   };
 
-  const renderDestinationItem = ({ item }: { item: DestinationItem }) => (
-    <TouchableOpacity style={styles.destinationItem}>
+  const renderDestinationItem = ({ item }: { item: any }) => (
+    <TouchableOpacity
+      style={styles.destinationItem}
+      onPress={() =>
+        handleReview(item?.id, destinations[0].image, item?.location?.address)
+      }
+    >
       <View style={styles.destinationImageContainer}>
         <Image
           source={{ uri: item.image }}
@@ -187,7 +213,12 @@ const HomeScreen = ({ navigation }: any) => {
   );
 
   const renderSuggestionItem = ({ item }: { item: SuggestionItem }) => (
-    <TouchableOpacity style={styles.suggestionItem}>
+    <TouchableOpacity
+      style={styles.suggestionItem}
+      onPress={() =>
+        handleReview(item?.id, destinations[0].image, item?.location?.address)
+      }
+    >
       <View style={styles.suggestionImageContainer}>
         <Image
           source={{ uri: item.image }}
