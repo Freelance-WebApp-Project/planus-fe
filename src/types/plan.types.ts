@@ -155,6 +155,7 @@ export interface CreatePlanDto {
   isPaid?: boolean;
   isShared?: boolean;
   isFavorite?: boolean;
+  isUsingPoint?: boolean;
 }
 
 export interface PlanFilters {

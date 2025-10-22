@@ -39,11 +39,13 @@ export interface WalletTransaction {
   _id: string;
   createdBy: string | null;
   updatedBy: string | null;
+  deletedAt?: string | null;
   userId: string;
   walletId: string;
   amount: number;
-  type: 'deposit' | 'withdraw' | 'payment' | 'vip_purchase';
+  type: 'deposit' | 'withdraw' | 'payment' | 'vip_purchase' | 'bonus';
   description?: string;
+  source?: 'balance' | 'point' | string;
   createdAt: string;
   updatedAt: string;
 }

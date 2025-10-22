@@ -46,8 +46,12 @@ const WalletScreen = ({ navigation }: any) => {
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return amount.toLocaleString("vi-VN") + " VND";
+  const formatCurrency = (amount: number, source?: string) => {
+    const formattedAmount = amount.toLocaleString("vi-VN");
+    if (source === 'point') {
+      return formattedAmount + " điểm";
+    }
+    return formattedAmount + " VND";
   };
 
   const toggleBalanceVisibility = () => {
@@ -207,7 +211,7 @@ const WalletScreen = ({ navigation }: any) => {
           </View>
           <View style={styles.balanceAmount}>
             <Text style={styles.balanceText}>
-              <FontAwesome name="star" size={30} color="#FFD700"/>
+              <FontAwesome name="star" size={30} color="#FFD700" />{" "}
               {balance?.point || 0}
             </Text>
           </View>
@@ -254,60 +258,112 @@ const WalletScreen = ({ navigation }: any) => {
               </View>
             ) : transactions && transactions.length > 0 ? (
               <>
-                {transactions.slice(0, 3).map((transaction) => (
-                  <View key={transaction._id} style={styles.transactionItem}>
-                    <View style={styles.transactionIcon}>
-                      <FontAwesome
-                        name={
-                          transaction.type === "deposit"
-                            ? "arrow-down"
-                            : transaction.type === "payment"
-                            ? "credit-card"
-                            : transaction.type === "vip_purchase"
-                            ? "star"
-                            : "money"
-                        }
-                        size={18}
-                        color={
-                          transaction.type === "deposit"
-                            ? "#4CAF50"
-                            : transaction.type === "payment"
-                            ? "#FF5722"
-                            : transaction.type === "vip_purchase"
-                            ? "#FFD700"
-                            : "#4facfe"
-                        }
-                      />
-                    </View>
-                    <View style={styles.transactionDetails}>
-                      <Text style={styles.transactionTitle}>
-                        {transaction.description ||
-                          (transaction.type === "deposit"
-                            ? "Nạp tiền"
-                            : transaction.type === "payment"
-                            ? "Thanh toán"
-                            : transaction.type === "vip_purchase"
-                            ? "Mua VIP"
-                            : "Giao dịch")}
-                      </Text>
-                      <Text style={styles.transactionTime}>
-                        {new Date(transaction.createdAt).toLocaleDateString(
-                          "vi-VN"
+                {transactions.slice(0, 3).map((transaction) => {
+                  const getTransactionIcon = (type: string) => {
+                    switch (type) {
+                      case 'deposit':
+                        return { name: 'arrow-down' as const, color: '#4CAF50' };
+                      case 'payment':
+                        return { name: 'credit-card' as const, color: '#FF5722' };
+                      case 'bonus':
+                        return { name: 'gift' as const, color: '#FFD700' };
+                      case 'vip_purchase':
+                        return { name: 'star' as const, color: '#FFD700' };
+                      default:
+                        return { name: 'money' as const, color: '#4facfe' };
+                    }
+                  };
+
+                  const getTransactionTitle = (transaction: any) => {
+                    if (transaction.description) {
+                      return transaction.description;
+                    }
+                    
+                    switch (transaction.type) {
+                      case 'deposit':
+                        return 'Nạp tiền';
+                      case 'payment':
+                        return 'Thanh toán';
+                      case 'bonus':
+                        return 'Thưởng';
+                      case 'vip_purchase':
+                        return 'Mua VIP';
+                      default:
+                        return 'Giao dịch';
+                    }
+                  };
+
+                  const getAmountColor = (type: string) => {
+                    switch (type) {
+                      case 'deposit':
+                      case 'bonus':
+                        return '#4CAF50'; // Green for income
+                      case 'payment':
+                      case 'vip_purchase':
+                        return '#F44336'; // Red for expenses
+                      default:
+                        return '#333';
+                    }
+                  };
+
+                  const getAmountPrefix = (type: string) => {
+                    switch (type) {
+                      case 'deposit':
+                      case 'bonus':
+                        return '+';
+                      case 'payment':
+                      case 'vip_purchase':
+                        return '-';
+                      default:
+                        return '';
+                    }
+                  };
+
+                  const iconData = getTransactionIcon(transaction.type);
+                  const showAmount = transaction.amount > 0 || transaction.type === 'bonus';
+
+                  return (
+                    <View key={transaction._id} style={styles.transactionItem}>
+                      <View style={styles.transactionIcon}>
+                        <FontAwesome
+                          name={iconData.name}
+                          size={18}
+                          color={iconData.color}
+                        />
+                      </View>
+                      <View style={styles.transactionDetails}>
+                        <Text style={styles.transactionTitle}>
+                          {getTransactionTitle(transaction)}
+                        </Text>
+                        <Text style={styles.transactionTime}>
+                          {new Date(transaction.createdAt).toLocaleDateString(
+                            "vi-VN"
+                          )}
+                        </Text>
+                        {transaction.source && (
+                          <Text style={styles.transactionSource}>
+                            Nguồn: {transaction.source === 'balance' ? 'Ví' : transaction.source === 'point' ? 'Điểm' : transaction.source}
+                          </Text>
+                        )}
+                      </View>
+                      <Text
+                        style={[
+                          styles.transactionAmount,
+                          { color: getAmountColor(transaction.type) }
+                        ]}
+                      >
+                        {showAmount ? (
+                          <>
+                            {getAmountPrefix(transaction.type)}
+                            {formatCurrency(transaction.amount, transaction.source)}
+                          </>
+                        ) : (
+                          'Miễn phí'
                         )}
                       </Text>
                     </View>
-                    <Text
-                      style={[
-                        transaction.type === "deposit"
-                          ? styles.transactionAmount
-                          : styles.transactionAmountNegative,
-                      ]}
-                    >
-                      {transaction.type === "deposit" ? "+" : "-"}
-                      {formatCurrency(transaction.amount)}
-                    </Text>
-                  </View>
-                ))}
+                  );
+                })}
                 <TouchableOpacity
                   style={styles.viewAllButton}
                   onPress={handleHistory}
@@ -654,6 +710,11 @@ const styles = StyleSheet.create({
   transactionTime: {
     fontSize: 12,
     color: "#666",
+  },
+  transactionSource: {
+    fontSize: 10,
+    color: "#999",
+    fontStyle: "italic",
   },
   transactionAmount: {
     fontSize: 14,

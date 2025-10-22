@@ -73,8 +73,8 @@ const PlanDetailsScreen = () => {
   const handleCreateWithPayment = (selectedMethod: string, amount: number) => {
     const paymentText =
       selectedMethod === "wallet"
-        ? `Thanh toán bằng ví của bạn: ${amount.toLocaleString()}đ`
-        : `Thanh toán bằng điểm thưởng: ${amount.toLocaleString()} điểm`;
+        ? `Thanh toán bằng ví: ${amount.toLocaleString()} VND`
+        : `Thanh toán bằng điểm: ${amount.toLocaleString()} điểm`;
 
     Alert.alert(
       "Xác nhận thanh toán",
@@ -111,14 +111,10 @@ const PlanDetailsScreen = () => {
           travelTime: item.travelTime || "0 phút",
         })),
         isPaid: true,
+        isUsingPoint: selectedMethod === "point" ? true : false,
       };
 
-      console.log(
-        "createPlanData:",
-        createPlanData.estimatedCost,
-        createPlanData.point,
-        createPlanData.pointBonus
-      );
+      console.log("createPlanData:", createPlanData);
 
       const response = await planService.createWithPayment(createPlanData);
 
@@ -230,6 +226,7 @@ const PlanDetailsScreen = () => {
           isPaid: false,
           isShared: false,
           isFavorite: true,
+          isUsingPoint: selectedMethod === "point" ? true : false,
         };
 
         const response = await planService.toggleFavorite(favoritePlanData);
@@ -465,8 +462,7 @@ const PlanDetailsScreen = () => {
                       selectedMethod === "wallet" && styles.selectedTextWallet,
                     ]}
                   >
-                    Thanh toán bằng ví của bạn: {isPaidNumber.toLocaleString()}{" "}
-                    VND
+                    Thanh toán bằng ví: {isPaidNumber.toLocaleString()} VND
                   </Text>
                 </TouchableOpacity>
 
@@ -484,8 +480,7 @@ const PlanDetailsScreen = () => {
                       selectedMethod === "point" && styles.selectedText,
                     ]}
                   >
-                    Thanh toán bằng điểm thưởng: {isPaidPoint.toLocaleString()}{" "}
-                    điểm
+                    Thanh toán bằng điểm: {isPaidPoint.toLocaleString()} điểm
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -495,9 +490,7 @@ const PlanDetailsScreen = () => {
                   onPress={() => setShowModal(false)}
                   style={styles.closeButton}
                 >
-                  <Text style={{ color: "#fff", fontWeight: "600" }}>
-                    Hủy chọn{" "}
-                  </Text>
+                  <Text style={styles.buttonText}>Hủy</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() =>
@@ -508,9 +501,7 @@ const PlanDetailsScreen = () => {
                   }
                   style={styles.reviewButton}
                 >
-                  <Text style={{ color: "#fff", fontWeight: "600" }}>
-                    Thanh toán
-                  </Text>
+                  <Text style={styles.buttonText}>Thanh toán</Text>
                 </TouchableOpacity>
               </View>
             </Animated.View>
@@ -884,22 +875,23 @@ const styles = StyleSheet.create({
   },
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.3)",
+    backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "flex-end",
   },
   modalContent: {
     backgroundColor: "#fff",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    padding: 20,
-    paddingBottom: 35,
-    alignItems: "center",
+    padding: 24,
+    paddingBottom: 30,
+    minHeight: 300,
   },
   title: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: "700",
-    color: "green",
-    marginBottom: 10,
+    color: "#212529",
+    marginBottom: 20,
+    textAlign: "center",
   },
   subText: {
     fontSize: 15,
@@ -912,62 +904,74 @@ const styles = StyleSheet.create({
     marginVertical: 10,
   },
   closeButton: {
-    backgroundColor: "#3b82f6",
-    paddingVertical: 10,
-    paddingHorizontal: 40,
-    borderRadius: 10,
-    marginTop: 20,
-    marginLeft: 6,
+    backgroundColor: "#6c757d",
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    flex: 1,
+    marginRight: 8,
+    alignItems: "center",
   },
   reviewButton: {
-    backgroundColor: "#4CAF50",
-    paddingVertical: 10,
-    paddingHorizontal: 40,
-    borderRadius: 10,
-    marginTop: 20,
-    // marginLeft: 5,
+    backgroundColor: "#28a745",
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    flex: 1,
+    marginLeft: 8,
+    alignItems: "center",
   },
   placeModal: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     width: "100%",
-    marginTop: 5,
+    marginTop: 20,
+    paddingHorizontal: 0,
   },
   option: {
     width: "100%",
-    borderWidth: 2,
-    borderColor: "#ddd",
-    borderRadius: 6,
-    paddingVertical: 12,
-    alignItems: "flex-start",
-    marginHorizontal: 5,
-    position: "relative",
+    borderWidth: 1,
+    borderColor: "#dee2e6",
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    marginBottom: 12,
     backgroundColor: "#fff",
-    padding: 5,
-    margin: 5,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   selectedOption: {
-    borderColor: "#e74c3c",
+    borderColor: "#007bff",
     borderWidth: 2,
+    backgroundColor: "#f8f9ff",
   },
   selectedOptionWallet: {
-    borderColor: "#e74c3c",
+    borderColor: "#007bff",
     borderWidth: 2,
+    backgroundColor: "#f8f9ff",
   },
   optionText: {
-    color: "#333",
-    fontSize: 14,
+    color: "#495057",
+    fontSize: 16,
+    fontWeight: "500",
+    textAlign: "left",
   },
   selectedText: {
-    color: "#e74c3c",
+    color: "#007bff",
     fontWeight: "600",
-    fontSize: 14,
+    fontSize: 16,
   },
   selectedTextWallet: {
-    color: "#e74c3c",
+    color: "#007bff",
     fontWeight: "600",
-    fontSize: 14,
+    fontSize: 16,
   },
   checkIcon: {
     position: "absolute",
@@ -975,11 +979,16 @@ const styles = StyleSheet.create({
     right: 4,
   },
   containerModal: {
-    // flex: 1,
     flexDirection: "column",
     justifyContent: "space-between",
-    paddingHorizontal: 20,
-    alignItems: "center",
+    paddingHorizontal: 0,
+    alignItems: "stretch",
+    marginBottom: 10,
+  },
+  buttonText: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: 16,
   },
 });
 

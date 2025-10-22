@@ -28,6 +28,7 @@ export const useWallet = () => {
 
       if (response.success && response.data) {
         setBalance(response.data);
+        console.log("response.data:", response.data);
       } else {
         setError(response.error?.message || 'Failed to fetch balance');
       }

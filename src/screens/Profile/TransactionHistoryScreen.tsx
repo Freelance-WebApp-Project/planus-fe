@@ -37,8 +37,12 @@ const TransactionHistoryScreen = ({ navigation }: any) => {
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return amount.toLocaleString('vi-VN') + ' VND';
+  const formatCurrency = (amount: number, source?: string) => {
+    const formattedAmount = amount.toLocaleString('vi-VN');
+    if (source === 'point') {
+      return formattedAmount + ' điểm';
+    }
+    return formattedAmount + ' VND';
   };
 
   const formatDate = (dateString: string) => {
@@ -60,6 +64,8 @@ const TransactionHistoryScreen = ({ navigation }: any) => {
         return { name: 'arrow-up' as const, color: '#FF5722' };
       case 'payment':
         return { name: 'credit-card' as const, color: '#FF5722' };
+      case 'bonus':
+        return { name: 'gift' as const, color: '#FFD700' };
       case 'vip_purchase':
         return { name: 'star' as const, color: '#FFD700' };
       default:
@@ -79,6 +85,8 @@ const TransactionHistoryScreen = ({ navigation }: any) => {
         return 'Rút tiền từ ví';
       case 'payment':
         return 'Thanh toán';
+      case 'bonus':
+        return 'Thưởng';
       case 'vip_purchase':
         return 'Mua gói VIP';
       default:
@@ -89,7 +97,8 @@ const TransactionHistoryScreen = ({ navigation }: any) => {
   const getAmountColor = (type: string) => {
     switch (type) {
       case 'deposit':
-        return '#4CAF50'; // Green for deposit
+      case 'bonus':
+        return '#4CAF50'; // Green for income
       case 'withdraw':
       case 'payment':
       case 'vip_purchase':
@@ -102,6 +111,7 @@ const TransactionHistoryScreen = ({ navigation }: any) => {
   const getAmountPrefix = (type: string) => {
     switch (type) {
       case 'deposit':
+      case 'bonus':
         return '+';
       case 'withdraw':
       case 'payment':
@@ -114,6 +124,8 @@ const TransactionHistoryScreen = ({ navigation }: any) => {
 
   const renderTransaction = ({ item }: { item: WalletTransaction }) => {
     const iconData = getTransactionIcon(item.type);
+    const showAmount = item.amount > 0 || item.type === 'bonus'; // Show amount for bonus even if 0
+    
     return (
       <View style={styles.transactionItem}>
         <View style={styles.transactionIcon}>
@@ -124,27 +136,41 @@ const TransactionHistoryScreen = ({ navigation }: any) => {
           />
         </View>
       
-      <View style={styles.transactionDetails}>
-        <Text style={styles.transactionTitle}>
-          {getTransactionTitle(item)}
-        </Text>
-        <Text style={styles.transactionTime}>
-          {formatDate(item.createdAt)}
-        </Text>
+        <View style={styles.transactionDetails}>
+          <Text style={styles.transactionTitle}>
+            {getTransactionTitle(item)}
+          </Text>
+          <Text style={styles.transactionTime}>
+            {formatDate(item.createdAt)}
+          </Text>
+          {item.source && (
+            <Text style={styles.transactionSource}>
+              Nguồn: {item.source === 'balance' ? 'Ví' : item.source === 'point' ? 'Điểm' : item.source}
+            </Text>
+          )}
+        </View>
+        
+        <View style={styles.transactionAmountContainer}>
+          {showAmount ? (
+            <Text style={[
+              styles.transactionAmount,
+              { color: getAmountColor(item.type) }
+            ]}>
+              {getAmountPrefix(item.type)}{formatCurrency(item.amount, item.source)}
+            </Text>
+          ) : (
+            <Text style={[
+              styles.transactionAmount,
+              { color: '#666' }
+            ]}>
+              Miễn phí
+            </Text>
+          )}
+          <Text style={styles.transactionType}>
+            {item.type.toUpperCase()}
+          </Text>
+        </View>
       </View>
-      
-      <View style={styles.transactionAmountContainer}>
-        <Text style={[
-          styles.transactionAmount,
-          { color: getAmountColor(item.type) }
-        ]}>
-          {getAmountPrefix(item.type)}{formatCurrency(item.amount)}
-        </Text>
-        <Text style={styles.transactionType}>
-          {item.type.toUpperCase()}
-        </Text>
-      </View>
-    </View>
     );
   };
 
@@ -348,6 +374,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666',
     marginBottom: 2,
+  },
+  transactionSource: {
+    fontSize: 10,
+    color: '#999',
+    fontStyle: 'italic',
   },
   transactionId: {
     fontSize: 10,
