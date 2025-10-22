@@ -1,6 +1,7 @@
 export interface WalletBalance {
   balance: number;
   totalSpent: number;
+  point: number;
 }
 
 export interface WalletBalanceResponse {

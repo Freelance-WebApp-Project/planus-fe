@@ -25,6 +25,7 @@ class WalletService {
       if (response.success && response.data) {
         // Handle the nested data structure: response.data.data
         const apiData = response.data.data || response.data;
+        console.log("🔵 Wallet Service - Get balance response:", apiData); 
         return {
           success: true,
           data: apiData

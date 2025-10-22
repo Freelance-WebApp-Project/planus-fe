@@ -29,6 +29,7 @@ const ProfileScreen = ({ navigation }: any) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoadingUser, setIsLoadingUser] = useState(false);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [userPoints, setUserPoints] = useState(1250);
   const [isUpdating, setIsUpdating] = useState(false);
   const [editData, setEditData] = useState({
     fullName: "",
@@ -38,6 +39,8 @@ const ProfileScreen = ({ navigation }: any) => {
     income: "",
   });
   const [isPremiumPopupVisible, setIsPremiumPopupVisible] = useState(false);
+
+  const { balance } = useWallet();
 
   // Fetch current user data from API
   const fetchCurrentUser = async () => {
@@ -250,11 +253,7 @@ const ProfileScreen = ({ navigation }: any) => {
           <View style={styles.headerContent}>
             <View style={styles.avatarContainer}>
               <View style={styles.avatar}>
-                <FontAwesome 
-                  name="user" 
-                  size={32} 
-                  color="#4facfe" 
-                />
+                <FontAwesome name="user" size={32} color="#4facfe" />
               </View>
             </View>
             <View style={styles.userInfo}>
@@ -264,6 +263,10 @@ const ProfileScreen = ({ navigation }: any) => {
               <Text style={styles.userEmail}>
                 {currentUser?.email || "Chưa cập nhật"}
               </Text>
+              <View style={styles.pointsDisplay}>
+                <FontAwesome name="star" size={16} color="#FFD700" />
+                <Text style={styles.pointsDisplayText}>{balance?.point}</Text>
+              </View>
             </View>
           </View>
         </LinearGradient>
@@ -275,11 +278,7 @@ const ProfileScreen = ({ navigation }: any) => {
           <View style={styles.premiumCard}>
             <View style={styles.premiumInfo}>
               <View style={styles.premiumIcon}>
-                <FontAwesome 
-                  name="star" 
-                  size={24} 
-                  color="#FFD700" 
-                />
+                <FontAwesome name="star" size={24} color="#FFD700" />
               </View>
               <View style={styles.premiumDetails}>
                 <Text style={styles.premiumTitle}>
@@ -305,21 +304,17 @@ const ProfileScreen = ({ navigation }: any) => {
                 onPress={() => setIsPremiumPopupVisible(true)}
               >
                 <Text style={styles.premiumButtonText}>Nâng cấp</Text>
-                <FontAwesome 
-                  name="arrow-right" 
-                  size={14} 
-                  color="#000" 
+                <FontAwesome
+                  name="arrow-right"
+                  size={14}
+                  color="#000"
                   style={styles.premiumButtonArrow}
                 />
               </TouchableOpacity>
             )}
             {isPremiumUser && (
               <View style={styles.premiumActiveBadge}>
-                <FontAwesome 
-                  name="check" 
-                  size={16} 
-                  color="#FFFFFF" 
-                />
+                <FontAwesome name="check" size={16} color="#FFFFFF" />
               </View>
             )}
           </View>
@@ -332,11 +327,7 @@ const ProfileScreen = ({ navigation }: any) => {
           <View style={styles.walletCard}>
             <View style={styles.walletInfo}>
               <View style={styles.walletIcon}>
-                <FontAwesome 
-                  name="credit-card" 
-                  size={24} 
-                  color="#4facfe" 
-                />
+                <FontAwesome name="credit-card" size={24} color="#4facfe" />
               </View>
               <View style={styles.walletDetails}>
                 <Text style={styles.walletTitle}>Ví PLANUS</Text>
@@ -350,10 +341,10 @@ const ProfileScreen = ({ navigation }: any) => {
               onPress={() => navigation.navigate("Wallet")}
             >
               <Text style={styles.walletButtonText}>Xem ví</Text>
-              <FontAwesome 
-                name="arrow-right" 
-                size={14} 
-                color="#FFFFFF" 
+              <FontAwesome
+                name="arrow-right"
+                size={14}
+                color="#FFFFFF"
                 style={styles.walletButtonArrow}
               />
             </TouchableOpacity>
@@ -367,11 +358,7 @@ const ProfileScreen = ({ navigation }: any) => {
           <View style={styles.voucherCard}>
             <View style={styles.voucherInfo}>
               <View style={styles.voucherIcon}>
-                <FontAwesome 
-                  name="gift" 
-                  size={24} 
-                  color="#FF6B6B" 
-                />
+                <FontAwesome name="gift" size={24} color="#FF6B6B" />
               </View>
               <View style={styles.voucherDetails}>
                 <Text style={styles.voucherTitle}>Voucher & Ưu đãi</Text>
@@ -385,10 +372,10 @@ const ProfileScreen = ({ navigation }: any) => {
               onPress={() => navigation.navigate("VoucherScreen")}
             >
               <Text style={styles.voucherButtonText}>Xem voucher</Text>
-              <FontAwesome 
-                name="arrow-right" 
-                size={14} 
-                color="#FFFFFF" 
+              <FontAwesome
+                name="arrow-right"
+                size={14}
+                color="#FFFFFF"
                 style={styles.voucherButtonArrow}
               />
             </TouchableOpacity>
@@ -402,11 +389,7 @@ const ProfileScreen = ({ navigation }: any) => {
           <View style={styles.historyCard}>
             <View style={styles.historyInfo}>
               <View style={styles.historyIcon}>
-                <FontAwesome 
-                  name="map" 
-                  size={24} 
-                  color="#4CAF50" 
-                />
+                <FontAwesome name="map" size={24} color="#4CAF50" />
               </View>
               <View style={styles.historyDetails}>
                 <Text style={styles.historyTitle}>Chuyến đi đã thanh toán</Text>
@@ -420,10 +403,10 @@ const ProfileScreen = ({ navigation }: any) => {
               onPress={() => navigation.navigate("TravelHistory")}
             >
               <Text style={styles.historyButtonText}>Xem lịch sử</Text>
-              <FontAwesome 
-                name="arrow-right" 
-                size={14} 
-                color="#FFFFFF" 
+              <FontAwesome
+                name="arrow-right"
+                size={14}
+                color="#FFFFFF"
                 style={styles.historyButtonArrow}
               />
             </TouchableOpacity>
@@ -742,6 +725,20 @@ const styles = StyleSheet.create({
   userEmail: {
     fontSize: 14,
     color: "rgba(255, 255, 255, 0.8)",
+  },
+  pointsDisplay: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  pointsDisplayText: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#FFFFFF",
+    marginLeft: 4,
   },
   section: {
     marginTop: 20,
@@ -1268,4 +1265,3 @@ const styles = StyleSheet.create({
 });
 
 export default ProfileScreen;
-

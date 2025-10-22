@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -9,13 +9,16 @@ import {
   Dimensions,
   ActivityIndicator,
   Alert,
+  Animated,
+  Easing,
+  Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { TravelPlan, CreatePlanDto } from "../../types/plan.types";
 import { API_CONFIG } from "../../constants/api.constants";
 import { planService } from "../../services/plan.service";
-import { FontAwesome } from "@expo/vector-icons";
+import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { showToast } from "../../utils/toast.utils";
 
@@ -31,34 +34,76 @@ const PlanDetailsScreen = () => {
   const [processingPayment, setProcessingPayment] = useState(false);
   const [processingFavorite, setProcessingFavorite] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
+  const [isPaidNumber, setIsPaidNumber] = useState(0);
+  const [isPaidPoint, setIsPaidPoint] = useState(0);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedMethod, setSelectedMethod] = useState("wallet");
+  const slideAnim = useState(new Animated.Value(300))[0];
 
-  const handleCreateWithPayment = () => {
-    const totalCost = (plan.totalCost || plan.estimatedCost || 0).toLocaleString();
+  useEffect(() => {
+    if (plan.planTitle === "Kế hoạch tiết kiệm") {
+      setIsPaidNumber(5000);
+      setIsPaidPoint(5);
+    } else if (plan.planTitle === "Kế hoạch tốt nghiệp") {
+      setIsPaidNumber(10000);
+      setIsPaidPoint(10);
+    } else if (plan.planTitle === "Kế hoạch trung bình") {
+      setIsPaidNumber(15000);
+      setIsPaidPoint(15);
+    } else if (plan.planTitle === "Kế hoạch đầy đủ") {
+      setIsPaidNumber(20000);
+      setIsPaidPoint(20);
+    }
+  }, [plan.planTitle]);
+
+  const handleSelectPaymentMethod = () => {
+    openModal();
+  };
+
+  const openModal = () => {
+    setShowModal(true);
+    Animated.timing(slideAnim, {
+      toValue: 0,
+      duration: 400,
+      easing: Easing.out(Easing.ease),
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handleCreateWithPayment = (selectedMethod: string, amount: number) => {
+    const paymentText =
+      selectedMethod === "wallet"
+        ? `Thanh toán bằng ví của bạn: ${amount.toLocaleString()}đ`
+        : `Thanh toán bằng điểm thưởng: ${amount.toLocaleString()} điểm`;
+
     Alert.alert(
-      "Xác nhận thanh toán", 
-      `Thanh toán ${totalCost}đ cho kế hoạch "${plan.planTitle}"?`,  
+      "Xác nhận thanh toán",
+      `${paymentText} cho kế hoạch "${plan.planTitle}"?`,
       [
         {
-          text: "Hủy",  
-          style: "cancel",  
+          text: "Hủy",
+          style: "cancel",
         },
         {
-          text: "Xác nhận",  
-          onPress: processPayment, 
+          text: "Xác nhận",
+          onPress: () => processPayment(selectedMethod, amount),
         },
       ],
-      { cancelable: true } 
+      { cancelable: true }
     );
   };
 
-  const processPayment = async () => {
+  const processPayment = async (selectedMethod: string, amount: number) => {
     try {
       setProcessingPayment(true);
+      console.log("Init Data:", selectedMethod, amount);
 
       const createPlanData: CreatePlanDto = {
         planTitle: plan.planTitle,
         totalDuration: plan.totalDuration,
-        estimatedCost: plan.totalCost || plan.estimatedCost || 0,
+        estimatedCost: selectedMethod === "wallet" ? amount : 0,
+        point: selectedMethod === "point" ? amount : 0,
+        pointBonus: selectedMethod === "wallet" ? isPaidPoint : 0,
         itinerary: plan.itinerary.map((item: any) => ({
           placeId: item.place?._id || item.placeInfo?._id,
           order: item.order,
@@ -67,6 +112,13 @@ const PlanDetailsScreen = () => {
         })),
         isPaid: true,
       };
+
+      console.log(
+        "createPlanData:",
+        createPlanData.estimatedCost,
+        createPlanData.point,
+        createPlanData.pointBonus
+      );
 
       const response = await planService.createWithPayment(createPlanData);
 
@@ -80,6 +132,7 @@ const PlanDetailsScreen = () => {
         const createdPlanId = response?.data?.data?._id;
 
         await fetchAndNavigateToPaidPlan(createdPlanId);
+        setShowModal(false);
       }
     } catch (error) {
       console.error("Error creating plan with payment:", error);
@@ -165,7 +218,9 @@ const PlanDetailsScreen = () => {
         const favoritePlanData: CreatePlanDto = {
           planTitle: plan.planTitle,
           totalDuration: plan.totalDuration,
-          estimatedCost: plan.totalCost || plan.estimatedCost || 0,
+          estimatedCost: selectedMethod === "wallet" ? isPaidNumber : 0,
+          point: selectedMethod === "point" ? isPaidPoint : 0,
+          pointBonus: selectedMethod === "wallet" ? isPaidPoint : 0,
           itinerary: plan.itinerary.map((item: any) => ({
             placeId: item.place?._id || item.placeInfo?._id,
             order: item.order,
@@ -356,9 +411,16 @@ const PlanDetailsScreen = () => {
             </View>
             <View style={styles.summaryItem}>
               <FontAwesome name="money" size={24} color="#28A745" />
-              <Text style={styles.summaryLabel}>Chi phí</Text>
+              <Text style={styles.summaryLabel}>Chi phí dự kiến</Text>
               <Text style={styles.summaryValue}>
                 {(plan.totalCost || plan.estimatedCost || 0).toLocaleString()}đ
+              </Text>
+            </View>
+            <View style={styles.summaryItem}>
+              <FontAwesome name="money" size={24} color="#28A745" />
+              <Text style={styles.summaryLabel}>Thanh toán</Text>
+              <Text style={styles.summaryValue}>
+                {isPaidNumber.toLocaleString()}đ
               </Text>
             </View>
             <View style={styles.summaryItem}>
@@ -378,6 +440,82 @@ const PlanDetailsScreen = () => {
             renderPlaceItem(item, index)
           )}
         </View>
+
+        <Modal transparent visible={showModal} animationType="none">
+          <View style={styles.overlay}>
+            <Animated.View
+              style={[
+                styles.modalContent,
+                { transform: [{ translateY: slideAnim }] },
+              ]}
+            >
+              <Text style={styles.title}>Chọn phương thức thanh toán</Text>
+              <View style={styles.containerModal}>
+                {/* Thanh toán khi nhận hàng */}
+                <TouchableOpacity
+                  style={[
+                    styles.option,
+                    selectedMethod === "wallet" && styles.selectedOptionWallet,
+                  ]}
+                  onPress={() => setSelectedMethod("wallet")}
+                >
+                  <Text
+                    style={[
+                      styles.optionText,
+                      selectedMethod === "wallet" && styles.selectedTextWallet,
+                    ]}
+                  >
+                    Thanh toán bằng ví của bạn: {isPaidNumber.toLocaleString()}{" "}
+                    VND
+                  </Text>
+                </TouchableOpacity>
+
+                {/* Chuyển khoản ngân hàng */}
+                <TouchableOpacity
+                  style={[
+                    styles.option,
+                    selectedMethod === "point" && styles.selectedOption,
+                  ]}
+                  onPress={() => setSelectedMethod("point")}
+                >
+                  <Text
+                    style={[
+                      styles.optionText,
+                      selectedMethod === "point" && styles.selectedText,
+                    ]}
+                  >
+                    Thanh toán bằng điểm thưởng: {isPaidPoint.toLocaleString()}{" "}
+                    điểm
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.placeModal}>
+                <TouchableOpacity
+                  onPress={() => setShowModal(false)}
+                  style={styles.closeButton}
+                >
+                  <Text style={{ color: "#fff", fontWeight: "600" }}>
+                    Hủy chọn{" "}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() =>
+                    handleCreateWithPayment(
+                      selectedMethod,
+                      selectedMethod === "wallet" ? isPaidNumber : isPaidPoint
+                    )
+                  }
+                  style={styles.reviewButton}
+                >
+                  <Text style={{ color: "#fff", fontWeight: "600" }}>
+                    Thanh toán
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </Animated.View>
+          </View>
+        </Modal>
       </ScrollView>
 
       {/* Bottom Action */}
@@ -387,7 +525,7 @@ const PlanDetailsScreen = () => {
             styles.selectButton,
             processingPayment && styles.disabledButton,
           ]}
-          onPress={handleCreateWithPayment}
+          onPress={handleSelectPaymentMethod}
           disabled={processingPayment}
         >
           <LinearGradient
@@ -743,6 +881,105 @@ const styles = StyleSheet.create({
     backgroundColor: "#000",
     transformOrigin: "top left", // đầu đường là điểm xoay
     zIndex: 1,
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.3)",
+    justifyContent: "flex-end",
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+    paddingBottom: 35,
+    alignItems: "center",
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "green",
+    marginBottom: 10,
+  },
+  subText: {
+    fontSize: 15,
+    color: "#555",
+    marginTop: 10,
+    textAlign: "center",
+  },
+  stars: {
+    flexDirection: "row",
+    marginVertical: 10,
+  },
+  closeButton: {
+    backgroundColor: "#3b82f6",
+    paddingVertical: 10,
+    paddingHorizontal: 40,
+    borderRadius: 10,
+    marginTop: 20,
+    marginLeft: 6,
+  },
+  reviewButton: {
+    backgroundColor: "#4CAF50",
+    paddingVertical: 10,
+    paddingHorizontal: 40,
+    borderRadius: 10,
+    marginTop: 20,
+    // marginLeft: 5,
+  },
+  placeModal: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    width: "100%",
+    marginTop: 5,
+  },
+  option: {
+    width: "100%",
+    borderWidth: 2,
+    borderColor: "#ddd",
+    borderRadius: 6,
+    paddingVertical: 12,
+    alignItems: "flex-start",
+    marginHorizontal: 5,
+    position: "relative",
+    backgroundColor: "#fff",
+    padding: 5,
+    margin: 5,
+  },
+  selectedOption: {
+    borderColor: "#e74c3c",
+    borderWidth: 2,
+  },
+  selectedOptionWallet: {
+    borderColor: "#e74c3c",
+    borderWidth: 2,
+  },
+  optionText: {
+    color: "#333",
+    fontSize: 14,
+  },
+  selectedText: {
+    color: "#e74c3c",
+    fontWeight: "600",
+    fontSize: 14,
+  },
+  selectedTextWallet: {
+    color: "#e74c3c",
+    fontWeight: "600",
+    fontSize: 14,
+  },
+  checkIcon: {
+    position: "absolute",
+    bottom: 4,
+    right: 4,
+  },
+  containerModal: {
+    // flex: 1,
+    flexDirection: "column",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    alignItems: "center",
   },
 });
 

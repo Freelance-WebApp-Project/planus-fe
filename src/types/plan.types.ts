@@ -149,6 +149,8 @@ export interface CreatePlanDto {
   planTitle: string;
   totalDuration: string;
   estimatedCost: number;
+  point: number;
+  pointBonus: number;
   itinerary: ItineraryDto[];
   isPaid?: boolean;
   isShared?: boolean;

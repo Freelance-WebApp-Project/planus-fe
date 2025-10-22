@@ -84,7 +84,7 @@ const WalletScreen = ({ navigation }: any) => {
         setDepositAmount("");
         showToast.success("Thành công", "Đã tạo link thanh toán");
         const paymentLink = result?.paymentLink;
-        
+
         // Open payment link in browser
         try {
           const canOpen = await Linking.canOpenURL(paymentLink);
@@ -164,11 +164,7 @@ const WalletScreen = ({ navigation }: any) => {
             style={styles.backButton}
             onPress={() => navigation.goBack()}
           >
-            <FontAwesome 
-              name="arrow-left" 
-              size={18} 
-              color="#4facfe" 
-            />
+            <FontAwesome name="arrow-left" size={18} color="#4facfe" />
             <Text style={styles.backButtonText}> Quay lại</Text>
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Ví điện tử</Text>
@@ -180,10 +176,10 @@ const WalletScreen = ({ navigation }: any) => {
           <View style={styles.balanceHeader}>
             <Text style={styles.balanceLabel}>Số dư hiện tại</Text>
             <TouchableOpacity onPress={toggleBalanceVisibility}>
-              <FontAwesome 
-                name={isBalanceVisible ? "eye" : "eye-slash"} 
-                size={20} 
-                color="rgba(255, 255, 255, 0.9)" 
+              <FontAwesome
+                name={isBalanceVisible ? "eye" : "eye-slash"}
+                size={20}
+                color="rgba(255, 255, 255, 0.9)"
               />
             </TouchableOpacity>
           </View>
@@ -205,6 +201,18 @@ const WalletScreen = ({ navigation }: any) => {
           </View>
         </View>
 
+        <View style={styles.pointCard}>
+          <View style={styles.balanceHeader}>
+            <Text style={styles.balanceLabel}>Số điểm thưởng tích lũy</Text>
+          </View>
+          <View style={styles.balanceAmount}>
+            <Text style={styles.balanceText}>
+              <FontAwesome name="star" size={30} color="#FFD700"/>
+              {balance?.point || 0}
+            </Text>
+          </View>
+        </View>
+
         {/* Quick Actions */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Thao tác nhanh</Text>
@@ -215,11 +223,7 @@ const WalletScreen = ({ navigation }: any) => {
               onPress={handleDeposit}
             >
               <View style={styles.actionIcon}>
-                <FontAwesome 
-                  name="credit-card" 
-                  size={24} 
-                  color="#4facfe" 
-                />
+                <FontAwesome name="credit-card" size={24} color="#4facfe" />
               </View>
               <Text style={styles.actionText}>Nạp tiền</Text>
             </TouchableOpacity>
@@ -229,11 +233,7 @@ const WalletScreen = ({ navigation }: any) => {
               onPress={handleHistory}
             >
               <View style={styles.actionIcon}>
-                <FontAwesome 
-                  name="history" 
-                  size={24} 
-                  color="#4facfe" 
-                />
+                <FontAwesome name="history" size={24} color="#4facfe" />
               </View>
               <Text style={styles.actionText}>Lịch sử</Text>
             </TouchableOpacity>
@@ -257,7 +257,7 @@ const WalletScreen = ({ navigation }: any) => {
                 {transactions.slice(0, 3).map((transaction) => (
                   <View key={transaction._id} style={styles.transactionItem}>
                     <View style={styles.transactionIcon}>
-                      <FontAwesome 
+                      <FontAwesome
                         name={
                           transaction.type === "deposit"
                             ? "arrow-down"
@@ -267,7 +267,7 @@ const WalletScreen = ({ navigation }: any) => {
                             ? "star"
                             : "money"
                         }
-                        size={18} 
+                        size={18}
                         color={
                           transaction.type === "deposit"
                             ? "#4CAF50"
@@ -313,10 +313,10 @@ const WalletScreen = ({ navigation }: any) => {
                   onPress={handleHistory}
                 >
                   <Text style={styles.viewAllText}>Xem tất cả giao dịch</Text>
-                  <FontAwesome 
-                    name="arrow-right" 
-                    size={14} 
-                    color="#4facfe" 
+                  <FontAwesome
+                    name="arrow-right"
+                    size={14}
+                    color="#4facfe"
                     style={styles.viewAllArrow}
                   />
                 </TouchableOpacity>
@@ -386,11 +386,7 @@ const WalletScreen = ({ navigation }: any) => {
                 onPress={handleDepositCancel}
                 style={styles.modalCloseButton}
               >
-                <FontAwesome 
-                  name="times" 
-                  size={16} 
-                  color="#666" 
-                />
+                <FontAwesome name="times" size={16} color="#666" />
               </TouchableOpacity>
             </View>
 
@@ -517,6 +513,22 @@ const styles = StyleSheet.create({
   },
   balanceCard: {
     margin: 20,
+    backgroundColor: "#4facfe",
+    borderRadius: 16,
+    padding: 24,
+    shadowColor: "#4facfe",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  pointCard: {
+    marginLeft: 20,
+    marginBottom: 20,
+    marginRight: 20,
     backgroundColor: "#4facfe",
     borderRadius: 16,
     padding: 24,

@@ -192,12 +192,27 @@ const SuggestedPlansScreen = () => {
           <View style={styles.planDetails}>
             <Text style={styles.planDuration}>⏰ {item.totalDuration}</Text>
             <Text style={styles.planCost}>
-              💰 {(item.totalCost || 0).toLocaleString()}đ
+              Chi phí dự kiến: {(item.totalCost || 0).toLocaleString()}đ
             </Text>
           </View>
-          <Text style={styles.planPlacesCount}>
-            📍 {item.itinerary.length} địa điểm
-          </Text>
+          <View style={styles.planDetails}>
+            <Text style={styles.planPlacesCount}>
+              📍 {item.itinerary.length} địa điểm
+            </Text>
+            <Text style={styles.planCost}>
+              Thanh toán:{" "}
+              {(item.planTitle === "Kế hoạch tiết kiệm"
+                ? 5000
+                : item.planTitle === "Kế hoạch tốt nghiệp"
+                ? 10000
+                : item.planTitle === "Kế hoạch trung bình"
+                ? 15000
+                : item.planTitle === "Kế hoạch đầy đủ"
+                ? 20000
+                : 0
+              ).toLocaleString()} đ
+            </Text>
+          </View>
           <Text style={styles.planDistance}>
             🗺️ {(item.totalDistance || 0).toFixed(1)} km
           </Text>
@@ -363,13 +378,22 @@ const SuggestedPlansScreen = () => {
 
       {/* Travel Info Card */}
       <View style={styles.travelCard}>
-          <View style={styles.dateRow}>
-            <FontAwesome name="calendar" size={16} color="#4facfe" style={styles.dateIcon} />
-            <Text style={styles.travelLabel}>Ngày: {travelDate}</Text>
-          </View>
+        <View style={styles.dateRow}>
+          <FontAwesome
+            name="calendar"
+            size={16}
+            color="#4facfe"
+            style={styles.dateIcon}
+          />
+          <Text style={styles.travelLabel}>Ngày: {travelDate}</Text>
+        </View>
         <View style={styles.travelInfo}>
           <View style={styles.travelHalf}>
-            <Text style={styles.titleLabel} numberOfLines={0} allowFontScaling={false}>
+            <Text
+              style={styles.titleLabel}
+              numberOfLines={0}
+              allowFontScaling={false}
+            >
               Từ: {start.address}
             </Text>
             <View style={styles.travelDetails}>
@@ -379,8 +403,8 @@ const SuggestedPlansScreen = () => {
                     {weatherLabelToIcon(weatherStart.weatherLabel)}
                   </Text>
                   <Text style={styles.tempText}>
-                    {weatherStart.temperatureMax}° / {weatherStart.temperatureMin}
-                    °
+                    {weatherStart.temperatureMax}° /{" "}
+                    {weatherStart.temperatureMin}°
                   </Text>
                 </View>
                 <Text style={styles.weatherLabel}>
@@ -400,7 +424,11 @@ const SuggestedPlansScreen = () => {
             </View>
           </View>
           <View style={styles.travelHalf}>
-            <Text style={styles.titleLabel} numberOfLines={0} allowFontScaling={false}>
+            <Text
+              style={styles.titleLabel}
+              numberOfLines={0}
+              allowFontScaling={false}
+            >
               Đến: {end.address}
             </Text>
             <View style={styles.travelDetails}>
@@ -430,19 +458,34 @@ const SuggestedPlansScreen = () => {
 
         <View style={styles.travelTo}>
           <View style={styles.infoRow}>
-            <FontAwesome name="bullseye" size={14} color="#FF6B6B" style={styles.infoIcon} />
+            <FontAwesome
+              name="bullseye"
+              size={14}
+              color="#FF6B6B"
+              style={styles.infoIcon}
+            />
             <Text style={styles.titleLabel2}>
               Mục đích: {selectedPurposeLabel}
             </Text>
           </View>
           <View style={styles.infoRow}>
-            <FontAwesome name="clock-o" size={14} color="#4ECDC4" style={styles.infoIcon} />
+            <FontAwesome
+              name="clock-o"
+              size={14}
+              color="#4ECDC4"
+              style={styles.infoIcon}
+            />
             <Text style={styles.titleLabel2}>
               Thời gian: {selectedDurationLabel}
             </Text>
           </View>
           <View style={styles.infoRow}>
-            <FontAwesome name="map-marker" size={14} color="#FFA726" style={styles.infoIcon} />
+            <FontAwesome
+              name="map-marker"
+              size={14}
+              color="#FFA726"
+              style={styles.infoIcon}
+            />
             <Text style={styles.titleLabel2}>Bán kính: {radius / 1000} km</Text>
           </View>
         </View>
@@ -861,4 +904,3 @@ const styles = StyleSheet.create({
 });
 
 export default SuggestedPlansScreen;
-
