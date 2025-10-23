@@ -52,10 +52,12 @@ export const usePlaces = (initialQuery: QueryPlaceDto = {}) => {
   }, [fetchPlaces]);
 
   const search = useCallback((searchTerm: string) => {
-    fetchPlaces({ search: searchTerm, page: 1 });
+    console.log("searchTerm:", searchTerm);
+    fetchPlaces({ text: searchTerm, page: 1 });
   }, [fetchPlaces]);
 
   const filterByType = useCallback((type: string) => {
+    console.log("type:", type);
     fetchPlaces({ type: type as any, page: 1 });
   }, [fetchPlaces]);
 
