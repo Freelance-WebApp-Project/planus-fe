@@ -1,5 +1,5 @@
 // ReviewDetailScreen.tsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -13,6 +13,8 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   Platform,
+  FlatList,
+  Dimensions,
 } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -28,6 +30,8 @@ import { User } from "../../types/auth.types";
 import { PlaceResponse } from "../../types/place.types";
 import { placeService } from "../../services/place.service";
 const noImageIcon = require("../../../assets/splash-icon.png");
+
+const { width } = Dimensions.get("window");
 
 const ReviewDetailScreen = () => {
   const route = useRoute();
@@ -50,6 +54,7 @@ const ReviewDetailScreen = () => {
     images: [] as string[],
   });
   const [tags, setTags] = useState<string[]>([]);
+  const [imgs, setImgs] = useState<string[]>([]);
   const [description, setDescription] = useState<string>("");
 
   const getOne = async () => {
@@ -58,6 +63,7 @@ const ReviewDetailScreen = () => {
       if (response.success && response.data) {
         setTags(response.data?.tags);
         setDescription(response.data?.description);
+        setImgs(response.data?.images.map((img) => img.imageUrl) || []);
       }
     } catch (err) {
       console.log(err);
@@ -188,6 +194,60 @@ const ReviewDetailScreen = () => {
     }
   };
 
+  // === Slider ảnh với nút trái/phải ===
+  const ImageSlider = ({ images }: { images: string[] }) => {
+  const flatListRef = useRef<FlatList>(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const displayImages =
+    images.length > 0
+      ? images.map((img) => `${API_CONFIG.UPLOADS_URL}/${img}`)
+      : [`https://via.placeholder.com/300x200/87CEEB/FFFFFF?text=${encodeURIComponent(place?.name || "Địa điểm")}`];
+
+  const handleNext = () => {
+    if (currentIndex < displayImages.length - 1) {
+      flatListRef.current?.scrollToIndex({ index: currentIndex + 1, animated: true });
+    }
+  };
+  const handlePrev = () => {
+    if (currentIndex > 0) {
+      flatListRef.current?.scrollToIndex({ index: currentIndex - 1, animated: true });
+    }
+  };
+
+  return (
+    <View style={{ height: 200, marginBottom: 10 }}>
+      <FlatList
+        ref={flatListRef}
+        data={displayImages}
+        keyExtractor={(item, index) => item + index}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        getItemLayout={(_, index) => ({ length: width, offset: width * index, index })} // 👈 fix cuộn
+        onMomentumScrollEnd={(event) => {
+          const index = Math.round(event.nativeEvent.contentOffset.x / width);
+          setCurrentIndex(index);
+        }}
+        renderItem={({ item }) => (
+          <Image source={{ uri: item }} style={{ width, height: 200 }} resizeMode="cover" />
+        )}
+      />
+      {currentIndex > 0 && (
+        <TouchableOpacity style={[styles.arrowButton, { left: 10 }]} onPress={handlePrev}>
+          <FontAwesome name="chevron-left" size={24} color="#fff" />
+        </TouchableOpacity>
+      )}
+      {currentIndex < displayImages.length - 1 && (
+        <TouchableOpacity style={[styles.arrowButton, { right: 10 }]} onPress={handleNext}>
+          <FontAwesome name="chevron-right" size={24} color="#fff" />
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+};
+
+
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
@@ -219,23 +279,12 @@ const ReviewDetailScreen = () => {
           </View>
 
           <ScrollView
-          keyboardShouldPersistTaps="handled" style={styles.content}>
+            keyboardShouldPersistTaps="handled"
+            style={styles.content}
+          >
             {/* Ảnh địa điểm */}
-            <View style={{ position: "relative" }}>
-              <Image
-                source={{
-                  uri: imageUrl || "https://i.pravatar.cc/100?img=5",
-                }}
-                style={styles.fieldImage}
-              />
-
-              {/* Chữ đè lên ảnh */}
-              <View style={styles.overlayText}>
-                <Text style={styles.fieldName}>
-                  {title || "Địa điểm không xác định"}
-                </Text>
-              </View>
-            </View>
+            {/* Ảnh địa điểm dạng slider */}
+            <ImageSlider images={imgs} />
 
             <View style={styles.placeCardContainer}>
               <View style={styles.rowContainer}>
@@ -262,7 +311,9 @@ const ReviewDetailScreen = () => {
                         color="#FF6B6B"
                         style={styles.planDetailIcon}
                       />
-                      <Text style={{ fontSize: 18, color: "#4facfe" }}>Bản đồ</Text>
+                      <Text style={{ fontSize: 18, color: "#4facfe" }}>
+                        Bản đồ
+                      </Text>
                     </View>
                   </View>
                 </View>
@@ -279,7 +330,9 @@ const ReviewDetailScreen = () => {
             </View>
 
             <View style={styles.placeCardDescription}>
-              <Text style={styles.titleDescription}>Giới thiệu cơ sở lưu trú:</Text>
+              <Text style={styles.titleDescription}>
+                Giới thiệu cơ sở lưu trú:
+              </Text>
               <Text style={styles.textDescription}>
                 {description || "Không có"}
               </Text>
@@ -303,7 +356,10 @@ const ReviewDetailScreen = () => {
 
                       {/* Ảnh đánh giá */}
                       {item.images && item.images.length > 0 ? (
-                        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                        <ScrollView
+                          horizontal
+                          showsHorizontalScrollIndicator={false}
+                        >
                           {item.images.map((img: any) => (
                             <Image
                               key={img._id}
@@ -317,7 +373,10 @@ const ReviewDetailScreen = () => {
                           ))}
                         </ScrollView>
                       ) : (
-                        <Image source={noImageIcon} style={styles.reviewImage} />
+                        <Image
+                          source={noImageIcon}
+                          style={styles.reviewImage}
+                        />
                       )}
 
                       {/* Footer (avatar, tên, rating) */}
@@ -338,7 +397,11 @@ const ReviewDetailScreen = () => {
                               },
                             ]}
                           >
-                            <FontAwesome name="user" size={18} color="#4facfe" />
+                            <FontAwesome
+                              name="user"
+                              size={18}
+                              color="#4facfe"
+                            />
                           </View>
                         )}
                         <Text style={styles.nameText}>
@@ -353,7 +416,12 @@ const ReviewDetailScreen = () => {
                   ))
                 ) : (
                   // ✅ Thẻ placeholder nếu không có đánh giá nào
-                  <View style={[styles.card, { justifyContent: "center", alignItems: "center" }]}>
+                  <View
+                    style={[
+                      styles.card,
+                      { justifyContent: "center", alignItems: "center" },
+                    ]}
+                  >
                     <FontAwesome name="commenting-o" size={36} color="#ccc" />
                     <Text style={{ color: "#777", marginTop: 8, fontSize: 16 }}>
                       Chưa có đánh giá nào
@@ -792,5 +860,14 @@ const styles = StyleSheet.create({
     marginLeft: 4,
     fontSize: 13,
     color: "#555",
+  },
+  arrowButton: {
+    position: "absolute",
+    top: "50%",
+    transform: [{ translateY: -12 }],
+    backgroundColor: "rgba(0,0,0,0.4)",
+    padding: 8,
+    borderRadius: 20,
+    zIndex: 10,
   },
 });

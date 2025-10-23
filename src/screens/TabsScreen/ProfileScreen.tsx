@@ -226,6 +226,7 @@ const ProfileScreen = ({ navigation }: any) => {
   };
 
   const isPremiumUser = currentUser?.isPremium || false;
+   console.log("isPremiumUser", isPremiumUser);
 
   if (isLoading || isLoadingUser) {
     return (

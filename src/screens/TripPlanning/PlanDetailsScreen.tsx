@@ -21,6 +21,9 @@ import { planService } from "../../services/plan.service";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { showToast } from "../../utils/toast.utils";
+import { User } from "../../types/auth.types";
+import { useAuth } from "../../hoc/AuthContext";
+import { userService } from "../../services/user.service";
 
 const { width } = Dimensions.get("window");
 
@@ -31,6 +34,8 @@ const PlanDetailsScreen = () => {
     plan: any; // Sử dụng any để tương thích với dữ liệu API mới
     planId?: string;
   };
+  const { user, logout, isLoading, setUser } = useAuth();
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [processingPayment, setProcessingPayment] = useState(false);
   const [processingFavorite, setProcessingFavorite] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
@@ -52,6 +57,28 @@ const PlanDetailsScreen = () => {
       setIsPaidPoint(15);
     }
   }, [plan.planTitle]);
+
+  const fetchCurrentUser = async () => {
+    try {
+      const response = await userService.getMe();
+      if (response.success && response.data) {
+        setCurrentUser(response.data);
+        // Also update the context user
+        setUser(response.data);
+      } else {
+        showToast.error("Lỗi", "Không thể tải thông tin người dùng");
+      }
+    } catch (error) {
+      showToast.error("Lỗi", "Có lỗi xảy ra khi tải thông tin");
+    }
+  };
+
+  useEffect(() => {
+    fetchCurrentUser();
+  }, []);
+
+  const isPremiumUser = currentUser?.isPremium || false;
+  console.log("isPremiumUser", isPremiumUser);
 
   const handleSelectPaymentMethod = () => {
     openModal();
@@ -285,11 +312,15 @@ const PlanDetailsScreen = () => {
             {/* Tags */}
             <View style={styles.tagsContainer}>
               {place?.tags && place.tags.length > 0
-                ? place.tags.slice(0, 3).map((tag: string, tagIndex: number) => (
-                    <View key={tagIndex} style={styles.tag}>
-                      <Text style={styles.tagText} numberOfLines={1}>{tag}</Text>
-                    </View>
-                  ))
+                ? place.tags
+                    .slice(0, 3)
+                    .map((tag: string, tagIndex: number) => (
+                      <View key={tagIndex} style={styles.tag}>
+                        <Text style={styles.tagText} numberOfLines={1}>
+                          {tag}
+                        </Text>
+                      </View>
+                    ))
                 : null}
             </View>
           </View>
@@ -448,7 +479,13 @@ const PlanDetailsScreen = () => {
             styles.selectButton,
             processingPayment && styles.disabledButton,
           ]}
-          onPress={handleSelectPaymentMethod}
+          onPress={() => {
+            if (isPremiumUser) {
+              fetchAndNavigateToPaidPlan(); // Gọi hàm cho Premium
+            } else {
+              handleSelectPaymentMethod(); // Gọi hàm bình thường
+            }
+          }}
           disabled={processingPayment}
         >
           <LinearGradient
@@ -560,58 +597,58 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   itineraryWrapper: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   itineraryItemContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 20,
   },
   connectorContainer: {
-    flexDirection: 'column',
-    alignItems: 'center',
+    flexDirection: "column",
+    alignItems: "center",
     marginBottom: 10,
   },
   verticalLine: {
     width: 3,
     height: 30,
-    backgroundColor: '#4facfe',
+    backgroundColor: "#4facfe",
     borderRadius: 2,
   },
   verticalLineBottom: {
     width: 3,
     height: 20,
-    backgroundColor: '#4facfe',
+    backgroundColor: "#4facfe",
     borderRadius: 2,
   },
   routeIconContainer: {
-    position: 'relative',
+    position: "relative",
     marginVertical: 5,
   },
   routeIcon: {
     fontSize: 20,
-    textAlign: 'center',
+    textAlign: "center",
   },
   diagonalLineLeft: {
-    position: 'absolute',
+    position: "absolute",
     top: 5,
     left: -15,
     width: 15,
     height: 2,
-    backgroundColor: '#4facfe',
-    transform: [{ rotate: '-45deg' }],
+    backgroundColor: "#4facfe",
+    transform: [{ rotate: "-45deg" }],
   },
   diagonalLineRight: {
-    position: 'absolute',
+    position: "absolute",
     top: 5,
     right: -15,
     width: 15,
     height: 2,
-    backgroundColor: '#4facfe',
-    transform: [{ rotate: '45deg' }],
+    backgroundColor: "#4facfe",
+    transform: [{ rotate: "45deg" }],
   },
   placeCard: {
     width: width * 0.85,
-    backgroundColor: '#FFF',
+    backgroundColor: "#FFF",
     borderRadius: 20,
     shadowColor: "#000",
     shadowOffset: {
@@ -621,59 +658,59 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 5,
-    overflow: 'hidden',
-    position: 'relative',
+    overflow: "hidden",
+    position: "relative",
   },
   orderBadge: {
-    position: 'absolute',
+    position: "absolute",
     top: 12,
     left: 12,
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#4facfe',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#4facfe",
+    justifyContent: "center",
+    alignItems: "center",
     zIndex: 2,
   },
   orderText: {
-    color: '#FFF',
+    color: "#FFF",
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   placeImage: {
-    width: '100%',
+    width: "100%",
     height: 180,
-    resizeMode: 'cover',
+    resizeMode: "cover",
   },
   infoOverlay: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: 'rgba(0,0,0,0.7)',
+    backgroundColor: "rgba(0,0,0,0.7)",
     padding: 15,
   },
   starsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
     marginBottom: 8,
   },
   star: {
     fontSize: 16,
-    color: '#FFD700',
+    color: "#FFD700",
     marginHorizontal: 1,
   },
   starEmpty: {
-    color: 'rgba(255,255,255,0.5)',
+    color: "rgba(255,255,255,0.5)",
   },
   tagsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
   },
   tag: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: "rgba(255,255,255,0.2)",
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
@@ -682,8 +719,8 @@ const styles = StyleSheet.create({
   },
   tagText: {
     fontSize: 11,
-    color: '#FFF',
-    fontWeight: '500',
+    color: "#FFF",
+    fontWeight: "500",
   },
   bottomBar: {
     paddingHorizontal: 20,
