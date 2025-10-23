@@ -82,6 +82,23 @@ const PlanDetailHistoryScreen = () => {
     }).start();
   };
 
+  const DashedLine = ({ segments = 4, color = "#000", height = 60 }) => {
+    return (
+      <View style={{ height, justifyContent: "space-between" }}>
+        {Array.from({ length: segments }).map((_, i) => (
+          <View
+            key={i}
+            style={{
+              width: 2,
+              height: height / (segments * 2),
+              backgroundColor: color,
+            }}
+          />
+        ))}
+      </View>
+    );
+  };
+
   const renderPlaceItem = (item: any, index: number) => {
     const place = item.placeInfo;
     const imageUrl = place.images?.[0]
@@ -97,35 +114,22 @@ const PlanDetailHistoryScreen = () => {
             <Image source={{ uri: imageUrl }} style={styles.placeImage} />
             {index !== plan.itinerary.length - 1 && (
               <View style={styles.verticalContainer}>
-                <View style={styles.verticalLine} />
-                <View style={styles.orderBadge}>
+                <DashedLine height={50} />
+
+                <View style={styles.orderBadgeMoto}>
                   <FontAwesome
                     name="motorcycle"
                     size={18}
                     color="#FFF"
                     style={styles.heartIcon}
                   />
-                  <View
-                    style={[
-                      styles.diagonalLine,
-                      { transform: [{ rotate: "-10deg" }], top: 16, left: 25 },
-                    ]}
-                  />
-
-                  {/* Đường chéo nghiêng xuống */}
-                  <View
-                    style={[
-                      styles.diagonalLine,
-                      { transform: [{ rotate: "10deg" }], top: 16, left: 25 },
-                    ]}
-                  />
                 </View>
-                <View style={styles.verticalLine} />
+                <DashedLine height={50} />
               </View>
             )}
           </View>
 
-          <View>
+          <View style={styles.information}>
             <View style={styles.placeContainer}>
               <View style={styles.orderBadge}>
                 <Text style={styles.orderText}>{item.order}</Text>
@@ -208,6 +212,12 @@ const PlanDetailHistoryScreen = () => {
               {index < plan.itinerary.length - 1 &&
                 plan.itinerary[index + 1].distance && (
                   <View style={styles.travelInfo}>
+                    <FontAwesome
+                      name="map-marker"
+                      size={18}
+                      color="#FF6B6B"
+                      style={styles.summaryIconLabel}
+                    />
                     <Text style={styles.travelLabel}>Khoảng cách:</Text>
                     <Text style={styles.travelValue}>
                       {plan.itinerary[index + 1].distance}
@@ -218,6 +228,12 @@ const PlanDetailHistoryScreen = () => {
               {index < plan.itinerary.length - 1 &&
                 plan.itinerary[index + 1].travelTime && (
                   <View style={styles.travelTimeInfo}>
+                    <FontAwesome
+                      name="clock-o"
+                      size={18}
+                      color="#4facfe"
+                      style={styles.summaryIconLabel}
+                    />
                     <Text style={styles.travelLabel}>Thời gian di chuyển:</Text>
                     <Text style={styles.travelValue}>
                       {plan.itinerary[index + 1].travelTime}
@@ -484,6 +500,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginRight: 3,
   },
+  orderBadgeMoto: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "#4facfe",
+    justifyContent: "center",
+    alignItems: "center",
+    marginLeft: 1,
+  },
   orderText: {
     color: "#FFF",
     fontSize: 16,
@@ -511,6 +536,10 @@ const styles = StyleSheet.create({
   },
   placeContainer: {
     flexDirection: "row",
+    // marginRight: 5,
+  },
+  information: {
+    marginLeft: -20,
   },
   placeModal: {
     flexDirection: "row",
@@ -521,7 +550,9 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   placeDetails: {
-    paddingTop: 5,
+    paddingTop: -20,
+    marginBottom: 2,
+    marginLeft: 8,
   },
   placeDescription: {
     fontSize: 14,
@@ -583,21 +614,27 @@ const styles = StyleSheet.create({
   travelInfo: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: 4,
   },
   travelTimeInfo: {
     flexDirection: "row",
     alignItems: "center",
   },
+  summaryIconLabel: {
+    marginBottom: 5,
+  },
   travelLabel: {
     fontSize: 14,
     color: "#6C757D",
     marginRight: 2,
+    marginLeft: 8,
+    marginBottom: 4,
   },
   travelValue: {
     fontSize: 14,
     fontWeight: "500",
     color: "#212529",
+    marginBottom: 4,
   },
   tagsContainer: {
     flexDirection: "row",
@@ -689,13 +726,13 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginTop: 7,
     marginLeft: -10, // Gắn vào circle bằng cách overlap
-    minWidth: 160,
+    minWidth: 193,
     height: 50,
     flex: 1,
     alignItems: "center",
   },
   priceText: {
-    marginTop: 2,
+    marginTop: -8,
     fontSize: 12,
     fontWeight: "bold",
     color: "white",
@@ -709,13 +746,14 @@ const styles = StyleSheet.create({
   itineraryItem: {
     alignItems: "center",
     width: "48%",
-    marginLeft: -30,
+    marginLeft: -40,
   },
   verticalLine: {
     width: 4, // độ dày của gạch dọc
     height: 40, // chiều dài nối giữa các ảnh
     backgroundColor: "#000",
     marginVertical: 4, // khoảng cách trên/dưới ảnh
+    borderStyle: "dashed",
   },
   verticalContainer: {
     flexDirection: "column",
@@ -736,6 +774,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginLeft: 12,
+    marginBottom: 10,
   },
   checkbox: {
     width: 20,

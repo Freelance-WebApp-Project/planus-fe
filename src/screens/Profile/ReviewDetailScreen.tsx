@@ -1,3 +1,4 @@
+// ReviewDetailScreen.tsx
 import React, { useEffect, useState } from "react";
 import {
   View,
@@ -8,6 +9,10 @@ import {
   TouchableOpacity,
   TextInput,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  TouchableWithoutFeedback,
+  Keyboard,
+  Platform,
 } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -20,6 +25,9 @@ import { showToast } from "../../utils/toast.utils";
 import * as ImagePicker from "expo-image-picker";
 import { useAuth } from "../../hoc/AuthContext";
 import { User } from "../../types/auth.types";
+import { PlaceResponse } from "../../types/place.types";
+import { placeService } from "../../services/place.service";
+const noImageIcon = require("../../../assets/splash-icon.png");
 
 const ReviewDetailScreen = () => {
   const route = useRoute();
@@ -41,6 +49,24 @@ const ReviewDetailScreen = () => {
     comment: "",
     images: [] as string[],
   });
+  const [tags, setTags] = useState<string[]>([]);
+  const [description, setDescription] = useState<string>("");
+
+  const getOne = async () => {
+    try {
+      const response: PlaceResponse = await placeService.getOne(placeId);
+      if (response.success && response.data) {
+        setTags(response.data?.tags);
+        setDescription(response.data?.description);
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  useEffect(() => {
+    getOne();
+  }, [placeId]);
 
   // ✅ Gọi API lấy danh sách review theo placeId
   const fetchReviews = async () => {
@@ -163,207 +189,269 @@ const ReviewDetailScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <FontAwesome name="arrow-left" size={18} color="#4facfe" />
-        </TouchableOpacity>
-        <View style={styles.titleContainer}>
-          <Text style={styles.headerTitle}>Đánh giá địa điểm</Text>
-        </View>
-        <View style={styles.placeholder} />
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() =>
-            (navigation as any).navigate("MainTabs", { screen: "Home" })
-          }
-        >
-          <FontAwesome name="home" size={20} color="#4facfe" />
-        </TouchableOpacity>
-      </View>
-
-      <ScrollView style={styles.content}>
-        {/* Ảnh địa điểm */}
-        <Image
-          source={{
-            uri: imageUrl || "https://i.pravatar.cc/100?img=5",
-          }}
-          style={styles.fieldImage}
-        />
-
-        {/* Thông tin địa điểm */}
-        <View style={styles.fieldInfo}>
-          <Text style={styles.fieldName}>
-            {title || "Địa điểm không xác định"}
-          </Text>
-          <Text style={styles.fieldAddress}>Địa chỉ: {address}</Text>
-        </View>
-
-        {/* DANH SÁCH REVIEW */}
-        {reviews.length > 0 ? (
-          reviews.map((review: any, index: number) => (
-            <View key={review._id}>
-              {review.userId?.avatar ? (
-                <Image
-                  source={{ uri: review.userId.avatar }}
-                  style={styles.avatar}
-                />
-              ) : (
-                <View
-                  style={[
-                    styles.avatar,
-                    {
-                      justifyContent: "center",
-                      alignItems: "center",
-                      backgroundColor: "#F0F0F0",
-                    },
-                  ]}
-                >
-                  <FontAwesome name="user" size={32} color="#4facfe" />
-                </View>
-              )}
-
-              {/* Rating */}
-              <View style={styles.ratingRow}>
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <FontAwesome
-                    key={star}
-                    name={star <= review.rating ? "star" : "star-o"}
-                    color="#FFD700"
-                    size={22}
-                    style={{ marginHorizontal: 4 }}
-                  />
-                ))}
-                <Text style={styles.ratingText}>
-                  {review.rating.toFixed(1)}
-                </Text>
-              </View>
-
-              {/* Comment */}
-              {review.comment ? (
-                <Text style={styles.comment}>{review.comment}</Text>
-              ) : null}
-
-              {/* Review images */}
-              {review.images && review.images.length > 0 && (
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  {review.images.map((img: any) => (
-                    <Image
-                      key={img._id}
-                      source={{
-                        uri:
-                          `${API_CONFIG.UPLOADS_URL}/${img.imageUrl}` ||
-                          "https://i.pravatar.cc/100?img=5",
-                      }}
-                      style={styles.reviewImage}
-                    />
-                  ))}
-                </ScrollView>
-              )}
-
-              {/* --- Đường kẻ tách review --- */}
-              {index < reviews.length - 1 && <View style={styles.separator} />}
-            </View>
-          ))
-        ) : (
-          <Text
-            style={{ textAlign: "center", color: "#777", marginVertical: 20 }}
-          >
-            Chưa có đánh giá nào
-          </Text>
-        )}
-      </ScrollView>
-
-      {/* FORM TẠO REVIEW */}
-      <View style={styles.card}>
-        {/* --- Hàng thông tin user --- */}
-        <View style={styles.commentRow}>
-          <View
-            style={[
-              styles.avatar,
-              {
-                justifyContent: "center",
-                alignItems: "center",
-                backgroundColor: "#F0F0F0",
-              },
-            ]}
-          >
-            <FontAwesome name="user" size={32} color="#4facfe" />
-          </View>
-          <Text style={styles.userNameIndent}>
-            {user?.username || user?.fullName || "Người dùng ẩn danh"}
-          </Text>
-        </View>
-
-        <View style={styles.commentInputContainer}>
-          <TextInput
-            style={styles.commentInput}
-            placeholder="Chia sẻ cảm nhận về địa điểm này..."
-            multiline
-            value={reviewForm.comment}
-            onChangeText={(text) =>
-              setReviewForm((prev) => ({ ...prev, comment: text }))
-            }
-          />
-
-          <TouchableOpacity
-            style={{
-              backgroundColor: "#4facfe",
-              padding: 12,
-              borderRadius: 50,
-              alignSelf: "flex-end", // đẩy về bên phải (tuỳ bạn)
-              marginBottom: 13,
-              marginLeft: 10,
-            }}
-            onPress={handleSubmit}
-          >
-            <FontAwesome name="paper-plane" size={22} color="#fff" />
-          </TouchableOpacity>
-        </View>
-
-        {/* --- Chọn số sao --- */}
-        <View style={styles.ratingRowCenter}>
-          {[1, 2, 3, 4, 5].map((star) => (
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "position"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? -33 : 80}
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <SafeAreaView style={styles.container}>
+          {/* Header */}
+          <View style={styles.header}>
             <TouchableOpacity
-              key={star}
+              style={styles.backButton}
+              onPress={() => navigation.goBack()}
+            >
+              <FontAwesome name="arrow-left" size={18} color="#4facfe" />
+            </TouchableOpacity>
+            <View style={styles.titleContainer}>
+              <Text style={styles.headerTitle}>Đánh giá địa điểm</Text>
+            </View>
+            <View style={styles.placeholder} />
+            <TouchableOpacity
+              style={styles.backButton}
               onPress={() =>
-                setReviewForm((prev) => ({ ...prev, rating: star }))
+                (navigation as any).navigate("MainTabs", { screen: "Home" })
               }
             >
-              <FontAwesome
-                name={star <= reviewForm.rating ? "star" : "star-o"}
-                size={24}
-                color="#FFD700"
-                style={{ marginHorizontal: 4 }}
-              />
+              <FontAwesome name="home" size={20} color="#4facfe" />
             </TouchableOpacity>
-          ))}
-        </View>
+          </View>
 
-        {/* --- Danh sách ảnh + nút thêm ảnh --- */}
-        <View style={styles.imageRow}>
-          {reviewForm.images.map((uri, i) => (
-            <Image key={i} source={{ uri }} style={styles.imagePreview} />
-          ))}
-          <TouchableOpacity
-            style={styles.addImageButton}
-            onPress={handlePickImages}
-          >
-            <FontAwesome name="camera" size={20} color="#4facfe" />
-          </TouchableOpacity>
-        </View>
-      </View>
+          <ScrollView
+          keyboardShouldPersistTaps="handled" style={styles.content}>
+            {/* Ảnh địa điểm */}
+            <View style={{ position: "relative" }}>
+              <Image
+                source={{
+                  uri: imageUrl || "https://i.pravatar.cc/100?img=5",
+                }}
+                style={styles.fieldImage}
+              />
 
-      {loading && (
-        <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color="#4facfe" />
-        </View>
-      )}
-    </SafeAreaView>
+              {/* Chữ đè lên ảnh */}
+              <View style={styles.overlayText}>
+                <Text style={styles.fieldName}>
+                  {title || "Địa điểm không xác định"}
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.placeCardContainer}>
+              <View style={styles.rowContainer}>
+                {/* Bên trái (30%) */}
+                <TouchableOpacity style={[styles.placeCard, styles.leftCard]}>
+                  <Text>{reviews.length} đánh giá</Text>
+                </TouchableOpacity>
+
+                {/* Bên phải (70%) */}
+                <View style={[styles.placeCard, styles.rightCard]}>
+                  <View style={styles.innerRow}>
+                    {/* Bên trái trong phần 70% (chiếm 70%) */}
+                    <View style={styles.innerLeft}>
+                      <Text style={styles.fieldAddress}>{address}</Text>
+                    </View>
+
+                    <View style={styles.divider} />
+
+                    {/* Bên phải trong phần 70% (chiếm 30%) */}
+                    <View style={styles.innerRight}>
+                      <FontAwesome
+                        name="map-marker"
+                        size={20}
+                        color="#FF6B6B"
+                        style={styles.planDetailIcon}
+                      />
+                      <Text style={{ fontSize: 18, color: "#4facfe" }}>Bản đồ</Text>
+                    </View>
+                  </View>
+                </View>
+              </View>
+
+              {/* Hàng thứ hai (tags nằm bên dưới) */}
+              <View style={styles.tagsContainer}>
+                {tags.map((tag, index) => (
+                  <View key={index} style={styles.tag}>
+                    <Text style={styles.tagText}>{tag}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+
+            <View style={styles.placeCardDescription}>
+              <Text style={styles.titleDescription}>Giới thiệu cơ sở lưu trú:</Text>
+              <Text style={styles.textDescription}>
+                {description || "Không có"}
+              </Text>
+            </View>
+
+            <View style={styles.placeCardDescription}>
+              <Text style={styles.titleDescription}>Đánh giá:</Text>
+
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                snapToAlignment="start"
+                decelerationRate="fast"
+                snapToInterval={320} // đúng bằng width của card
+                contentContainerStyle={{ paddingHorizontal: 5 }}
+              >
+                {reviews.length > 0 ? (
+                  reviews.map((item) => (
+                    <TouchableOpacity key={item._id} style={styles.card}>
+                      <Text style={styles.commentText}>{item.comment}</Text>
+
+                      {/* Ảnh đánh giá */}
+                      {item.images && item.images.length > 0 ? (
+                        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                          {item.images.map((img: any) => (
+                            <Image
+                              key={img._id}
+                              source={{
+                                uri:
+                                  `${API_CONFIG.UPLOADS_URL}/${img.imageUrl}` ||
+                                  "https://i.pravatar.cc/100?img=5",
+                              }}
+                              style={styles.reviewImage}
+                            />
+                          ))}
+                        </ScrollView>
+                      ) : (
+                        <Image source={noImageIcon} style={styles.reviewImage} />
+                      )}
+
+                      {/* Footer (avatar, tên, rating) */}
+                      <View style={styles.footer}>
+                        {item.userId?.avatar ? (
+                          <Image
+                            source={{ uri: item.userId.avatar }}
+                            style={styles.avatar}
+                          />
+                        ) : (
+                          <View
+                            style={[
+                              styles.avatar,
+                              {
+                                justifyContent: "center",
+                                alignItems: "center",
+                                backgroundColor: "#F0F0F0",
+                              },
+                            ]}
+                          >
+                            <FontAwesome name="user" size={18} color="#4facfe" />
+                          </View>
+                        )}
+                        <Text style={styles.nameText}>
+                          {item.userId?.username || "Người dùng ẩn danh"}
+                        </Text>
+                        <View style={styles.ratingRow}>
+                          <FontAwesome name="star" size={14} color="#FFD700" />
+                          <Text style={styles.ratingText}>{item.rating}/5</Text>
+                        </View>
+                      </View>
+                    </TouchableOpacity>
+                  ))
+                ) : (
+                  // ✅ Thẻ placeholder nếu không có đánh giá nào
+                  <View style={[styles.card, { justifyContent: "center", alignItems: "center" }]}>
+                    <FontAwesome name="commenting-o" size={36} color="#ccc" />
+                    <Text style={{ color: "#777", marginTop: 8, fontSize: 16 }}>
+                      Chưa có đánh giá nào
+                    </Text>
+                  </View>
+                )}
+              </ScrollView>
+            </View>
+          </ScrollView>
+
+          {/* FORM TẠO REVIEW */}
+          <View style={styles.cardReview}>
+            {/* --- Hàng thông tin user --- */}
+            <View style={styles.commentRow}>
+              <View
+                style={[
+                  styles.avatar,
+                  {
+                    justifyContent: "center",
+                    alignItems: "center",
+                    backgroundColor: "#F0F0F0",
+                  },
+                ]}
+              >
+                <FontAwesome name="user" size={25} color="#4facfe" />
+              </View>
+              <Text style={styles.userNameIndent}>
+                {user?.username || user?.fullName || "Người dùng ẩn danh"}
+              </Text>
+
+              {/* --- Chọn số sao --- */}
+              <View style={styles.ratingRowCenter}>
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <TouchableOpacity
+                    key={star}
+                    onPress={() =>
+                      setReviewForm((prev) => ({ ...prev, rating: star }))
+                    }
+                  >
+                    <FontAwesome
+                      name={star <= reviewForm.rating ? "star" : "star-o"}
+                      size={24}
+                      color="#FFD700"
+                      style={{ marginHorizontal: 4 }}
+                    />
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            <View style={styles.commentInputContainer}>
+              <TextInput
+                style={styles.commentInput}
+                placeholder="Chia sẻ cảm nhận về địa điểm này..."
+                multiline
+                value={reviewForm.comment}
+                onChangeText={(text) =>
+                  setReviewForm((prev) => ({ ...prev, comment: text }))
+                }
+              />
+
+              <TouchableOpacity
+                style={{
+                  backgroundColor: "#4facfe",
+                  padding: 12,
+                  borderRadius: 50,
+                  alignSelf: "flex-end", // đẩy về bên phải (tuỳ bạn)
+                  marginBottom: 13,
+                  marginLeft: 10,
+                }}
+                onPress={handleSubmit}
+              >
+                <FontAwesome name="paper-plane" size={22} color="#fff" />
+              </TouchableOpacity>
+            </View>
+
+            {/* --- Danh sách ảnh + nút thêm ảnh --- */}
+            <View style={styles.imageRow}>
+              {reviewForm.images.map((uri, i) => (
+                <Image key={i} source={{ uri }} style={styles.imagePreview} />
+              ))}
+              <TouchableOpacity
+                style={styles.addImageButton}
+                onPress={handlePickImages}
+              >
+                <FontAwesome name="camera" size={20} color="#4facfe" />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {loading && (
+            <View style={styles.loadingOverlay}>
+              <ActivityIndicator size="large" color="#4facfe" />
+            </View>
+          )}
+        </SafeAreaView>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -372,18 +460,130 @@ export default ReviewDetailScreen;
 // === STYLES ===
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#F5F5F5" },
-  fieldImage: { width: "100%", height: 200, borderRadius: 10, marginTop: 10 },
+  fieldImage: { width: "100%", height: 200 },
   fieldInfo: { marginTop: 10, marginBottom: 10 },
-  fieldName: { fontSize: 20, fontWeight: "bold" },
-  fieldAddress: { fontSize: 14, color: "#777", marginTop: 4 },
+  fieldName: { fontSize: 20, fontWeight: "bold", color: "#F5F5F5" },
+  overlayText: {
+    position: "absolute",
+    bottom: 18, // đẩy chữ xuống gần đáy ảnh
+    left: 10,
+    right: 10,
+    backgroundColor: "transparent", // nền mờ cho dễ đọc
+    padding: 8,
+    borderRadius: 8,
+  },
+  fieldAddress: { fontSize: 14, color: "#4facfe" },
   userRow: { flexDirection: "row", alignItems: "center" },
-  avatar: { width: 45, height: 45, borderRadius: 25, marginRight: 10 },
+  placeCardParent: {
+    backgroundColor: "#FFF",
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    flexDirection: "row",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 6,
+    borderWidth: 1,
+    borderColor: "#F0F0F0",
+  },
+  placeCardContainer: {
+    flexDirection: "column",
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    marginHorizontal: 4,
+    paddingBottom: 2,
+    paddingTop: 5,
+    paddingLeft: 5,
+    paddingRight: 5,
+    marginTop: -28,
+  },
+  placeCardDescription: {
+    flexDirection: "column",
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    marginHorizontal: 4,
+    paddingBottom: 3,
+    paddingTop: 5,
+    paddingLeft: 5,
+    paddingRight: 5,
+    marginTop: 5,
+  },
+  titleDescription: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 4,
+    color: "#222",
+  },
+  textDescription: {
+    fontSize: 14,
+    color: "#222",
+    marginTop: 2,
+  },
+  rowContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    backgroundColor: "#fff",
+  },
+  placeCard: {
+    backgroundColor: "#f2f2f2",
+    borderRadius: 10,
+    padding: 10,
+    margin: 5,
+  },
+  leftCard: {
+    flex: 3, // 30%
+  },
+  rightCard: {
+    flex: 7, // 70%
+  },
+  innerRow: {
+    flexDirection: "row",
+    width: "100%",
+  },
+  innerLeft: {
+    flex: 7, // 70% trong phần phải
+    justifyContent: "center",
+  },
+  divider: {
+    width: 1,
+    backgroundColor: "#ccc",
+    marginHorizontal: 8,
+  },
+  innerRight: {
+    flex: 3, // 30% trong phần phải
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  planDetailIcon: {
+    // marginRight: 1,
+    alignContent: "center",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  rowContainerRightCard: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    marginTop: -10,
+    paddingHorizontal: -15,
+  },
+  avatar: { width: 25, height: 25, borderRadius: 15 },
   userName: { fontWeight: "bold", fontSize: 16 },
   reviewDate: { fontSize: 13, color: "#777" },
-  ratingRow: { flexDirection: "row", alignItems: "center" },
-  ratingText: { marginLeft: 6, fontSize: 15, color: "#444" },
   comment: { fontSize: 15, lineHeight: 22, marginVertical: 2 },
-  reviewImage: { width: 120, height: 120, borderRadius: 10, marginRight: 8 },
+  reviewImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 10,
+    marginRight: 5,
+    marginBottom: 2,
+  },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -413,30 +613,31 @@ const styles = StyleSheet.create({
   placeholder: { width: 36 },
   content: {
     flex: 1,
-    paddingHorizontal: 20,
+    // paddingHorizontal: 20,
   },
-  card: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    paddingHorizontal: 20,
-    paddingVertical: 26,
-    marginTop: 10,
-    shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 3,
-  },
+  // card: {
+  //   backgroundColor: "#fff",
+  //   borderRadius: 12,
+  //   paddingHorizontal: 20,
+  //   paddingVertical: 26,
+  //   marginTop: 10,
+  //   shadowColor: "#000",
+  //   shadowOpacity: 0.08,
+  //   shadowRadius: 6,
+  //   shadowOffset: { width: 0, height: 3 },
+  //   elevation: 3,
+  // },
   userNameIndent: {
     fontWeight: "700",
     fontSize: 16,
-    marginTop: 10,
+    marginRight: 5,
+    marginLeft: 3,
+    // marginTop: 10,
   },
   commentRow: {
     flexDirection: "row",
     alignItems: "flex-start",
-    marginBottom: 12,
-    marginTop: -15,
+    marginTop: -20,
   },
   commentInput: {
     flex: 1,
@@ -454,7 +655,7 @@ const styles = StyleSheet.create({
   ratingRowCenter: {
     flexDirection: "row",
     justifyContent: "flex-start",
-    marginBottom: 10,
+    // marginBottom: 10,
   },
   imageRow: {
     flexDirection: "row",
@@ -520,5 +721,76 @@ const styles = StyleSheet.create({
   commentInputContainer: {
     flexDirection: "row",
     alignItems: "center",
+    marginBottom: -10,
+  },
+  tagsContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    marginTop: 2,
+    minHeight: 30,
+  },
+  tag: {
+    backgroundColor: "#E9ECEF",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginRight: 8,
+  },
+  tagText: {
+    fontSize: 12,
+    color: "#6C757D",
+  },
+  card: {
+    width: 300,
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 14,
+    marginRight: 12,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  cardReview: {
+    width: "100%",
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 26,
+    marginTop: 10,
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 3,
+  },
+  commentText: {
+    fontSize: 14,
+    color: "#333",
+    marginBottom: 2,
+    lineHeight: 20,
+    marginTop: -12,
+  },
+  footer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 5,
+  },
+  nameText: {
+    fontSize: 13,
+    fontWeight: "500",
+    color: "#555",
+    marginLeft: -190,
+  },
+  ratingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  ratingText: {
+    marginLeft: 4,
+    fontSize: 13,
+    color: "#555",
   },
 });

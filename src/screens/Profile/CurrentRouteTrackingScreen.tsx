@@ -14,6 +14,7 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import { TravelPlan } from "../../types/plan.types";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { FontAwesome } from "@expo/vector-icons";
+import * as Location from "expo-location";
 
 const NOMINATIM_URL = "https://nominatim.openstreetmap.org";
 
@@ -30,6 +31,27 @@ const CurrentRouteTrackingScreen = () => {
   >([]);
   const [loading, setLoading] = useState(true);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [location, setLocation] =
+    useState<Location.LocationObjectCoords | null>(null);
+
+  const getCurrentLocation = async () => {
+    try {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        console.warn("Permission denied");
+        return;
+      }
+
+      let loc = await Location.getCurrentPositionAsync({});
+      setLocation(loc.coords);
+    } catch (err) {
+      console.error("Error getting location", err);
+    }
+  };
+
+  useEffect(() => {
+    getCurrentLocation();
+  }, []);
 
   // 🔹 Gọi Nominatim để chuyển address -> lat/lon
   const fetchCoordinates = async (address: string) => {
@@ -168,6 +190,48 @@ const CurrentRouteTrackingScreen = () => {
             strokeWidth={4}
             strokeColor="#007bff"
           />
+          {location && locations.length > 0 && (
+            <Polyline
+              coordinates={[
+                {
+                  latitude: location.latitude,
+                  longitude: location.longitude,
+                },
+                {
+                  latitude: locations[0].lat,
+                  longitude: locations[0].lon,
+                },
+              ]}
+              strokeWidth={4}
+              strokeColor="#00C853" // màu xanh lá cây cho rõ
+              lineDashPattern={[5, 5]} // đường gạch chấm để phân biệt
+            />
+          )}
+
+          {/* Marker người hiện tại */}
+          {location ? (
+            <Marker
+              coordinate={{
+                latitude: location.latitude,
+                longitude: location.longitude,
+              }}
+              title="Vị trí của bạn"
+              description="Đây là nơi bạn đang đứng"
+            >
+              <View
+                style={[
+                  styles.avatar,
+                  {
+                    justifyContent: "center",
+                    alignItems: "center",
+                    backgroundColor: "#4facfe",
+                  },
+                ]}
+              >
+                <FontAwesome name="user" size={20} color="#F0F0F0" />
+              </View>
+            </Marker>
+          ) : null}
         </MapView>
 
         {/* 🔹 Thẻ địa điểm nằm ngang */}
@@ -331,4 +395,5 @@ const styles = StyleSheet.create({
   starEmpty: {
     color: "#E9ECEF",
   },
+  avatar: { width: 30, height: 30, borderRadius: 25, marginRight: 10 },
 });

@@ -263,6 +263,10 @@ const ProfileScreen = ({ navigation }: any) => {
               <Text style={styles.userEmail}>
                 {currentUser?.email || "Chưa cập nhật"}
               </Text>
+              <View style={styles.pointsDisplay}>
+                <FontAwesome name="star" size={16} color="#FFD700" />
+                <Text style={styles.pointsDisplayText}>{balance?.point}</Text>
+              </View>
             </View>
           </View>
         </LinearGradient>

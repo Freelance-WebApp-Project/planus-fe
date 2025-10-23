@@ -44,15 +44,12 @@ const PlanDetailsScreen = () => {
     if (plan.planTitle === "Kế hoạch tiết kiệm") {
       setIsPaidNumber(5000);
       setIsPaidPoint(5);
-    } else if (plan.planTitle === "Kế hoạch tốt nghiệp") {
+    } else if (plan.planTitle === "Kế hoạch trung bình") {
       setIsPaidNumber(10000);
       setIsPaidPoint(10);
-    } else if (plan.planTitle === "Kế hoạch trung bình") {
+    } else if (plan.planTitle === "Kế hoạch đầy đủ") {
       setIsPaidNumber(15000);
       setIsPaidPoint(15);
-    } else if (plan.planTitle === "Kế hoạch đầy đủ") {
-      setIsPaidNumber(20000);
-      setIsPaidPoint(20);
     }
   }, [plan.planTitle]);
 
@@ -257,110 +254,43 @@ const PlanDetailsScreen = () => {
         )}`;
 
     return (
-      <View key={index}>
-        <View style={styles.placeContainer}>
-          <View key={item._id} style={styles.itineraryItem}>
-            <Image source={{ uri: imageUrl }} style={styles.placeImage} />
-            {index !== plan.itinerary.length - 1 && (
-              <View style={styles.verticalContainer}>
-                <View style={styles.verticalLine} />
-                <View style={styles.orderBadge}>
-                  <Text style={styles.heartIcon}>🏍️</Text>
-                  <View
-                    style={[
-                      styles.diagonalLine,
-                      { transform: [{ rotate: "-10deg" }], top: 16, left: 25 },
-                    ]}
-                  />
-
-                  {/* Đường chéo nghiêng xuống */}
-                  <View
-                    style={[
-                      styles.diagonalLine,
-                      { transform: [{ rotate: "10deg" }], top: 16, left: 25 },
-                    ]}
-                  />
-                </View>
-                <View style={styles.verticalLine} />
-              </View>
-            )}
+      <View key={index} style={styles.itineraryItemContainer}>
+        {/* Place Card */}
+        <View style={styles.placeCard}>
+          {/* Order Badge on Image */}
+          <View style={styles.orderBadge}>
+            <Text style={styles.orderText}>{item.order}</Text>
           </View>
+          <Image source={{ uri: imageUrl }} style={styles.placeImage} />
 
-          <View>
-            <View style={styles.placeContainer}>
-              <View style={styles.orderBadge}>
-                <Text style={styles.orderText}>{item.order}</Text>
-              </View>
-              <View>
-                <Text style={styles.placeName}>
-                  {place?.name || "Địa điểm"}
+          {/* Overlay Info */}
+          <View style={styles.infoOverlay}>
+            {/* Stars */}
+            <View style={styles.starsContainer}>
+              {[...Array(5)].map((_, i) => (
+                <Text
+                  key={i}
+                  style={[
+                    styles.star,
+                    i < Math.round(place?.rating || 0)
+                      ? styles.starFilled
+                      : styles.starEmpty,
+                  ]}
+                >
+                  ★
                 </Text>
-              </View>
+              ))}
             </View>
 
-            <View style={styles.placeContainer}>
-              <View style={styles.circle}>
-                <View style={styles.starsContainer}>
-                  {[...Array(5)].map((_, i) => (
-                    <Text
-                      key={i}
-                      style={[
-                        styles.star,
-                        i < Math.round(place?.rating || 0)
-                          ? styles.starFilled
-                          : styles.starEmpty,
-                      ]}
-                    >
-                      ★
-                    </Text>
-                  ))}
-                </View>
-              </View>
-
-              {/* Hình chữ nhật bo tròn gắn vào hình tròn */}
-              <View style={styles.rectangle}>
-                <View style={styles.locationInfo}>
-                  <FontAwesome name="map-marker" size={12} color="#FFF" />
-                  <Text style={styles.locationText}>
-                    {place?.location?.address || "Địa chỉ không có"}
-                  </Text>
-                </View>
-                <Text style={styles.priceText}>
-                  {(place?.priceRange || 0).toLocaleString()}VND/Người
-                </Text>
-              </View>
-            </View>
-
+            {/* Tags */}
             <View style={styles.tagsContainer}>
               {place?.tags && place.tags.length > 0
-                ? place.tags.map((tag: string, tagIndex: number) => (
+                ? place.tags.slice(0, 3).map((tag: string, tagIndex: number) => (
                     <View key={tagIndex} style={styles.tag}>
-                      <Text style={styles.tagText}>{tag}</Text>
+                      <Text style={styles.tagText} numberOfLines={1}>{tag}</Text>
                     </View>
                   ))
                 : null}
-            </View>
-
-            <View style={styles.placeDetails}>
-              {index < plan.itinerary.length - 1 &&
-                plan.itinerary[index + 1].distance && (
-                  <View style={styles.travelInfo}>
-                    <Text style={styles.travelLabel}>Khoảng cách:</Text>
-                    <Text style={styles.travelValue}>
-                      {plan.itinerary[index + 1].distance}
-                    </Text>
-                  </View>
-                )}
-
-              {index < plan.itinerary.length - 1 &&
-                plan.itinerary[index + 1].travelTime && (
-                  <View style={styles.travelTimeInfo}>
-                    <Text style={styles.travelLabel}>Thời gian di chuyển:</Text>
-                    <Text style={styles.travelValue}>
-                      {plan.itinerary[index + 1].travelTime}
-                    </Text>
-                  </View>
-                )}
             </View>
           </View>
         </View>
@@ -432,10 +362,12 @@ const PlanDetailsScreen = () => {
 
         {/* Places List */}
         <View style={styles.placesSection}>
-          <Text style={styles.sectionTitle}>Lộ trình chi tiết</Text>
-          {plan.itinerary.map((item: any, index: number) =>
-            renderPlaceItem(item, index)
-          )}
+          <Text style={styles.sectionTitle}>Lộ trình xem trước</Text>
+          <View style={styles.itineraryWrapper}>
+            {plan.itinerary.map((item: any, index: number) =>
+              renderPlaceItem(item, index)
+            )}
+          </View>
         </View>
 
         <Modal transparent visible={showModal} animationType="none">
@@ -627,151 +559,131 @@ const styles = StyleSheet.create({
     color: "#212529",
     marginBottom: 16,
   },
-  placeItem: {
-    backgroundColor: "#FFF",
-    borderRadius: 12,
-    marginBottom: 16,
-    overflow: "hidden",
+  itineraryWrapper: {
+    alignItems: 'center',
+  },
+  itineraryItemContainer: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  connectorContainer: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  verticalLine: {
+    width: 3,
+    height: 30,
+    backgroundColor: '#4facfe',
+    borderRadius: 2,
+  },
+  verticalLineBottom: {
+    width: 3,
+    height: 20,
+    backgroundColor: '#4facfe',
+    borderRadius: 2,
+  },
+  routeIconContainer: {
+    position: 'relative',
+    marginVertical: 5,
+  },
+  routeIcon: {
+    fontSize: 20,
+    textAlign: 'center',
+  },
+  diagonalLineLeft: {
+    position: 'absolute',
+    top: 5,
+    left: -15,
+    width: 15,
+    height: 2,
+    backgroundColor: '#4facfe',
+    transform: [{ rotate: '-45deg' }],
+  },
+  diagonalLineRight: {
+    position: 'absolute',
+    top: 5,
+    right: -15,
+    width: 15,
+    height: 2,
+    backgroundColor: '#4facfe',
+    transform: [{ rotate: '45deg' }],
+  },
+  placeCard: {
+    width: width * 0.85,
+    backgroundColor: '#FFF',
+    borderRadius: 20,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 4,
     },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  placeHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 16,
-    paddingBottom: 8,
+    shadowRadius: 8,
+    elevation: 5,
+    overflow: 'hidden',
+    position: 'relative',
   },
   orderBadge: {
+    position: 'absolute',
+    top: 12,
+    left: 12,
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: "#4facfe",
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 3,
+    backgroundColor: '#4facfe',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 2,
   },
   orderText: {
-    color: "#FFF",
-    fontSize: 16,
-    fontWeight: "700",
-  },
-  placeName: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#212529",
-    marginTop: 5,
+    color: '#FFF',
+    fontSize: 14,
+    fontWeight: 'bold',
   },
   placeImage: {
-    width: "60%",
-    height: 100,
-    borderRadius: 30,
-    resizeMode: "cover",
+    width: '100%',
+    height: 180,
+    resizeMode: 'cover',
   },
-  placeContainer: {
-    flexDirection: "row",
+  infoOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    padding: 15,
   },
-  placeDetails: {
-    paddingTop: 5,
-  },
-  placeDescription: {
-    fontSize: 14,
-    color: "#6C757D",
-    lineHeight: 20,
-    marginBottom: 12,
-  },
-  locationInfo: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  locationIcon: {
-    fontSize: 10,
-  },
-  locationText: {
-    fontSize: 10,
-    color: "#6C757D",
-    flex: 1,
-  },
-  ratingContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  ratingLabel: {
-    fontSize: 14,
-    color: "#6C757D",
-    marginRight: 8,
-  },
-  star: {
-    fontSize: 10,
-  },
-  starFilled: {
-    color: "#FFD700",
-  },
-  starEmpty: {
-    color: "#E9ECEF",
-  },
-  ratingValue: {
-    fontSize: 14,
-    color: "#6C757D",
-    marginLeft: 4,
-  },
-  priceInfo: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  priceLabel: {
-    fontSize: 14,
-    color: "#6C757D",
-    marginRight: 8,
-  },
-  priceValue: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#28A745",
-  },
-  travelInfo: {
-    flexDirection: "row",
-    alignItems: "center",
+  starsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
     marginBottom: 8,
   },
-  travelTimeInfo: {
-    flexDirection: "row",
-    alignItems: "center",
+  star: {
+    fontSize: 16,
+    color: '#FFD700',
+    marginHorizontal: 1,
   },
-  travelLabel: {
-    fontSize: 14,
-    color: "#6C757D",
-    marginRight: 2,
-  },
-  travelValue: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#212529",
+  starEmpty: {
+    color: 'rgba(255,255,255,0.5)',
   },
   tagsContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    marginTop: 8,
-    minHeight: 30,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
   },
   tag: {
-    backgroundColor: "#E9ECEF",
+    backgroundColor: 'rgba(255,255,255,0.2)',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
-    marginRight: 8,
-    marginBottom: 8,
+    marginHorizontal: 4,
+    marginBottom: 4,
   },
   tagText: {
-    fontSize: 12,
-    color: "#6C757D",
+    fontSize: 11,
+    color: '#FFF',
+    fontWeight: '500',
   },
   bottomBar: {
     paddingHorizontal: 20,
@@ -803,75 +715,6 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     opacity: 0.6,
-  },
-  circle: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    borderWidth: 5,
-    borderColor: "#6ec3ee",
-    backgroundColor: "#FFF", // Màu vàng cho circle
-    justifyContent: "center",
-    alignItems: "center",
-    position: "relative",
-    zIndex: 2,
-  },
-  starsContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "center",
-  },
-  rectangle: {
-    backgroundColor: "#4FC3F7", // Màu xanh dương
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginTop: 7,
-    marginLeft: -10, // Gắn vào circle bằng cách overlap
-    minWidth: 160,
-    height: 50,
-    flex: 1,
-    alignItems: "center",
-  },
-  priceText: {
-    marginTop: 2,
-    fontSize: 12,
-    fontWeight: "bold",
-    color: "white",
-    marginBottom: 2,
-  },
-  itineraryContainer: {
-    flexDirection: "column", // xếp ảnh dọc
-    alignItems: "center",
-    paddingVertical: 10,
-  },
-  itineraryItem: {
-    alignItems: "center",
-    width: "48%",
-    marginLeft: -30,
-  },
-  verticalLine: {
-    width: 4, // độ dày của gạch dọc
-    height: 40, // chiều dài nối giữa các ảnh
-    backgroundColor: "#000",
-    marginVertical: 4, // khoảng cách trên/dưới ảnh
-  },
-  verticalContainer: {
-    flexDirection: "column",
-    alignItems: "center",
-  },
-  heartIcon: {
-    fontSize: 18,
-    lineHeight: 15,
-    textAlign: "center",
-  },
-  diagonalLine: {
-    position: "absolute",
-    width: 65, // chiều dài đường
-    height: 2, // độ dày
-    backgroundColor: "#000",
-    transformOrigin: "top left", // đầu đường là điểm xoay
-    zIndex: 1,
   },
   overlay: {
     flex: 1,
@@ -989,6 +832,9 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "600",
     fontSize: 16,
+  },
+  starFilled: {
+    color: "#FFD700",
   },
 });
 
