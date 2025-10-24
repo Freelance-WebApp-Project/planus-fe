@@ -36,6 +36,7 @@ const ProfileScreen = ({ navigation }: any) => {
     email: "",
     gender: "",
     phone: "",
+    // dob: "",
     income: "",
   });
   const [isPremiumPopupVisible, setIsPremiumPopupVisible] = useState(false);
@@ -114,6 +115,7 @@ const ProfileScreen = ({ navigation }: any) => {
       gender: currentUser?.gender || "",
       phone: currentUser?.phone || "",
       income: currentUser?.income?.toString() || "",
+      // dob: currentUser?.dob || "",
     });
     setIsEditModalVisible(true);
   };
@@ -126,6 +128,7 @@ const ProfileScreen = ({ navigation }: any) => {
       gender: "",
       phone: "",
       income: "",
+      // dob: "",
     });
   };
 
@@ -147,13 +150,13 @@ const ProfileScreen = ({ navigation }: any) => {
         fullName: editData.fullName.trim(),
         email: editData.email.trim(),
         gender: editData.gender,
-        dob: currentUser?.dob || {},
+        // dob: currentUser?.dob || {},
         income: editData.income
           ? parseInt(editData.income)
           : currentUser?.income,
         favorites: currentUser?.favorites || [],
       };
-
+      // console.log("Update data:", updateData.dob);
       const response = await userService.updateProfile(updateData);
 
       if (response.success) {
@@ -440,12 +443,12 @@ const ProfileScreen = ({ navigation }: any) => {
               </Text>
             </View>
 
-            <View style={styles.infoRow}>
+            {/* <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Ngày sinh</Text>
               <Text style={styles.infoValue}>
                 {formatDate(currentUser?.dob || "")}
               </Text>
-            </View>
+            </View> */}
 
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Số điện thoại</Text>
@@ -562,6 +565,18 @@ const ProfileScreen = ({ navigation }: any) => {
                   autoCapitalize="none"
                 />
               </View>
+
+              {/* <View style={styles.inputGroup}>
+  <Text style={styles.inputLabel}>Ngày tháng năm sinh *</Text>
+  <TextInput
+    style={styles.textInput}
+    value={editData.dob}
+    onChangeText={(text) => setEditData({ ...editData, dob: text })}
+    placeholder="Nhập ngày tháng năm sinh (VD: 24/10/2000)"
+    placeholderTextColor="#A0A0A0"
+  />
+</View> */}
+
 
               {/* Gender */}
               <View style={styles.inputGroup}>
