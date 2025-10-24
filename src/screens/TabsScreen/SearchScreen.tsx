@@ -54,8 +54,8 @@ const SearchScreen = () => {
 
   // Fetch data based on params
   useEffect(() => {
-    if (params.searchQuery) {
-      search(params.searchQuery);
+    if (params.searchQuery && params.searchQuery.trim()) {
+      search(params.searchQuery.trim());
     } else if (params.filterType) {
       filterByType(params.filterType);
     } else if (params.showAllCategories) {
@@ -71,11 +71,17 @@ const SearchScreen = () => {
     params.filterType,
     params.showAllCategories,
     params.showPopularPlaces,
+    search,
+    filterByType,
+    fetchPlaces,
   ]);
 
   const handleSearch = () => {
     if (searchQuery.trim()) {
       search(searchQuery.trim());
+    } else {
+      // If search query is empty, show all places
+      fetchPlaces();
     }
   };
 
@@ -223,6 +229,8 @@ const SearchScreen = () => {
             onChangeText={setSearchQuery}
             onSubmitEditing={handleSearch}
             returnKeyType="search"
+            autoCorrect={false}
+            autoCapitalize="none"
           />
           <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
             <FontAwesome name="search" size={20} color="#4facfe" />

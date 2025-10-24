@@ -21,7 +21,12 @@ class PlaceService {
       
       if (query.page) queryParams.append('page', query.page.toString());
       if (query.limit) queryParams.append('limit', query.limit.toString());
-      if (query.search) queryParams.append('search', query.search);
+      // Prioritize 'text' parameter for search (backend uses 'text')
+      if (query.text) {
+        queryParams.append('text', query.text);
+      } else if (query.search) {
+        queryParams.append('text', query.search);
+      }
       if (query.sortBy) queryParams.append('sortBy', query.sortBy);
       if (query.sortOrder) queryParams.append('sortOrder', query.sortOrder);
       if (query.type) queryParams.append('type', query.type);

@@ -92,6 +92,7 @@ export interface QueryPlaceDto {
   city?: string;
   minRating?: number;
   priceRange?: number;
+  text?: string;
   tags?: string[];
 }
 
