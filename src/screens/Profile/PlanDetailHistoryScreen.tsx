@@ -328,7 +328,7 @@ const PlanDetailHistoryScreen = () => {
               <Text style={styles.title}>🎉 Bạn đã đến đích!</Text>
               <View style={styles.headerLogo}>
                 <Image
-                  source={require("../../../assets/logo.png")}
+                  source={require("../../../assets/banner.png")}
                   style={{
                     width: 80,
                     height: 80,

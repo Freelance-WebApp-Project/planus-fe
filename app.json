@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "planus-fe",
-    "slug": "planus-fe",
+    "name": "PlanUS",
+    "slug": "PlanUS",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/logo.jpg",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
@@ -22,14 +22,21 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.phongph137.planusfe"
+      "package": "com.phongph137.planus",
+
+      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"],
+
+      "config": {
+        "googleMobileAdsAppId": "ca-app-pub-3940256099942544~3347511713"
+      }
     },
+
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/logo.jpg"
     },
     "extra": {
       "eas": {
-        "projectId": "bfe815a8-9761-42ad-b53a-8958fb6969c0"
+        "projectId": "9cb2cb0b-c24d-4e8d-be33-284e2ccebe2a"
       }
     }
   }
