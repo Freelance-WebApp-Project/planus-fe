@@ -56,6 +56,7 @@ const ReviewDetailScreen = () => {
   const [tags, setTags] = useState<string[]>([]);
   const [imgs, setImgs] = useState<string[]>([]);
   const [description, setDescription] = useState<string>("");
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
   const getOne = async () => {
     try {
@@ -130,12 +131,15 @@ const ReviewDetailScreen = () => {
 
   const handleSubmit = async () => {
     try {
-      if (
-        reviewForm.rating === 0 &&
-        reviewForm.comment.trim() === "" &&
-        reviewForm.images.length === 0
-      ) {
-        showToast.error("⚠️ Thiếu thông tin", "Bạn chưa nhập đánh giá nào!");
+      // Kiểm tra chưa chọn sao
+      if (reviewForm.rating === 0) {
+        showToast.error("⚠️ Chưa chọn sao", "Vui lòng chọn số sao đánh giá!");
+        return;
+      }
+
+      // Kiểm tra chưa nhập comment và không có ảnh
+      if (reviewForm.comment.trim() === "" && reviewForm.images.length === 0) {
+        showToast.error("⚠️ Thiếu nội dung", "Vui lòng nhập đánh giá hoặc thêm ảnh!");
         return;
       }
 
@@ -329,14 +333,31 @@ const ReviewDetailScreen = () => {
               </View>
             </View>
 
-            <View style={styles.placeCardDescription}>
-              <Text style={styles.titleDescription}>
-                Giới thiệu cơ sở lưu trú:
-              </Text>
-              <Text style={styles.textDescription}>
+            <TouchableOpacity 
+              style={styles.placeCardDescription}
+              onPress={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+              activeOpacity={0.7}
+            >
+              <View style={styles.descriptionHeader}>
+                <Text style={styles.titleDescription}>
+                  Giới thiệu cơ sở lưu trú:
+                </Text>
+                {description && description.length > 100 && (
+                  <FontAwesome 
+                    name={isDescriptionExpanded ? "chevron-up" : "chevron-down"} 
+                    size={16} 
+                    color="#4facfe" 
+                  />
+                )}
+              </View>
+              <Text 
+                style={styles.textDescription} 
+                numberOfLines={isDescriptionExpanded ? undefined : 3} 
+                ellipsizeMode="tail"
+              >
                 {description || "Không có"}
               </Text>
-            </View>
+            </TouchableOpacity>
 
             <View style={styles.placeCardDescription}>
               <Text style={styles.titleDescription}>Đánh giá:</Text>
@@ -352,13 +373,40 @@ const ReviewDetailScreen = () => {
                 {reviews.length > 0 ? (
                   reviews.map((item) => (
                     <TouchableOpacity key={item._id} style={styles.card}>
-                      <Text style={styles.commentText}>{item.comment}</Text>
+                      {/* Header với avatar và tên */}
+                      <View style={styles.reviewHeader}>
+                        {item.userId?.avatar ? (
+                          <Image
+                            source={{ uri: item.userId.avatar }}
+                            style={styles.reviewAvatar}
+                          />
+                        ) : (
+                          <View style={styles.reviewAvatarPlaceholder}>
+                            <FontAwesome name="user" size={16} color="#4facfe" />
+                          </View>
+                        )}
+                        <View style={styles.reviewUserInfo}>
+                          <Text style={styles.reviewUserName}>
+                            {item.userId?.username || "Người dùng ẩn danh"}
+                          </Text>
+                          <View style={styles.reviewRating}>
+                            <FontAwesome name="star" size={12} color="#FFD700" />
+                            <Text style={styles.reviewRatingText}>{item.rating}/5</Text>
+                          </View>
+                        </View>
+                      </View>
+
+                      {/* Comment */}
+                      <Text style={styles.commentText} numberOfLines={4} ellipsizeMode="tail">
+                        {item.comment}
+                      </Text>
 
                       {/* Ảnh đánh giá */}
                       {item.images && item.images.length > 0 ? (
                         <ScrollView
                           horizontal
                           showsHorizontalScrollIndicator={false}
+                          style={styles.reviewImagesContainer}
                         >
                           {item.images.map((img: any) => (
                             <Image
@@ -373,45 +421,10 @@ const ReviewDetailScreen = () => {
                           ))}
                         </ScrollView>
                       ) : (
-                        <Image
-                          source={noImageIcon}
-                          style={styles.reviewImage}
-                        />
-                      )}
-
-                      {/* Footer (avatar, tên, rating) */}
-                      <View style={styles.footer}>
-                        {item.userId?.avatar ? (
-                          <Image
-                            source={{ uri: item.userId.avatar }}
-                            style={styles.avatar}
-                          />
-                        ) : (
-                          <View
-                            style={[
-                              styles.avatar,
-                              {
-                                justifyContent: "center",
-                                alignItems: "center",
-                                backgroundColor: "#F0F0F0",
-                              },
-                            ]}
-                          >
-                            <FontAwesome
-                              name="user"
-                              size={18}
-                              color="#4facfe"
-                            />
-                          </View>
-                        )}
-                        <Text style={styles.nameText}>
-                          {item.userId?.username || "Người dùng ẩn danh"}
-                        </Text>
-                        <View style={styles.ratingRow}>
-                          <FontAwesome name="star" size={14} color="#FFD700" />
-                          <Text style={styles.ratingText}>{item.rating}/5</Text>
+                        <View style={styles.noImageContainer}>
+                          <Image source={noImageIcon} style={styles.noImageIcon} />
                         </View>
-                      </View>
+                      )}
                     </TouchableOpacity>
                   ))
                 ) : (
@@ -454,21 +467,26 @@ const ReviewDetailScreen = () => {
 
               {/* --- Chọn số sao --- */}
               <View style={styles.ratingRowCenter}>
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <TouchableOpacity
-                    key={star}
-                    onPress={() =>
-                      setReviewForm((prev) => ({ ...prev, rating: star }))
-                    }
-                  >
-                    <FontAwesome
-                      name={star <= reviewForm.rating ? "star" : "star-o"}
-                      size={24}
-                      color="#FFD700"
-                      style={{ marginHorizontal: 4 }}
-                    />
-                  </TouchableOpacity>
-                ))}
+                <Text style={styles.ratingLabel}>
+                  {reviewForm.rating === 0 ? "Chọn sao đánh giá *" : "Đánh giá của bạn"}
+                </Text>
+                <View style={styles.starsContainer}>
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <TouchableOpacity
+                      key={star}
+                      onPress={() =>
+                        setReviewForm((prev) => ({ ...prev, rating: star }))
+                      }
+                    >
+                      <FontAwesome
+                        name={star <= reviewForm.rating ? "star" : "star-o"}
+                        size={24}
+                        color={reviewForm.rating === 0 ? "#FF6B6B" : "#FFD700"}
+                        style={{ marginHorizontal: 4 }}
+                      />
+                    </TouchableOpacity>
+                  ))}
+                </View>
               </View>
             </View>
 
@@ -573,13 +591,18 @@ const styles = StyleSheet.create({
   placeCardDescription: {
     flexDirection: "column",
     backgroundColor: "#fff",
-    borderRadius: 10,
-    marginHorizontal: 4,
-    paddingBottom: 3,
-    paddingTop: 5,
-    paddingLeft: 5,
-    paddingRight: 5,
-    marginTop: 5,
+    borderRadius: 12,
+    marginHorizontal: 16,
+    padding: 16,
+    marginTop: 8,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   titleDescription: {
     fontSize: 16,
@@ -587,10 +610,17 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     color: "#222",
   },
+  descriptionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 4,
+  },
   textDescription: {
     fontSize: 14,
-    color: "#222",
-    marginTop: 2,
+    color: "#666",
+    lineHeight: 20,
+    marginTop: 8,
   },
   rowContainer: {
     flexDirection: "row",
@@ -698,7 +728,7 @@ const styles = StyleSheet.create({
   userNameIndent: {
     fontWeight: "700",
     fontSize: 16,
-    marginRight: 5,
+    marginRight: 15,
     marginLeft: 3,
     // marginTop: 10,
   },
@@ -721,9 +751,19 @@ const styles = StyleSheet.create({
     color: "#333",
   },
   ratingRowCenter: {
+    flexDirection: "column",
+    alignItems: "flex-start",
+    marginBottom: 8,
+  },
+  ratingLabel: {
+    fontSize: 12,
+    color: "#666",
+    marginBottom: 4,
+    fontWeight: "500",
+  },
+  starsContainer: {
     flexDirection: "row",
-    justifyContent: "flex-start",
-    // marginBottom: 10,
+    alignItems: "center",
   },
   imageRow: {
     flexDirection: "row",
@@ -809,10 +849,10 @@ const styles = StyleSheet.create({
     color: "#6C757D",
   },
   card: {
-    width: 300,
+    width: 320,
     backgroundColor: "#fff",
     borderRadius: 16,
-    padding: 14,
+    padding: 16,
     marginRight: 12,
     shadowColor: "#000",
     shadowOpacity: 0.1,
@@ -836,9 +876,9 @@ const styles = StyleSheet.create({
   commentText: {
     fontSize: 14,
     color: "#333",
-    marginBottom: 2,
+    marginBottom: 12,
     lineHeight: 20,
-    marginTop: -12,
+    marginTop: 8,
   },
   footer: {
     flexDirection: "row",
@@ -869,5 +909,57 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 20,
     zIndex: 10,
+  },
+  // New styles for improved review layout
+  reviewHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  reviewAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    marginRight: 12,
+  },
+  reviewAvatarPlaceholder: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "#F0F0F0",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  reviewUserInfo: {
+    flex: 1,
+  },
+  reviewUserName: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 2,
+  },
+  reviewRating: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  reviewRatingText: {
+    fontSize: 12,
+    color: "#666",
+    marginLeft: 4,
+  },
+  reviewImagesContainer: {
+    marginTop: 8,
+  },
+  noImageContainer: {
+    alignItems: "center",
+    marginTop: 8,
+    paddingVertical: 16,
+  },
+  noImageIcon: {
+    width: 40,
+    height: 40,
+    opacity: 0.3,
   },
 });
