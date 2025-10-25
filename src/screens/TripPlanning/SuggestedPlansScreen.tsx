@@ -14,7 +14,7 @@ import { FontAwesome } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import * as Location from "expo-location";
-import MapView, { Marker, Polyline } from "react-native-maps";
+import { WebView } from "react-native-webview";
 import {
   GeneratePlanRequest,
   GeneratePlanResponse,
@@ -201,16 +201,15 @@ const SuggestedPlansScreen = () => {
             </Text>
             <Text style={styles.planCost}>
               Thanh toán:{" "}
-              {(item.planTitle === "Kế hoạch tiết kiệm"
+              {(item.totalCost < 500000
                 ? 5000
-                : item.planTitle === "Kế hoạch tốt nghiệp"
+                : item.totalCost < 1000000
                 ? 10000
-                : item.planTitle === "Kế hoạch trung bình"
+                : item.totalCost < 2000000
                 ? 15000
-                : item.planTitle === "Kế hoạch đầy đủ"
-                ? 20000
-                : 0
-              ).toLocaleString()} đ
+                : 20000
+              ).toLocaleString()}{" "}
+              đ
             </Text>
           </View>
           <Text style={styles.planDistance}>
@@ -335,45 +334,58 @@ const SuggestedPlansScreen = () => {
       </View>
 
       {/* Header with Background Image */}
+      {/* Header with Background Image (Map Section) */}
       <View style={styles.headerContainer}>
-        <MapView
+        <WebView
           style={styles.map}
-          initialRegion={{
-            latitude: 21.0285, // Hà Nội
-            longitude: 105.8542,
-            latitudeDelta: 0.05,
-            longitudeDelta: 0.05,
+          originWhitelist={["*"]}
+          source={{
+            html: `
+              <!DOCTYPE html>
+              <html>
+              <head>
+                <meta name="viewport" content="initial-scale=1.0, width=device-width" />
+                <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+                <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+                <style>
+                  #map { height: 100vh; width: 100%; margin: 0; padding: 0; }
+                  .custom-user-icon { width: 14px; height: 14px; background: red; border-radius: 50%; border: 2px solid white; }
+                  .custom-dest-icon { width: 14px; height: 14px; background: blue; border-radius: 50%; border: 2px solid white; }
+                </style>
+              </head>
+              <body>
+                <div id="map"></div>
+                <script>
+                  const map = L.map('map').setView([${start.lat}, ${start.lng}], 13);
+                  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; OpenStreetMap contributors'
+                  }).addTo(map);
+
+                  const startMarker = L.marker([${start.lat}, ${start.lng}], {
+                    icon: L.divIcon({ className: "custom-user-icon" })
+                  }).addTo(map).bindPopup("Bạn đang ở đây");
+
+                  const endMarker = L.marker([${end.lat}, ${end.lng}], {
+                    icon: L.divIcon({ className: "custom-dest-icon" })
+                  }).addTo(map).bindPopup("Điểm đến");
+
+                  // Gọi API OSRM để vẽ tuyến đường
+                  fetch("https://router.project-osrm.org/route/v1/driving/${start.lng},${start.lat};${end.lng},${end.lat}?overview=full&geometries=geojson")
+                    .then(res => res.json())
+                    .then(data => {
+                      if (data.routes && data.routes.length > 0) {
+                        const coords = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
+                        L.polyline(coords, { color: "blue", weight: 5 }).addTo(map);
+                        map.fitBounds(L.polyline(coords).getBounds());
+                      }
+                    })
+                    .catch(err => console.error("Error fetching route:", err));
+                </script>
+              </body>
+              </html>
+            `,
           }}
-        >
-          {/* Marker vị trí hiện tại */}
-          <Marker
-            coordinate={{
-              latitude: start.lat,
-              longitude: start.lng,
-            }}
-            title="Bạn đang ở đây"
-            pinColor="red"
-          />
-
-          {/* Marker điểm đến */}
-          <Marker
-            coordinate={{
-              latitude: end.lat,
-              longitude: end.lng,
-            }}
-            title="Điểm đến"
-            pinColor="blue"
-          />
-
-          {/* Vẽ đường đi */}
-          {routeCoords.length > 0 && (
-            <Polyline
-              coordinates={routeCoords}
-              strokeWidth={5}
-              strokeColor="blue"
-            />
-          )}
-        </MapView>
+        />
       </View>
 
       {/* Travel Info Card */}

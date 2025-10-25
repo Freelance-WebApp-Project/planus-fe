@@ -29,6 +29,7 @@ const FavoritesScreen = () => {
       const response = await planService.getMe({ isFavorite: true });
       if (response.success && response.data) {
         setPlans(response.data.records);
+        console.log('Plans:', response.data.records);
       }
     } catch (error) {
       console.error('Error fetching plans:', error);
@@ -99,7 +100,7 @@ const FavoritesScreen = () => {
             <Text style={styles.planDuration}>⏰ {item.totalDuration}</Text>
             <Text style={styles.planCost}>
               <FontAwesome name="money" size={20} color="#green"/>{' '}
-               {item.estimatedCost.toLocaleString()}đ</Text>
+               {item.estimatedCost.toLocaleString()}</Text>
           </View>
           <Text style={styles.planPlacesCount}>
             📍 {item.itinerary.length} địa điểm

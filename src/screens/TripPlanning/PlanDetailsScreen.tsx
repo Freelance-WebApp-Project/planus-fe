@@ -30,10 +30,12 @@ const { width } = Dimensions.get("window");
 const PlanDetailsScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const { plan, planId } = route.params as {
+  const { plan, planId, index } = route.params as {
     plan: any; // Sử dụng any để tương thích với dữ liệu API mới
     planId?: string;
+    index: number;
   };
+
   const { user, logout, isLoading, setUser } = useAuth();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [processingPayment, setProcessingPayment] = useState(false);
@@ -46,17 +48,22 @@ const PlanDetailsScreen = () => {
   const slideAnim = useState(new Animated.Value(300))[0];
 
   useEffect(() => {
-    if (plan.planTitle === "Kế hoạch tiết kiệm") {
+    if (!plan) return;
+
+    if (plan.totalCost < 500000) {
       setIsPaidNumber(5000);
       setIsPaidPoint(5);
-    } else if (plan.planTitle === "Kế hoạch trung bình") {
+    } else if (plan.totalCost < 1000000) {
       setIsPaidNumber(10000);
       setIsPaidPoint(10);
-    } else if (plan.planTitle === "Kế hoạch đầy đủ") {
+    } else if (plan.totalCost < 2000000) {
       setIsPaidNumber(15000);
       setIsPaidPoint(15);
+    } else {
+      setIsPaidNumber(20000);
+      setIsPaidPoint(20);
     }
-  }, [plan.planTitle]);
+  }, [plan.totalCost]);
 
   const fetchCurrentUser = async () => {
     try {
@@ -180,7 +187,7 @@ const PlanDetailsScreen = () => {
       }
 
       // Điều hướng sang màn chi tiết
-      (navigation as any).navigate("PlanDetailHistoryScreen", {
+      (navigation as any).push("PlanDetailHistoryScreen", {
         plan: {
           planTitle: newPlan.planTitle,
           totalDuration: newPlan.totalDuration,
@@ -481,7 +488,7 @@ const PlanDetailsScreen = () => {
           ]}
           onPress={() => {
             if (isPremiumUser) {
-              fetchAndNavigateToPaidPlan(); // Gọi hàm cho Premium
+              processPayment("wallet", 0); // Gọi hàm cho Premium
             } else {
               handleSelectPaymentMethod(); // Gọi hàm bình thường
             }

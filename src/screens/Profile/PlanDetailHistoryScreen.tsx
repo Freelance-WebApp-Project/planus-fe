@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -15,7 +15,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { FontAwesome } from "@expo/vector-icons";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { RouteProp, useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import { TravelPlan, CreatePlanDto } from "../../types/plan.types";
 import { API_CONFIG } from "../../constants/api.constants";
 import { planService } from "../../services/plan.service";
@@ -24,11 +24,27 @@ const { width } = Dimensions.get("window");
 
 const PlanDetailHistoryScreen = () => {
   const navigation = useNavigation();
-  const route = useRoute();
-  const { plan, planId } = route.params as {
-    plan: TravelPlan;
-    planId?: string;
-  };
+ type PlanDetailRouteProp = RouteProp<
+    { PlanDetailHistoryScreen: { plan: TravelPlan; planId?: string } },
+    "PlanDetailHistoryScreen"
+  >;
+
+  const route = useRoute<PlanDetailRouteProp>();
+
+  // 🧠 Tạo state để lưu plan hiện tại
+  const [plan, setPlan] = useState<TravelPlan>(route.params.plan);
+  const planId = route.params?.planId;
+  console.log("planId:", planId);
+
+  // ✅ Dùng useFocusEffect để cập nhật lại plan mỗi khi vào màn này
+  useFocusEffect(
+    React.useCallback(() => {
+      if (route.params?.plan) {
+        console.log("🔄 Plan updated:", route.params.plan.planTitle);
+        setPlan(route.params.plan);
+      }
+    }, [route.params?.plan])
+  );
 
   const [visitedPlaces, setVisitedPlaces] = useState<Set<number>>(new Set());
   const [showModal, setShowModal] = useState(false);

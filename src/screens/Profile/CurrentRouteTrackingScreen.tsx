@@ -9,7 +9,7 @@ import {
   Image,
   TouchableOpacity,
 } from "react-native";
-import MapView, { Marker, Polyline } from "react-native-maps";
+import { WebView } from "react-native-webview";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { TravelPlan } from "../../types/plan.types";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -25,7 +25,9 @@ const CurrentRouteTrackingScreen = () => {
     plan: TravelPlan;
     visitedPlaces?: number[];
   };
-  const mapRef = useRef<MapView>(null);
+  const mapRef = useRef(null);
+  const webViewRef = useRef<WebView>(null);
+
   const [locations, setLocations] = useState<
     { name: string; address: string; lat: number; lon: number }[]
   >([]);
@@ -33,6 +35,7 @@ const CurrentRouteTrackingScreen = () => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [location, setLocation] =
     useState<Location.LocationObjectCoords | null>(null);
+  const [mapReady, setMapReady] = useState(false);
 
   const getCurrentLocation = async () => {
     try {
@@ -52,6 +55,34 @@ const CurrentRouteTrackingScreen = () => {
   useEffect(() => {
     getCurrentLocation();
   }, []);
+
+  useEffect(() => {
+    if (location && mapReady && webViewRef.current) {
+      console.log("📡 Injecting user marker & connecting to route...");
+      
+      const js = `
+      // Xoá marker cũ (nếu có)
+      if (window.userMarker) map.removeLayer(window.userMarker);
+
+      // Vẽ marker vị trí hiện tại
+      window.userMarker = L.circleMarker(
+        [${location.latitude}, ${location.longitude}],
+        { radius: 7, color: '#4facfe', fillColor: '#4facfe', fillOpacity: 0.9 }
+      ).addTo(map).bindPopup("📍 Bạn đang ở đây");
+
+      // Nếu có line hành trình, nối từ vị trí hiện tại -> điểm đầu tiên
+      if (window.line && window.line.length > 0) {
+        const firstPoint = window.line[0];
+        const extendedLine = [[${location.latitude}, ${location.longitude}], ...window.line];
+        L.polyline(extendedLine, { color: '#4facfe', weight: 4, dashArray: '6,6' }).addTo(map);
+      }
+
+      map.flyTo([${location.latitude}, ${location.longitude}], 14);
+      true;
+    `;
+      webViewRef.current.injectJavaScript(js);
+    }
+  }, [location, mapReady]);
 
   // 🔹 Gọi Nominatim để chuyển address -> lat/lon
   const fetchCoordinates = async (address: string) => {
@@ -111,20 +142,16 @@ const CurrentRouteTrackingScreen = () => {
   }, []);
 
   // 🔹 Zoom vào địa điểm đang chọn
+
   useEffect(() => {
-    if (locations.length > 0 && mapRef.current) {
+    if (locations.length > 0 && webViewRef.current) {
       const loc = locations[selectedIndex];
-      mapRef.current.animateToRegion(
-        {
-          latitude: loc.lat,
-          longitude: loc.lon,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
-        },
-        800
-      );
+      webViewRef.current.injectJavaScript(`
+      map.flyTo([${loc.lat}, ${loc.lon}], 14);
+      true;
+    `);
     }
-  }, [selectedIndex, locations]);
+  }, [selectedIndex]);
 
   if (loading) {
     return (
@@ -165,74 +192,74 @@ const CurrentRouteTrackingScreen = () => {
       </View>
 
       <View style={styles.container}>
-        <MapView
-          ref={mapRef}
-          style={StyleSheet.absoluteFillObject}
-          region={region}
-        >
-          {locations.map((loc, i) => (
-            <Marker
-              key={i}
-              coordinate={{ latitude: loc.lat, longitude: loc.lon }}
-              title={`${i + 1}. ${loc.name}`}
-              description={loc.address}
-              pinColor={
-                i === 0 ? "green" : i === locations.length - 1 ? "red" : "blue"
+        <View style={StyleSheet.absoluteFillObject}>
+          <WebView
+            ref={webViewRef}
+            onMessage={(event) => {
+              console.log("📬 WebView message:", event.nativeEvent.data);
+              if (event.nativeEvent.data === "MAP_READY") {
+                setMapReady(true);
               }
-            />
-          ))}
+            }}
+            style={StyleSheet.absoluteFillObject}
+            originWhitelist={["*"]}
+            source={{
+              html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+          <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+          <style>
+            html, body, #map { height: 100%; margin: 0; padding: 0; }
+          </style>
+        </head>
+        <body>
+          <div id="map"></div>
+          <script>
+            const start = [${locations[0].lat}, ${locations[0].lon}];
+            const map = L.map('map').setView(start, 13);
 
-          <Polyline
-            coordinates={locations.map((l) => ({
-              latitude: l.lat,
-              longitude: l.lon,
-            }))}
-            strokeWidth={4}
-            strokeColor="#007bff"
+            // OpenStreetMap tiles
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+              maxZoom: 19,
+              attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+
+            // Vẽ markers
+            const locs = ${JSON.stringify(locations)};
+            locs.forEach((l, i) => {
+              const color = i === 0 ? "green" : i === locs.length - 1 ? "red" : "blue";
+              L.marker([l.lat, l.lon]).addTo(map)
+                .bindPopup((i+1) + ". " + l.name);
+            });
+
+            // Vẽ polyline hành trình
+            window.line = locs.map(p => [p.lat, p.lon]); // 👈 gắn vào window
+L.polyline(window.line, { color: '#007bff', weight: 4 }).addTo(map);
+window.ReactNativeWebView.postMessage("MAP_READY");
+
+            // Vẽ vị trí hiện tại (nếu có)
+            ${
+              location
+                ? `
+              const userMarker = L.circleMarker(
+                [${location.latitude}, ${location.longitude}],
+                { radius: 7, color: '#4facfe', fillColor: '#4facfe', fillOpacity: 0.9 }
+              ).addTo(map).bindPopup("Bạn đang ở đây");
+            `
+                : ""
+            }
+
+            map.fitBounds(line);
+          </script>
+        </body>
+        </html>
+      `,
+            }}
           />
-          {location && locations.length > 0 && (
-            <Polyline
-              coordinates={[
-                {
-                  latitude: location.latitude,
-                  longitude: location.longitude,
-                },
-                {
-                  latitude: locations[0].lat,
-                  longitude: locations[0].lon,
-                },
-              ]}
-              strokeWidth={4}
-              strokeColor="#00C853" // màu xanh lá cây cho rõ
-              lineDashPattern={[5, 5]} // đường gạch chấm để phân biệt
-            />
-          )}
-
-          {/* Marker người hiện tại */}
-          {location ? (
-            <Marker
-              coordinate={{
-                latitude: location.latitude,
-                longitude: location.longitude,
-              }}
-              title="Vị trí của bạn"
-              description="Đây là nơi bạn đang đứng"
-            >
-              <View
-                style={[
-                  styles.avatar,
-                  {
-                    justifyContent: "center",
-                    alignItems: "center",
-                    backgroundColor: "#4facfe",
-                  },
-                ]}
-              >
-                <FontAwesome name="user" size={20} color="#F0F0F0" />
-              </View>
-            </Marker>
-          ) : null}
-        </MapView>
+        </View>
 
         {/* 🔹 Thẻ địa điểm nằm ngang */}
         <View style={styles.infoBox}>

@@ -23,20 +23,20 @@
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.phongph137.planus",
-
-      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"],
-
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ],
       "config": {
         "googleMobileAdsAppId": "ca-app-pub-3940256099942544~3347511713"
       }
     },
-
     "web": {
       "favicon": "./assets/logo.jpg"
     },
     "extra": {
       "eas": {
-        "projectId": "9cb2cb0b-c24d-4e8d-be33-284e2ccebe2a"
+        "projectId": "619e80e9-c329-44bb-a273-90275265739c"
       }
     }
   }

@@ -15,7 +15,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import * as Location from "expo-location";
-import MapView, { Marker, Polyline } from "react-native-maps";
+import { WebView } from "react-native-webview";
 import { API_CONFIG } from "../../constants/api.constants";
 
 const { width } = Dimensions.get("window");
@@ -92,7 +92,7 @@ const SelectDestinationScreen = () => {
   const [selectedDestination, setSelectedDestination] =
     useState<CityOption | null>(cities.find((c) => c.id === "hanoi") || null);
 
-  // Hàm gọi API
+  // Hàm gọi API tìm địa điểm
   const searchLocation = async (query: string) => {
     try {
       if (!query.trim()) return [];
@@ -102,7 +102,7 @@ const SelectDestinationScreen = () => {
 
       const response = await fetch(url, {
         headers: {
-          "User-Agent": "MyApp/1.0 (myemail@example.com)", // BẮT BUỘC với Nominatim
+          "User-Agent": "MyApp/1.0 (myemail@example.com)",
           Accept: "application/json",
         },
       });
@@ -124,7 +124,6 @@ const SelectDestinationScreen = () => {
     }
   };
 
-  // Hàm xử lý khi bấm nút Search
   const handleSearch = async () => {
     if (!query.trim()) return;
     const results = await searchLocation(query);
@@ -154,13 +153,11 @@ const SelectDestinationScreen = () => {
 
       const response = await fetch(url, {
         headers: {
-          "User-Agent": "MyApp/1.0 (myemail@example.com)", // bắt buộc
+          "User-Agent": "MyApp/1.0 (myemail@example.com)",
         },
       });
 
       if (!response.ok) {
-        // const text = await response.text();
-        // console.error("Nominatim error:", text);
         alert("Hệ thống gặp sự cố khi lấy địa chỉ từ tọa độ, vui lòng thử lại sau");
         return;
       }
@@ -177,49 +174,12 @@ const SelectDestinationScreen = () => {
     }
   };
 
-  const getRoute = async (
-    start: { lat: number; lng: number },
-    end: { lat: number; lng: number }
-  ) => {
-    try {
-      const url = `${API_CONFIG.OSRM_URL}/route/v1/driving/${start.lng},${start.lat};${end.lng},${end.lat}?overview=full&geometries=geojson`;
-      console.log("Fetching:", url);
-
-      const response = await fetch(url);
-      const data = await response.json();
-
-      if (data.routes && data.routes.length > 0) {
-        const coords = data.routes[0].geometry.coordinates.map(
-          (c: number[]) => ({
-            latitude: c[1],
-            longitude: c[0],
-          })
-        );
-
-        console.log("Route points:", coords.length);
-        setRouteCoords(coords);
-      } else {
-        console.warn("No route found in OSRM response:", data);
-      }
-    } catch (error) {
-      console.error("Error fetching route:", error);
-    }
-  };
-
-  // useEffect gọi lấy tọa độ
   useEffect(() => {
     getCurrentLocation();
   }, []);
 
-  // useEffect gọi reverse geocode khi đã có tọa độ
   useEffect(() => {
-    if (location) {
-      getAddressFromCoords(location);
-      getRoute(
-        { lat: location.latitude, lng: location.longitude },
-        destination
-      );
-    }
+    if (location) getAddressFromCoords(location);
   }, [location]);
 
   if (!location) {
@@ -268,9 +228,20 @@ const SelectDestinationScreen = () => {
     });
   };
 
+  // 🔄 Dùng OpenStreetMap thay vì MapView
+  const mapLat = selectedPlace
+    ? selectedPlace.lat
+    : location.latitude;
+  const mapLon = selectedPlace
+    ? selectedPlace.lon
+    : location.longitude;
+
+  const mapUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${
+    mapLon - 0.01
+  },${mapLat - 0.01},${mapLon + 0.01},${mapLat + 0.01}&layer=mapnik&marker=${mapLat},${mapLon}`;
+
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Chọn địa điểm</Text>
       </View>
@@ -280,54 +251,15 @@ const SelectDestinationScreen = () => {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <ScrollView showsVerticalScrollIndicator={false}>
-          {/* Banner */}
-          <MapView
+          {/* 🗺️ Bản đồ OpenStreetMap */}
+          <WebView
+            source={{ uri: mapUrl }}
             style={styles.map}
-            region={
-              selectedPlace
-                ? {
-                    latitude: selectedPlace.lat,
-                    longitude: selectedPlace.lon,
-                    latitudeDelta: 0.01,
-                    longitudeDelta: 0.01,
-                  }
-                : location
-                ? {
-                    latitude: location.latitude,
-                    longitude: location.longitude,
-                    latitudeDelta: 0.01,
-                    longitudeDelta: 0.01,
-                  }
-                : undefined
-            }
-            showsUserLocation={true}
-          >
-            {selectedPlace ? (
-              <Marker
-                coordinate={{
-                  latitude: selectedPlace.lat,
-                  longitude: selectedPlace.lon,
-                }}
-                title={selectedPlace.name}
-                pinColor="blue"
-              />
-            ) : location ? (
-              <Marker
-                coordinate={{
-                  latitude: location.latitude,
-                  longitude: location.longitude,
-                }}
-                title="Vị trí của bạn"
-                description="Đây là nơi bạn đang đứng"
-                pinColor="red"
-              />
-            ) : null}
-          </MapView>
+          />
 
           <Text style={styles.chooseDestinationTitle}>Địa điểm của bạn</Text>
 
           <View style={styles.searchWrapper}>
-            {/* Ô input + nút search */}
             <View style={styles.searchContainer}>
               <TextInput
                 style={styles.searchInput}
@@ -344,7 +276,6 @@ const SelectDestinationScreen = () => {
               </TouchableOpacity>
             </View>
 
-            {/* Danh sách gợi ý */}
             {results.length > 0 && (
               <View style={styles.suggestionsContainer}>
                 {results.map((item, index) => (
@@ -366,7 +297,6 @@ const SelectDestinationScreen = () => {
             )}
           </View>
 
-          {/* Choose Destination Section */}
           <Text style={styles.chooseDestinationTitle}>Chọn điểm đến</Text>
           <View style={styles.destinationList}>
             {cities.map((city) => (
@@ -390,7 +320,6 @@ const SelectDestinationScreen = () => {
           </View>
         </ScrollView>
 
-        {/* Bottom Navigation */}
         <View style={styles.bottomNavBar}>
           <TouchableOpacity
             style={styles.navItem}
@@ -409,13 +338,8 @@ const SelectDestinationScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  keyboardContainer: {
-    flex: 1,
-  },
-  container: {
-    flex: 1,
-    backgroundColor: "#F8F8F8",
-  },
+  keyboardContainer: { flex: 1 },
+  container: { flex: 1, backgroundColor: "#F8F8F8" },
   header: {
     flexDirection: "row",
     justifyContent: "center",
@@ -426,66 +350,34 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#E9ECEF",
   },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#212529",
+  headerTitle: { fontSize: 18, fontWeight: "700", color: "#212529" },
+  map: {
+    flex: 1,
+    width: width - 32,
+    height: 200,
+    marginHorizontal: 16,
+    marginBottom: 20,
+    borderRadius: 12,
+    overflow: "hidden",
   },
-  locationInfo: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  locationIcon: {
-    fontSize: 18,
-    marginRight: 6,
-    color: "#5A9FD8",
-  },
-  locationText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#333",
-  },
-  chevronIcon: {
-    fontSize: 12,
-    color: "#666",
-    marginLeft: 8,
-  },
-  notificationButton: {
-    padding: 8,
-  },
-  bellIcon: {
-    fontSize: 20,
-    color: "#5A9FD8",
-  },
-  bannerContainer: {
-    width: "100%",
-    height: 180,
+  loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
+  // giữ nguyên toàn bộ style khác
+  searchWrapper: {
+    marginHorizontal: 16,
     marginBottom: 20,
   },
-  bannerImage: {
-    width: "100%",
-    height: "100%",
-  },
-  bannerOverlay: {
-    position: "absolute",
-    bottom: 10,
-    left: 16,
-    backgroundColor: "rgba(0,0,0,0.4)",
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-  },
-  bannerText: {
-    color: "#FFF",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  currentLocationInput: {
-    flex: 1,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    fontSize: 16,
-    color: "#333",
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: 12,
+    backgroundColor: "#fff",
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    paddingHorizontal: 1,
+    paddingVertical: 3,
   },
   currentLocationArrowButton: {
     backgroundColor: "#E0E0E0",
@@ -496,10 +388,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginRight: 8,
   },
-  currentLocationArrowText: {
-    fontSize: 20,
-    color: "#666",
-  },
+  currentLocationArrowText: { fontSize: 20, color: "#666" },
   chooseDestinationTitle: {
     fontSize: 18,
     fontWeight: "bold",
@@ -507,10 +396,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginBottom: 15,
   },
-  destinationList: {
-    marginHorizontal: 16,
-    marginBottom: 20,
-  },
+  destinationList: { marginHorizontal: 16, marginBottom: 20 },
   destinationCard: {
     flexDirection: "row",
     alignItems: "center",
@@ -531,11 +417,7 @@ const styles = StyleSheet.create({
     borderColor: "#E74C3C",
     borderWidth: 2,
   },
-  destinationPinIcon: {
-    fontSize: 18,
-    marginRight: 12,
-    color: "#E74C3C",
-  },
+  destinationPinIcon: { fontSize: 18, marginRight: 12, color: "#E74C3C" },
   destinationName: {
     flex: 1,
     fontSize: 16,
@@ -548,16 +430,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginLeft: 12,
   },
-  moreButton: {
-    alignSelf: "flex-start",
-    paddingVertical: 8,
-    paddingHorizontal: 10,
-  },
-  moreButtonText: {
-    fontSize: 16,
-    color: "#5A9FD8",
-    fontWeight: "500",
-  },
   bottomNavBar: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -568,99 +440,21 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: "#E9ECEF",
   },
-  navItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 12,
-  },
-  navIcon: {
-    fontSize: 20,
-    color: "#5A9FD8",
-    marginRight: 8,
-  },
-  navText: {
-    fontSize: 16,
-    color: "#5A9FD8",
-    fontWeight: "600",
-  },
+  navItem: { flexDirection: "row", alignItems: "center", padding: 12 },
+  navIcon: { fontSize: 20, color: "#5A9FD8", marginRight: 8 },
+  navText: { fontSize: 16, color: "#5A9FD8", fontWeight: "600" },
   nextButton: {
     backgroundColor: "#5A9FD8",
     paddingHorizontal: 32,
     paddingVertical: 12,
     borderRadius: 25,
     shadowColor: "#5A9FD8",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 4,
   },
-  nextButtonText: {
-    color: "#FFF",
-    fontSize: 16,
-    fontWeight: "700",
-  },
-  map: {
-    flex: 1,
-    width: width - 32,
-    height: 200,
-    marginHorizontal: 16,
-    marginBottom: 20,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  searchWrapper: {
-    marginHorizontal: 16,
-    marginBottom: 20,
-  },
-  searchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderRadius: 12,
-    backgroundColor: "#fff",
-    elevation: 3,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    paddingHorizontal: 1,
-    paddingVertical: 3,
-  },
-  currentLocationInputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FFF",
-    borderRadius: 12,
-    marginHorizontal: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  searchInput: {
-    flex: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 16,
-    color: "#333",
-  },
-  searchButton: {
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    backgroundColor: "#007AFF",
-    borderTopRightRadius: 8,
-    borderBottomRightRadius: 8,
-  },
-  searchButtonText: {
-    color: "#fff",
-    fontSize: 16,
-  },
+  nextButtonText: { color: "#FFF", fontSize: 16, fontWeight: "700" },
   suggestionsContainer: {
     marginTop: 4,
     borderRadius: 8,
@@ -678,10 +472,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#eee",
   },
-  suggestionText: {
-    fontSize: 15,
-    color: "#333",
-  },
+  suggestionText: { fontSize: 15, color: "#333" },
+  searchInput: { flex: 1, paddingHorizontal: 12, paddingVertical: 10, fontSize: 16, color: "#333", },
 });
 
 export default SelectDestinationScreen;
