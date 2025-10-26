@@ -15,7 +15,12 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { FontAwesome } from "@expo/vector-icons";
-import { RouteProp, useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
+import {
+  RouteProp,
+  useFocusEffect,
+  useNavigation,
+  useRoute,
+} from "@react-navigation/native";
 import { TravelPlan, CreatePlanDto } from "../../types/plan.types";
 import { API_CONFIG } from "../../constants/api.constants";
 import { planService } from "../../services/plan.service";
@@ -24,7 +29,7 @@ const { width } = Dimensions.get("window");
 
 const PlanDetailHistoryScreen = () => {
   const navigation = useNavigation();
- type PlanDetailRouteProp = RouteProp<
+  type PlanDetailRouteProp = RouteProp<
     { PlanDetailHistoryScreen: { plan: TravelPlan; planId?: string } },
     "PlanDetailHistoryScreen"
   >;
@@ -195,20 +200,33 @@ const PlanDetailHistoryScreen = () => {
 
               {/* Hình chữ nhật bo tròn gắn vào hình tròn */}
               <View style={styles.rectangle}>
-                <View style={styles.locationInfo}>
+                <View style={styles.rectangleTop}>
                   <FontAwesome
                     name="map-marker"
-                    size={10}
-                    color="#6C757D"
+                    size={12}
+                    color="#fff"
                     style={styles.locationIcon}
                   />
-                  <Text style={styles.locationText}>
+                  <Text
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                    style={styles.locationTextEnhanced}
+                  >
                     {place.location.address}
                   </Text>
                 </View>
-                <Text style={styles.priceText}>
-                  {place.priceRange.toLocaleString()}VND/Người
-                </Text>
+
+                <View style={styles.rectangleBottom}>
+                  <FontAwesome
+                    name="money"
+                    size={12}
+                    color="#fff"
+                    style={{ marginRight: 4 }}
+                  />
+                  <Text style={styles.priceTextEnhanced}>
+                    {place.priceRange.toLocaleString()} VND/người
+                  </Text>
+                </View>
               </View>
             </View>
 
@@ -236,7 +254,7 @@ const PlanDetailHistoryScreen = () => {
                     />
                     <Text style={styles.travelLabel}>Khoảng cách:</Text>
                     <Text style={styles.travelValue}>
-                      {plan.itinerary[index + 1].distance}
+                      {plan.itinerary[index + 1].distance} km
                     </Text>
                   </View>
                 )}
@@ -853,6 +871,49 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40,
     borderRadius: 10,
     marginTop: 20,
+  },
+  //   rectangle: {
+  //   backgroundColor: "#4facfe",
+  //   borderRadius: 16,
+  //   paddingVertical: 8,
+  //   paddingHorizontal: 12,
+  //   marginTop: 8,
+  //   marginLeft: -10,
+  //   minWidth: 200,
+  //   alignItems: "flex-start",
+  //   justifyContent: "center",
+  //   shadowColor: "#000",
+  //   shadowOffset: { width: 0, height: 2 },
+  //   shadowOpacity: 0.2,
+  //   shadowRadius: 3,
+  //   elevation: 3,
+  // },
+
+  rectangleTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 4,
+    width: "100%",
+  },
+
+  rectangleBottom: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  locationTextEnhanced: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "500",
+    marginLeft: 6,
+    flexShrink: 1,
+    maxWidth: 160,
+  },
+
+  priceTextEnhanced: {
+    color: "#fff",
+    fontSize: 13,
+    fontWeight: "700",
   },
 });
 
