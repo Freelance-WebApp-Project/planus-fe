@@ -4,12 +4,13 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  ScrollView,
   Image,
   Dimensions,
   TextInput,
   Modal,
   ActivityIndicator,
+  FlatList,
+  ScrollView,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -20,8 +21,27 @@ import { userService } from "../../services/user.service";
 import { useWallet } from "../../hooks/useWallet";
 import { User } from "../../types/auth.types";
 import PremiumPopup from "./PremiumPopup";
+import { UpdateProfileRequest } from "../../types/user.types";
 
 const { width } = Dimensions.get("window");
+
+const FAVORITE_OPTIONS = [
+  { key: "workshop", label: "Workshop" },
+  { key: "xem_phim", label: "Xem phim" },
+  { key: "thien_nhien", label: "Thiên nhiên" },
+  { key: "du_lich", label: "Du lịch" },
+  { key: "kham_pha", label: "Khám phá" },
+  { key: "the_thao", label: "Thể thao" },
+  { key: "sach", label: "Sách" },
+  { key: "cafe", label: "Cafe" },
+  { key: "dien_anh", label: "Điện ảnh" },
+  { key: "an_uong", label: "Ăn uống" },
+  { key: "cam_hoa", label: "Cắm hoa" },
+  { key: "dong_vat", label: "Động vật" },
+  { key: "boardgame", label: "Boardgame" },
+  { key: "am_nhac", label: "Âm nhạc" },
+  { key: "hoi_hoa", label: "Hội họa" },
+];
 
 const ProfileScreen = ({ navigation }: any) => {
   const { user, logout, isLoading, setUser } = useAuth();
@@ -29,6 +49,8 @@ const ProfileScreen = ({ navigation }: any) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoadingUser, setIsLoadingUser] = useState(false);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [isEditModalFavourite, setIsEditModalFavourite] = useState(false);
+  const [editFavorites, setEditFavorites] = useState<string[]>([]); // danh sách đang sửa (labels)
   const [userPoints, setUserPoints] = useState(1250);
   const [isUpdating, setIsUpdating] = useState(false);
   const [editData, setEditData] = useState({
@@ -42,6 +64,16 @@ const ProfileScreen = ({ navigation }: any) => {
   const [isPremiumPopupVisible, setIsPremiumPopupVisible] = useState(false);
 
   const { balance } = useWallet();
+
+  const getLabelByKey = (key: string): string => {
+    const option = FAVORITE_OPTIONS.find((opt) => opt.key === key);
+    return option ? option.label : key; // Fallback nếu không match
+  };
+
+  const getKeyByLabel = (label: string): string => {
+    const option = FAVORITE_OPTIONS.find((opt) => opt.label === label);
+    return option ? option.key : label; // Fallback
+  };
 
   // Fetch current user data from API
   const fetchCurrentUser = async () => {
@@ -72,6 +104,74 @@ const ProfileScreen = ({ navigation }: any) => {
       showToast.success("Thành công", "Đăng xuất thành công");
     } catch (error) {
       showToast.error("Lỗi", "Có lỗi xảy ra khi đăng xuất");
+    }
+  };
+
+  const openEditFavoritesModal = () => {
+    const apiFavorites = currentUser?.favorites || []; // e.g., ["xem_phim", "cafe"]
+    const uiFavorites = apiFavorites.map((favKey) => getLabelByKey(favKey)); // Map sang ["Xem phim", "Cafe"]
+    setEditFavorites(uiFavorites.filter(Boolean)); // Filter empty
+    setIsEditModalFavourite(true);
+  };
+
+  // Toggle favorite selection
+  const toggleFavorite = (label: string) => {
+    setEditFavorites((prev) =>
+      prev.includes(label)
+        ? prev.filter((fav) => fav !== label)
+        : [...prev, label]
+    );
+  };
+
+  // Lưu sở thích
+  const handleUpdateFavorites = async () => {
+    if (!editFavorites || !Array.isArray(editFavorites)) {
+      showToast.error("Lỗi", "Danh sách sở thích không hợp lệ");
+      return;
+    }
+
+    try {
+      setIsUpdating(true);
+
+      // Map label sang key lowercase cho BE
+      const apiFavorites = editFavorites
+        .map((label) => getKeyByLabel(label))
+        .filter(Boolean);
+
+      const updateData: UpdateProfileRequest = {
+        fullName: editData.fullName?.trim() || currentUser?.fullName || "",
+        email: editData.email?.trim() || currentUser?.email || "",
+        gender: editData.gender || currentUser?.gender || "",
+        income: editData.income
+          ? parseInt(editData.income)
+          : currentUser?.income,
+        favorites: apiFavorites,
+      };
+
+      const response = await userService.updateProfile(updateData);
+
+      if (response.success) {
+        // Cập nhật currentUser với key (từ API response)
+        if (currentUser) {
+          const updatedUser = {
+            ...currentUser,
+            favorites: apiFavorites, // Lưu key ở state để match API
+          };
+          setCurrentUser(updatedUser);
+          setUser(updatedUser);
+        }
+
+        showToast.success("Thành công", "Cập nhật sở thích thành công");
+        setIsEditModalFavourite(false);
+      } else {
+        const errorMessage =
+          response.error?.message || "Có lỗi xảy ra khi cập nhật sở thích";
+        showToast.error("Lỗi", errorMessage);
+      }
+    } catch (error) {
+      showToast.error("Lỗi", "Có lỗi xảy ra khi cập nhật sở thích");
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -229,7 +329,313 @@ const ProfileScreen = ({ navigation }: any) => {
   };
 
   const isPremiumUser = currentUser?.isPremium || false;
-   console.log("isPremiumUser", isPremiumUser);
+  console.log("isPremiumUser", isPremiumUser);
+
+  // Render Header Component for main FlatList (all content)
+  const renderHeaderComponent = () => (
+    <View>
+      {/* Header */}
+      <LinearGradient
+        colors={["#4facfe", "#00f2fe"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.header}
+      >
+        <View style={styles.headerContent}>
+          <View style={styles.avatarContainer}>
+            <View style={styles.avatar}>
+              <FontAwesome name="user" size={32} color="#4facfe" />
+            </View>
+          </View>
+          <View style={styles.userInfo}>
+            <Text style={styles.userName}>
+              {currentUser?.fullName || "Chưa cập nhật"}
+            </Text>
+            <Text style={styles.userEmail}>
+              {currentUser?.email || "Chưa cập nhật"}
+            </Text>
+            <View style={styles.pointsDisplay}>
+              <FontAwesome name="star" size={16} color="#FFD700" />
+              <Text style={styles.pointsDisplayText}>{balance?.point}</Text>
+            </View>
+          </View>
+        </View>
+      </LinearGradient>
+
+      {/* Premium Status Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Tài khoản Premium</Text>
+
+        <View style={styles.premiumCard}>
+          <View style={styles.premiumInfo}>
+            <View style={styles.premiumIcon}>
+              <FontAwesome name="star" size={24} color="#FFD700" />
+            </View>
+            <View style={styles.premiumDetails}>
+              <Text style={styles.premiumTitle}>
+                {isPremiumUser
+                  ? "Premium Active"
+                  : "Nâng cấp tài khoản Premium"}
+              </Text>
+              <Text style={styles.premiumSubtitle}>
+                {isPremiumUser
+                  ? `Tài khoản Premium của bạn đang hoạt động`
+                  : "Mở khóa tất cả tính năng cao cấp"}
+              </Text>
+              {isPremiumUser && currentUser?.premiumEndDate && (
+                <Text style={styles.premiumEndDate}>
+                  {formatPremiumEndDate(currentUser.premiumEndDate)}
+                </Text>
+              )}
+            </View>
+          </View>
+          {!isPremiumUser && (
+            <TouchableOpacity
+              style={styles.premiumButton}
+              onPress={() => setIsPremiumPopupVisible(true)}
+            >
+              <Text style={styles.premiumButtonText}>Nâng cấp</Text>
+              <FontAwesome
+                name="arrow-right"
+                size={14}
+                color="#000"
+                style={styles.premiumButtonArrow}
+              />
+            </TouchableOpacity>
+          )}
+          {isPremiumUser && (
+            <View style={styles.premiumActiveBadge}>
+              <FontAwesome name="check" size={16} color="#FFFFFF" />
+            </View>
+          )}
+        </View>
+      </View>
+
+      {/* Wallet Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Ví điện tử</Text>
+
+        <View style={styles.walletCard}>
+          <View style={styles.walletInfo}>
+            <View style={styles.walletIcon}>
+              <FontAwesome name="credit-card" size={24} color="#4facfe" />
+            </View>
+            <View style={styles.walletDetails}>
+              <Text style={styles.walletTitle}>Ví PLANUS</Text>
+              <Text style={styles.walletSubtitle}>
+                Quản lý tài chính của bạn
+              </Text>
+            </View>
+          </View>
+          <TouchableOpacity
+            style={styles.walletButton}
+            onPress={() => navigation.navigate("Wallet")}
+          >
+            <Text style={styles.walletButtonText}>Xem ví</Text>
+            <FontAwesome
+              name="arrow-right"
+              size={14}
+              color="#FFFFFF"
+              style={styles.walletButtonArrow}
+            />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Voucher Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Đổi điểm lấy voucher</Text>
+
+        <View style={styles.voucherCard}>
+          <View style={styles.voucherInfo}>
+            <View style={styles.voucherIcon}>
+              <FontAwesome name="gift" size={24} color="#FF6B6B" />
+            </View>
+            <View style={styles.voucherDetails}>
+              <Text style={styles.voucherTitle}>Voucher & Ưu đãi</Text>
+              <Text style={styles.voucherSubtitle}>
+                Đổi điểm tích lũy thành voucher giảm giá
+              </Text>
+            </View>
+          </View>
+          <TouchableOpacity
+            style={styles.voucherButton}
+            onPress={() => navigation.navigate("VoucherScreen")}
+          >
+            <Text style={styles.voucherButtonText}>Xem voucher</Text>
+            <FontAwesome
+              name="arrow-right"
+              size={14}
+              color="#FFFFFF"
+              style={styles.voucherButtonArrow}
+            />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Travel History Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Lịch sử chuyến đi</Text>
+
+        <View style={styles.historyCard}>
+          <View style={styles.historyInfo}>
+            <View style={styles.historyIcon}>
+              <FontAwesome name="map" size={24} color="#4CAF50" />
+            </View>
+            <View style={styles.historyDetails}>
+              <Text style={styles.historyTitle}>Chuyến đi đã thanh toán</Text>
+              <Text style={styles.historySubtitle}>
+                Xem lại các kế hoạch đã mua
+              </Text>
+            </View>
+          </View>
+          <TouchableOpacity
+            style={styles.historyButton}
+            onPress={() => navigation.navigate("TravelHistory")}
+          >
+            <Text style={styles.historyButtonText}>Xem lịch sử</Text>
+            <FontAwesome
+              name="arrow-right"
+              size={14}
+              color="#FFFFFF"
+              style={styles.historyButtonArrow}
+            />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Profile Information */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Thông tin cá nhân</Text>
+
+        <View style={styles.infoCard}>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Họ và tên</Text>
+            <Text style={styles.infoValue}>
+              {currentUser?.fullName || "Chưa cập nhật"}
+            </Text>
+          </View>
+
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Email</Text>
+            <Text style={styles.infoValue}>
+              {currentUser?.email || "Chưa cập nhật"}
+            </Text>
+          </View>
+
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Giới tính</Text>
+            <Text style={styles.infoValue}>
+              {currentUser?.gender === "male" ? "Nam" : "Nữ"}
+            </Text>
+          </View>
+
+          {/* <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Ngày sinh</Text>
+            <Text style={styles.infoValue}>
+              {formatDate(currentUser?.dob || "")}
+            </Text>
+          </View> */}
+
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Số điện thoại</Text>
+            <Text style={styles.infoValue}>
+              {currentUser?.phone || "Chưa cập nhật"}
+            </Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Income Information */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Thông tin thu nhập</Text>
+
+        <View style={styles.infoCard}>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Thu nhập</Text>
+            <Text style={styles.infoValue}>
+              {currentUser?.income
+                ? formatCurrency(currentUser.income)
+                : "Chưa cập nhật"}
+            </Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Interests */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Sở thích</Text>
+
+        <View style={styles.infoCard}>
+          {currentUser?.favorites && currentUser.favorites.length > 0 ? (
+            <View style={styles.interestsContainer}>
+              {currentUser.favorites.map((interest, index) => (
+                <View key={index} style={styles.interestTag}>
+                  <Text style={styles.interestText}>{interest}</Text>
+                </View>
+              ))}
+            </View>
+          ) : (
+            <Text style={styles.noDataText}>Chưa cập nhật sở thích</Text>
+          )}
+        </View>
+      </View>
+
+      {/* Actions */}
+      <View style={styles.actionsSection}>
+        <TouchableOpacity
+          style={styles.editButton}
+          onPress={openEditFavoritesModal}
+        >
+          <Text style={styles.editButtonText}>Chỉnh sửa sở thích</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.editButton} onPress={openEditModal}>
+          <Text style={styles.editButtonText}>Chỉnh sửa hồ sơ</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Text style={styles.logoutButtonText}>Đăng xuất</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
+  // Render item for favorites selection
+  const renderFavoriteOption = ({
+    item,
+  }: {
+    item: { key: string; label: string };
+  }) => {
+    const isSelected = editFavorites.includes(item.label); // Bây giờ match vì dùng label
+    return (
+      <TouchableOpacity
+        style={[
+          styles.favoriteOption,
+          isSelected && styles.favoriteOptionSelected,
+        ]}
+        onPress={() => toggleFavorite(item.label)} // Toggle label
+        activeOpacity={0.7}
+      >
+        <Text
+          style={[
+            styles.favoriteOptionText,
+            isSelected && styles.favoriteOptionTextSelected,
+          ]}
+        >
+          {item.label}
+        </Text>
+        {isSelected && (
+          <FontAwesome
+            name="check"
+            size={16}
+            color="#FFFFFF"
+            style={styles.checkIcon}
+          />
+        )}
+      </TouchableOpacity>
+    );
+  };
 
   if (isLoading || isLoadingUser) {
     return (
@@ -243,268 +649,14 @@ const ProfileScreen = ({ navigation }: any) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView
-        style={styles.scrollView}
+      <FlatList
+        data={[]} // Empty data, only header
+        renderItem={undefined} // No renderItem needed
+        ListHeaderComponent={renderHeaderComponent}
         showsVerticalScrollIndicator={false}
-      >
-        {/* Header */}
-        <LinearGradient
-          colors={["#4facfe", "#00f2fe"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.header}
-        >
-          <View style={styles.headerContent}>
-            <View style={styles.avatarContainer}>
-              <View style={styles.avatar}>
-                <FontAwesome name="user" size={32} color="#4facfe" />
-              </View>
-            </View>
-            <View style={styles.userInfo}>
-              <Text style={styles.userName}>
-                {currentUser?.fullName || "Chưa cập nhật"}
-              </Text>
-              <Text style={styles.userEmail}>
-                {currentUser?.email || "Chưa cập nhật"}
-              </Text>
-              <View style={styles.pointsDisplay}>
-                <FontAwesome name="star" size={16} color="#FFD700" />
-                <Text style={styles.pointsDisplayText}>{balance?.point}</Text>
-              </View>
-            </View>
-          </View>
-        </LinearGradient>
-
-        {/* Premium Status Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Tài khoản Premium</Text>
-
-          <View style={styles.premiumCard}>
-            <View style={styles.premiumInfo}>
-              <View style={styles.premiumIcon}>
-                <FontAwesome name="star" size={24} color="#FFD700" />
-              </View>
-              <View style={styles.premiumDetails}>
-                <Text style={styles.premiumTitle}>
-                  {isPremiumUser
-                    ? "Premium Active"
-                    : "Nâng cấp tài khoản Premium"}
-                </Text>
-                <Text style={styles.premiumSubtitle}>
-                  {isPremiumUser
-                    ? `Tài khoản Premium của bạn đang hoạt động`
-                    : "Mở khóa tất cả tính năng cao cấp"}
-                </Text>
-                {isPremiumUser && currentUser?.premiumEndDate && (
-                  <Text style={styles.premiumEndDate}>
-                    {formatPremiumEndDate(currentUser.premiumEndDate)}
-                  </Text>
-                )}
-              </View>
-            </View>
-            {!isPremiumUser && (
-              <TouchableOpacity
-                style={styles.premiumButton}
-                onPress={() => setIsPremiumPopupVisible(true)}
-              >
-                <Text style={styles.premiumButtonText}>Nâng cấp</Text>
-                <FontAwesome
-                  name="arrow-right"
-                  size={14}
-                  color="#000"
-                  style={styles.premiumButtonArrow}
-                />
-              </TouchableOpacity>
-            )}
-            {isPremiumUser && (
-              <View style={styles.premiumActiveBadge}>
-                <FontAwesome name="check" size={16} color="#FFFFFF" />
-              </View>
-            )}
-          </View>
-        </View>
-
-        {/* Wallet Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Ví điện tử</Text>
-
-          <View style={styles.walletCard}>
-            <View style={styles.walletInfo}>
-              <View style={styles.walletIcon}>
-                <FontAwesome name="credit-card" size={24} color="#4facfe" />
-              </View>
-              <View style={styles.walletDetails}>
-                <Text style={styles.walletTitle}>Ví PLANUS</Text>
-                <Text style={styles.walletSubtitle}>
-                  Quản lý tài chính của bạn
-                </Text>
-              </View>
-            </View>
-            <TouchableOpacity
-              style={styles.walletButton}
-              onPress={() => navigation.navigate("Wallet")}
-            >
-              <Text style={styles.walletButtonText}>Xem ví</Text>
-              <FontAwesome
-                name="arrow-right"
-                size={14}
-                color="#FFFFFF"
-                style={styles.walletButtonArrow}
-              />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Voucher Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Đổi điểm lấy voucher</Text>
-
-          <View style={styles.voucherCard}>
-            <View style={styles.voucherInfo}>
-              <View style={styles.voucherIcon}>
-                <FontAwesome name="gift" size={24} color="#FF6B6B" />
-              </View>
-              <View style={styles.voucherDetails}>
-                <Text style={styles.voucherTitle}>Voucher & Ưu đãi</Text>
-                <Text style={styles.voucherSubtitle}>
-                  Đổi điểm tích lũy thành voucher giảm giá
-                </Text>
-              </View>
-            </View>
-            <TouchableOpacity
-              style={styles.voucherButton}
-              onPress={() => navigation.navigate("VoucherScreen")}
-            >
-              <Text style={styles.voucherButtonText}>Xem voucher</Text>
-              <FontAwesome
-                name="arrow-right"
-                size={14}
-                color="#FFFFFF"
-                style={styles.voucherButtonArrow}
-              />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Travel History Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Lịch sử chuyến đi</Text>
-
-          <View style={styles.historyCard}>
-            <View style={styles.historyInfo}>
-              <View style={styles.historyIcon}>
-                <FontAwesome name="map" size={24} color="#4CAF50" />
-              </View>
-              <View style={styles.historyDetails}>
-                <Text style={styles.historyTitle}>Chuyến đi đã thanh toán</Text>
-                <Text style={styles.historySubtitle}>
-                  Xem lại các kế hoạch đã mua
-                </Text>
-              </View>
-            </View>
-            <TouchableOpacity
-              style={styles.historyButton}
-              onPress={() => navigation.navigate("TravelHistory")}
-            >
-              <Text style={styles.historyButtonText}>Xem lịch sử</Text>
-              <FontAwesome
-                name="arrow-right"
-                size={14}
-                color="#FFFFFF"
-                style={styles.historyButtonArrow}
-              />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Profile Information */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Thông tin cá nhân</Text>
-
-          <View style={styles.infoCard}>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Họ và tên</Text>
-              <Text style={styles.infoValue}>
-                {currentUser?.fullName || "Chưa cập nhật"}
-              </Text>
-            </View>
-
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Email</Text>
-              <Text style={styles.infoValue}>
-                {currentUser?.email || "Chưa cập nhật"}
-              </Text>
-            </View>
-
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Giới tính</Text>
-              <Text style={styles.infoValue}>
-                {currentUser?.gender === "male" ? "Nam" : "Nữ"}
-              </Text>
-            </View>
-
-            {/* <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Ngày sinh</Text>
-              <Text style={styles.infoValue}>
-                {formatDate(currentUser?.dob || "")}
-              </Text>
-            </View> */}
-
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Số điện thoại</Text>
-              <Text style={styles.infoValue}>
-                {currentUser?.phone || "Chưa cập nhật"}
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Income Information */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Thông tin thu nhập</Text>
-
-          <View style={styles.infoCard}>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Thu nhập</Text>
-              <Text style={styles.infoValue}>
-                {currentUser?.income
-                  ? formatCurrency(currentUser.income)
-                  : "Chưa cập nhật"}
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Interests */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Sở thích</Text>
-
-          <View style={styles.infoCard}>
-            {currentUser?.favorites && currentUser.favorites.length > 0 ? (
-              <View style={styles.interestsContainer}>
-                {currentUser.favorites.map((interest, index) => (
-                  <View key={index} style={styles.interestTag}>
-                    <Text style={styles.interestText}>{interest}</Text>
-                  </View>
-                ))}
-              </View>
-            ) : (
-              <Text style={styles.noDataText}>Chưa cập nhật sở thích</Text>
-            )}
-          </View>
-        </View>
-
-        {/* Actions */}
-        <View style={styles.actionsSection}>
-          <TouchableOpacity style={styles.editButton} onPress={openEditModal}>
-            <Text style={styles.editButtonText}>Chỉnh sửa hồ sơ</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-            <Text style={styles.logoutButtonText}>Đăng xuất</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
+        contentContainerStyle={styles.flatListContent}
+        keyExtractor={() => "empty"} // Dummy key
+      />
 
       {/* Edit Profile Modal */}
       <Modal
@@ -532,7 +684,7 @@ const ProfileScreen = ({ navigation }: any) => {
               </TouchableOpacity>
             </View>
 
-            <ScrollView
+            <ScrollView // Giữ ScrollView cho modal vì nội dung ngắn, không nested VirtualizedList
               style={styles.modalBody}
               showsVerticalScrollIndicator={false}
             >
@@ -567,16 +719,15 @@ const ProfileScreen = ({ navigation }: any) => {
               </View>
 
               {/* <View style={styles.inputGroup}>
-  <Text style={styles.inputLabel}>Ngày tháng năm sinh *</Text>
-  <TextInput
-    style={styles.textInput}
-    value={editData.dob}
-    onChangeText={(text) => setEditData({ ...editData, dob: text })}
-    placeholder="Nhập ngày tháng năm sinh (VD: 24/10/2000)"
-    placeholderTextColor="#A0A0A0"
-  />
-</View> */}
-
+                <Text style={styles.inputLabel}>Ngày tháng năm sinh *</Text>
+                <TextInput
+                  style={styles.textInput}
+                  value={editData.dob}
+                  onChangeText={(text) => setEditData({ ...editData, dob: text })}
+                  placeholder="Nhập ngày tháng năm sinh (VD: 24/10/2000)"
+                  placeholderTextColor="#A0A0A0"
+                />
+              </View> */}
 
               {/* Gender */}
               <View style={styles.inputGroup}>
@@ -664,6 +815,57 @@ const ProfileScreen = ({ navigation }: any) => {
         </View>
       </Modal>
 
+      {/* Edit Favorites Modal - New Selection Style */}
+      <Modal
+        visible={isEditModalFavourite}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setIsEditModalFavourite(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <TouchableOpacity onPress={() => setIsEditModalFavourite(false)}>
+                <Text style={styles.modalButtonText}>Hủy</Text>
+              </TouchableOpacity>
+              <Text style={styles.modalTitle}>Chỉnh sửa sở thích</Text>
+              <TouchableOpacity
+                onPress={handleUpdateFavorites}
+                disabled={isUpdating}
+              >
+                <Text
+                  style={[styles.modalButtonText, styles.modalButtonPrimary]}
+                >
+                  {isUpdating ? "Đang cập nhật..." : "Lưu"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <FlatList // Thay ScrollView bằng FlatList cho modal để tránh nested nếu cần
+              data={FAVORITE_OPTIONS}
+              renderItem={renderFavoriteOption}
+              keyExtractor={(item) => item.key}
+              numColumns={2}
+              columnWrapperStyle={styles.favoriteRow}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.modalFlatListContent}
+              ListHeaderComponent={
+                <Text style={styles.favoritesInstruction}>
+                  Chọn sở thích của bạn từ danh sách dưới đây
+                </Text>
+              }
+            />
+
+            {isUpdating && (
+              <View style={styles.loadingOverlay}>
+                <ActivityIndicator size="large" color="#4facfe" />
+                <Text style={styles.loadingText}>Đang cập nhật...</Text>
+              </View>
+            )}
+          </View>
+        </View>
+      </Modal>
+
       {/* Premium Popup */}
       <PremiumPopup
         visible={isPremiumPopupVisible}
@@ -680,8 +882,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#F5F5F5",
   },
-  scrollView: {
-    flex: 1,
+  flatListContent: {
+    paddingBottom: 20,
   },
   loadingContainer: {
     flex: 1,
@@ -967,6 +1169,53 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255, 255, 255, 0.9)",
     justifyContent: "center",
     alignItems: "center",
+  },
+  // New Favorites Modal Styles
+  modalFlatListContent: {
+    paddingBottom: 20,
+  },
+  favoritesInstruction: {
+    fontSize: 14,
+    color: "#666",
+    marginBottom: 16,
+    textAlign: "center",
+    fontStyle: "italic",
+    paddingHorizontal: 20,
+    paddingTop: 16,
+  },
+  favoriteRow: {
+    justifyContent: "space-between",
+    paddingHorizontal: 4,
+    marginBottom: 12,
+  },
+  favoriteOption: {
+    flex: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#F8F9FA",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    marginHorizontal: 2,
+    borderWidth: 1,
+    borderColor: "#E9ECEF",
+  },
+  favoriteOptionSelected: {
+    backgroundColor: "#4facfe",
+    borderColor: "#4facfe",
+  },
+  favoriteOptionText: {
+    fontSize: 14,
+    color: "#495057",
+    fontWeight: "500",
+  },
+  favoriteOptionTextSelected: {
+    color: "#FFFFFF",
+    fontWeight: "600",
+  },
+  checkIcon: {
+    marginLeft: 8,
   },
   // Wallet styles
   walletCard: {

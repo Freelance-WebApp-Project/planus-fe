@@ -255,8 +255,8 @@ const ReviewDetailScreen = () => {
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : "position"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? -33 : 80}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? -33 : -15}
     >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <SafeAreaView style={styles.container}>
@@ -467,9 +467,9 @@ const ReviewDetailScreen = () => {
 
               {/* --- Chọn số sao --- */}
               <View style={styles.ratingRowCenter}>
-                <Text style={styles.ratingLabel}>
+                {/* <Text style={styles.ratingLabel}>
                   {reviewForm.rating === 0 ? "Chọn sao đánh giá *" : "Đánh giá của bạn"}
-                </Text>
+                </Text> */}
                 <View style={styles.starsContainer}>
                   {[1, 2, 3, 4, 5].map((star) => (
                     <TouchableOpacity
